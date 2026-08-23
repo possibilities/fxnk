@@ -1,0 +1,40 @@
+
+[1m━━ fx style swatch · dark theme · fx 1bd7bed ━━[0m
+
+  [1mroles[0m
+  divider                [38;5;240mthe quick brown fox[0m  \x1b[38;5;240m  #585858
+  hint                   [38;5;255mthe quick brown fox[0m  \x1b[38;5;255m  #eeeeee
+  statusline             [38;5;245mthe quick brown fox[0m  \x1b[38;5;245m  #8a8a8a
+  tag                    [1;38;5;255mthe quick brown fox[0m  \x1b[1;38;5;255m  #eeeeee  bold
+  subtitle               [1;38;5;255mthe quick brown fox[0m  \x1b[1;38;5;255m  #eeeeee  bold
+  system_notice_label    [1;38;5;252mthe quick brown fox[0m  \x1b[1;38;5;252m  #d0d0d0  bold
+  system_notice_text     [38;5;250mthe quick brown fox[0m  \x1b[38;5;250m  #bcbcbc
+  dim                    [38;5;245mthe quick brown fox[0m  \x1b[38;5;245m  #8a8a8a
+  warning                [38;5;252mthe quick brown fox[0m  \x1b[38;5;252m  #d0d0d0
+  green                  [38;5;252mthe quick brown fox[0m  \x1b[38;5;252m  #d0d0d0
+  red                    [38;5;252mthe quick brown fox[0m  \x1b[38;5;252m  #d0d0d0
+  diff_added             [38;5;252mthe quick brown fox[0m  \x1b[38;5;252m  #d0d0d0
+  diff_removed           [38;5;252mthe quick brown fox[0m  \x1b[38;5;252m  #d0d0d0
+  approval_button_active [48;5;255m[38;5;235m[1mthe quick brown fox[0m  \x1b[48;5;255m\x1b[38;5;235m\x1b[1m  #262626 on #eeeeee  bold
+  approval_button_inactive [48;5;239m[38;5;255mthe quick brown fox[0m  \x1b[48;5;239m\x1b[38;5;255m  #eeeeee on #4e4e4e
+  selected_completion    [1;38;5;255mthe quick brown fox[0m  \x1b[1;38;5;255m  #eeeeee  bold
+  permission_auto        [38;5;252mthe quick brown fox[0m  \x1b[38;5;252m  #d0d0d0
+
+  [1mdiff markers[0m (theme-invariant; the one chromatic accent)
+    [38;5;245m  │ 41   fn hello() void {[0m
+    [38;5;252m  │ [38;2;229;72;77m42 -[0m[38;5;252m     return old_name();[0m   \x1b[38;2;229;72;77m  #e5484d
+    [38;5;252m  │ [38;2;48;164;108m42 +[0m[38;5;252m     return new_name();[0m   \x1b[38;2;48;164;108m  #30a46c
+
+  [1mcode highlight[0m
+    [38;5;252mconst[0m x = [38;5;250m"ready"[0m; [38;5;245m// retries [38;5;250m3[38;5;245m times[0m
+    keyword #d0d0d0 · string #bcbcbc · number #bcbcbc · comment #8a8a8a
+
+  [1massistant text[0m
+    run [38;5;245mzig build[39m now · [38;5;252m✓[39m task done
+
+  [1muser prompt card[0m
+    [38;5;255m┃[0m [1mfix the flaky test in [0m[38;5;252m/review[0m[1m please[0m
+
+  [1mglyphs[0m
+    input prefix ❯ · user rail ┃ · tool ● / cancelled ■ · tree ├ └ · separator ·
+

@@ -16,6 +16,13 @@ or its installer.
   procedure belongs in `MAINTAIN.md`, never in a copy of the skill here.
 - `SCRATCHPAD.md` is current maintenance state, not a second specification or
   an unbounded transcript.
+- `style/` is the fx style guide for fmx: `style/STYLE.md` (prose for fmx
+  developers), `style/tokens.json` (extracted ground truth; on conflict it
+  wins), and `style/captures/` (swatch sheets and welcome-screen PNGs).
+  `scripts/style-extract.sh`, `scripts/style-swatch.sh`, and
+  `scripts/style-capture.sh` maintain them; the methodology is
+  `MAINTAIN.md` section "Style guide". The scripts read `~/src/fx` and never
+  write outside this repository.
 - `scripts/install.sh` consumes the published `fork/integration` branch. It
   must not rebase, push, inspect PRs, or decide which patches should be carried.
 - `scripts/reconcile-branches.sh` is the thin entrypoint to the skill's shared

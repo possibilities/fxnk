@@ -14,12 +14,24 @@ bash -n scripts/install.sh
 bash -n scripts/ship-gate.sh
 bash -n scripts/reconcile-branches.sh
 bash -n tests/install-transaction.sh
+bash -n scripts/style-extract.sh
+bash -n scripts/style-swatch.sh
+bash -n scripts/style-capture.sh
 [ -x scripts/install.sh ] || fail "scripts/install.sh is not executable"
 [ -x scripts/ship-gate.sh ] || fail "scripts/ship-gate.sh is not executable"
 [ -x scripts/reconcile-branches.sh ] \
     || fail "scripts/reconcile-branches.sh is not executable"
 [ -x tests/install-transaction.sh ] \
     || fail "tests/install-transaction.sh is not executable"
+for style_script in style-extract.sh style-swatch.sh style-capture.sh; do
+    [ -x "scripts/$style_script" ] \
+        || fail "scripts/$style_script is not executable"
+done
+[ -f style/tokens.json ] || fail "style/tokens.json is missing"
+jq -e '.roles.divider.dark.fg.hex and (.retint_map | length > 0)' style/tokens.json >/dev/null \
+    || fail "style/tokens.json is not the expected token shape"
+grep -Fx '## Style guide' MAINTAIN.md >/dev/null \
+    || fail "MAINTAIN.md is missing the section: ## Style guide"
 [ "$(readlink CLAUDE.md)" = AGENTS.md ] || fail "CLAUDE.md must link to AGENTS.md"
 
 plan=$(scripts/install.sh --check)

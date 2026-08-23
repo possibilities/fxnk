@@ -188,3 +188,51 @@ the installed binary or live receipts by hand; rerun the installer.
 
 - Title: `Fx Maintenance`
 - Group: `fxnk.maintain`
+
+## Style guide
+
+This repository also owns the fx style guide for fmx: `style/STYLE.md`, its
+machine-readable ground truth `style/tokens.json`, and the rendered
+references in `style/captures/`. fmx (`~/code/fmx`) treats fx as its living
+style guide; this is where that edge is documented and kept true.
+
+Methodology, run whenever the bound checkout's `integration` moves (every
+maintenance cycle qualifies, since carried features can touch UI):
+
+1. `scripts/style-extract.sh --check` — re-extracts the tokens from
+   `~/src/fx` and diffs against the committed `style/tokens.json`, ignoring
+   the generated stamp. No drift: done. Drift: run it without `--check`,
+   read the diff, and update the tables and prose in `style/STYLE.md` to
+   agree — the tables mirror tokens.json and must never contradict it.
+2. After any token drift, regenerate the visual references:
+   `scripts/style-capture.sh` (swatch sheets from tokens.json, plus
+   welcome-screen PNGs of the freshly built `~/src/fx/zig-out/bin/fx` in
+   both `FX_THEME` values). Commit the changed captures; they are small and
+   diffable.
+3. If the extractor itself fails, fx refactored a styling site. Re-derive
+   the sites with the census greps below, fix the extractor's parsers, and
+   reconcile STYLE.md prose against what actually changed.
+
+Discovery method (how the styling sites were found, and how to find them
+again after a refactor) — run in `~/src/fx`:
+
+```sh
+# every file carrying SGR color literals, ranked; excludes tests
+grep -rlE '38;5;|38;2;|48;5;|48;2;' src --include='*.zig' | grep -v _test
+# the distinct color indices in use (a new index = a palette change)
+grep -rhoE '(38|48);5;[0-9]+' src --include='*.zig' | sort | uniq -c | sort -rn
+# theme selection and live-update machinery
+grep -rn 'initTheme\|detectTheme\|FX_THEME\|2031\|997' src --include='*.zig'
+```
+
+The extractor's five parsed sites (role palette `src/ui/render.zig`
+`initTheme`, syntax palettes `code_highlight.zig`, assistant tokens
+`presentation/ansi.zig`, prompt card `user_message_card.zig`, retint map
+`store.zig`) are the authoritative producers; scattered literal SGR strings
+elsewhere in fx are always dark-ramp values covered by the retint map, so
+tracking the five sites plus the index census is complete coverage.
+
+The scripts read the fx checkout and never write to it; `style-capture.sh`
+requires an existing `zig-out/bin/fx` build and refuses to build one itself.
+The style guide never gates shipping: drift is follow-up work for the cycle,
+not a reason to hold the integration publish.

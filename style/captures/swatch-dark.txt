@@ -1,0 +1,40 @@
+
+━━ fx style swatch · dark theme · fx 1bd7bed ━━
+
+  roles
+  divider                the quick brown fox  \x1b[38;5;240m  #585858
+  hint                   the quick brown fox  \x1b[38;5;255m  #eeeeee
+  statusline             the quick brown fox  \x1b[38;5;245m  #8a8a8a
+  tag                    the quick brown fox  \x1b[1;38;5;255m  #eeeeee  bold
+  subtitle               the quick brown fox  \x1b[1;38;5;255m  #eeeeee  bold
+  system_notice_label    the quick brown fox  \x1b[1;38;5;252m  #d0d0d0  bold
+  system_notice_text     the quick brown fox  \x1b[38;5;250m  #bcbcbc
+  dim                    the quick brown fox  \x1b[38;5;245m  #8a8a8a
+  warning                the quick brown fox  \x1b[38;5;252m  #d0d0d0
+  green                  the quick brown fox  \x1b[38;5;252m  #d0d0d0
+  red                    the quick brown fox  \x1b[38;5;252m  #d0d0d0
+  diff_added             the quick brown fox  \x1b[38;5;252m  #d0d0d0
+  diff_removed           the quick brown fox  \x1b[38;5;252m  #d0d0d0
+  approval_button_active the quick brown fox  \x1b[48;5;255m\x1b[38;5;235m\x1b[1m  #262626 on #eeeeee  bold
+  approval_button_inactive the quick brown fox  \x1b[48;5;239m\x1b[38;5;255m  #eeeeee on #4e4e4e
+  selected_completion    the quick brown fox  \x1b[1;38;5;255m  #eeeeee  bold
+  permission_auto        the quick brown fox  \x1b[38;5;252m  #d0d0d0
+
+  diff markers (theme-invariant; the one chromatic accent)
+      │ 41   fn hello() void {
+      │ 42 -     return old_name();   \x1b[38;2;229;72;77m  #e5484d
+      │ 42 +     return new_name();   \x1b[38;2;48;164;108m  #30a46c
+
+  code highlight
+    const x = "ready"; // retries 3 times
+    keyword #d0d0d0 · string #bcbcbc · number #bcbcbc · comment #8a8a8a
+
+  assistant text
+    run zig build now · ✓ task done
+
+  user prompt card
+    ┃ fix the flaky test in /review please
+
+  glyphs
+    input prefix ❯ · user rail ┃ · tool ● / cancelled ■ · tree ├ └ · separator ·
+
