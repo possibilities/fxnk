@@ -62,6 +62,14 @@ shipping it.
 
 ## Features
 
+### Fork identity
+
+- Support the intentionally undocumented `--fxnk-version` consumer probe. It
+  exits zero with empty stderr and one exact stdout line in the form
+  `fxnk <fxnk-version> (fx <fx-version>)`. The independent fxnk version follows
+  semantic versioning for downstream consumer compatibility; the Fx version
+  remains the current upstream source version.
+
 ### System prompts
 
 - Support `--append-system-prompt-file` and `--system-prompt-file` for appending

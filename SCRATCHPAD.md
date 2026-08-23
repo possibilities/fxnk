@@ -8,17 +8,23 @@ entries on every maintenance cycle and appends one compact history entry.
 - Last completed maintenance: 2026-08-23
 - Upstream base: `04e0ae0b2076ccabb3c972351f5f0fbf2f67cc93`
 - Published and installed integration:
-  `87fcac544d2f2ec576c099e4a794e3fa4e80b3bf`
+  `1bd7bedaa7df7e13f68455d6e6d534eb6332673b`
 - Candidate quarantine ref:
-  `fork/DELETEME/maintain/candidate-20260823-1`
-- Full CI: run `32618954329`; all 20 matrix jobs and all four
+  `fork/DELETEME/maintain/candidate-20260823-fxnk-version-1`
+- Full CI: run `32647359923`; all 20 matrix jobs and all four
   `Full suite (...)` aggregates passed for the published commit.
-- Ship gate: `SHIP 87fcac544d2f2ec576c099e4a794e3fa4e80b3bf`
+- Ship gate: `SHIP 1bd7bedaa7df7e13f68455d6e6d534eb6332673b`
 - Installed SHA-256:
-  `c2147372cc1d426604b8efe38f8129319ffe8d925bc59df9deb051aa171a017a`;
+  `a4b297b011d116481229f08c6c1109cb8ced6afbcea7b92c7488ad61cc417d62`;
   the receipt matches and `auto_upgrade` is `false`.
 
 ## Carried state
+
+- Fork identity: `carry/fxnk-version` at
+  `544cd6ae23b52111a6478026c4a6ea8b7bf0f0b4`, integrated by
+  `1bd7bedaa7df7e13f68455d6e6d534eb6332673b`. The intentionally undocumented
+  `--fxnk-version` probe reports `fxnk 0.1.0 (fx 0.0.5)` with the exact
+  exit/stdout/stderr contract, while remaining absent from top-level help.
 
 - External editor: `carry/external-editor` at
   `2fd2e6903693d089cc950f91cb532ef2868b3a12`, integrated by
@@ -53,17 +59,26 @@ entries on every maintenance cycle and appends one compact history entry.
 
 ## Current notes
 
+- The fork identity carry is published and its temporary candidate was moved
+  with exact leases to
+  `DELETEME/maintain/candidate-20260823-fxnk-version-1`. Concurrent local
+  `carry/ade-event-feed` work was deliberately left untouched; the next full
+  namespace reconciliation should run after that carry is integrated.
+
 - Fork branches were reconciled on 2026-08-23: local, origin, and fork `main`
-  all name `04e0ae0b2076ccabb3c972351f5f0fbf2f67cc93`; all five carry heads are
-  published under matching `fork/carry/*` names; open PR heads #242, #244,
-  #320, and #323 remain frozen under their existing names; and 134 other heads
-  were preserved at the same commits under `DELETEME/*`. No branch remains
-  pending quarantine.
-- Local `main` pulls from `origin/main` and pushes to `fork/main`. Every local
-  carry branch tracks and pushes only its matching `fork/carry/*` ref.
-- All six completed `fxnk-*` feature and integration worktrees were removed
-  after publication and live installation. The local carry branches and exact
-  commits remain available for the next reconciliation.
+  all name `04e0ae0b2076ccabb3c972351f5f0fbf2f67cc93`; all six completed carry
+  heads are published under matching `fork/carry/*` names; open PR heads #242,
+  #244, #320, and #323 remain frozen under their existing names; and 134 other
+  heads were preserved at the same commits under `DELETEME/*`. No branch
+  remains pending quarantine.
+- Local `main` pulls from `origin/main` and pushes to `fork/main`. Every
+  completed local carry branch tracks and pushes only its matching
+  `fork/carry/*` ref; a newly opened carry may track its `origin/main` base
+  until its first publication.
+- Completed `fxnk-*` feature and integration worktrees are removed after
+  publication and live installation. Their local carry branches and exact
+  commits remain available for the next reconciliation; unrelated in-progress
+  worktrees are left alone.
 - Installer commit `1229441` handles lease-rewritten integration by proving
   the prior local tip from the install receipt or pre-fetch tracking ref,
   building detached, and rolling back checkout and artifacts on failure. Its
@@ -77,3 +92,6 @@ entries on every maintenance cycle and appends one compact history entry.
   carried five feature heads, retired the redundant capacity patch, passed the
   exact-SHA Full CI and ship gate, published and installed integration, and
   hardened `/maintain` plus the installer from the observed rewrite behavior.
+- 2026-08-23: Added the independent fxnk identity probe as a sixth carried
+  feature, passed exact-SHA Full CI and the ship gate, published and installed
+  integration, and left concurrent feature work isolated.
