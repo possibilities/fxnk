@@ -1,6 +1,6 @@
 ---
 name: maintain
-description: Maintain fxnk's local Fx fork by reconciling upstream changes, carried features, integration, and upstream pull requests. Use for /maintain or when asked to perform an Fx fork maintenance cycle; use the installer alone for installation without maintenance.
+description: Maintain fxnk's locally owned Fx patch stack by reconciling current upstream with every required behavior and publishing a gated integration build. Use for /maintain or an Fx fork maintenance cycle; use the installer alone for installation without maintenance.
 ---
 
 # Maintain the Fx fork
@@ -24,10 +24,10 @@ workshop and existing implementation do not resolve.
    baseline in the scratchpad. Read every upstream commit in that interval,
    grouping related changes before deciding whether they affect a carried
    feature.
-5. Survey every open pull request authored by the current GitHub user against
-   `vercel-labs/fx`. Record CI, review state, mergeability, labels, maintainer
-   activity, and relevant merged or closed replacements. Do not comment, label,
-   close, or otherwise mutate a pull request without separate authorization.
+5. For each carried feature, inspect current upstream code and any historical
+   upstream reference in the scratchpad for a possible replacement or
+   interaction. These references are evidence only: do not rebase or push their
+   branches, or comment on, label, close, edit, or otherwise mutate the requests.
 
 ## Reconcile the fork
 
@@ -35,12 +35,17 @@ workshop and existing implementation do not resolve.
 - Prefer an upstream implementation when it fully satisfies the required
   behavior. Retire a carried patch only after verifying the upstream code and
   exercising its path, not merely because a PR merged or closed.
+- Maintain each absent or incomplete behavior on a dedicated local carry branch
+  and compose its reviewed commits into integration. Historical upstream PR
+  heads are never dependencies or publication targets.
 - When upstream changes code a carried patch calls, reread that interaction
   even if Git reports a clean rebase. Accept a rerere resolution only after the
   same semantic review.
 - Use dedicated worktrees and branches for all work outside fxnk. Keep upstream
-  PR branches separate from local integration implementations when their
-  histories or review needs differ.
+  references untouched and never perform feature work in the bound checkout.
+- For a substantial feature repair, conflict resolution, or cross-cutting
+  integration, obtain an independent adversarial review when another agent is
+  available. Repair every concrete finding or record why it does not apply.
 - Rebase integration in a scratch worktree onto current `origin/main`. Resolve
   conflicts and repair or add carried features there. Never leave the bound
   checkout mid-rebase.
@@ -62,8 +67,12 @@ rmdir "$fx_zdotdir"
 ```
 
 Also run focused tests for every changed feature and exercise each changed happy
-path with that worktree's freshly built `./zig-out/bin/fx`. A PR branch is not
-ready until its exact-commit Full CI and ship gate satisfy `~/src/fx/AGENTS.md`.
+path with that worktree's freshly built `./zig-out/bin/fx`.
+
+Before publishing integration, push the exact candidate commit to a temporary
+branch on `possibilities/fx` without changing `fork/integration`. Require Full
+CI and the final ship gate for that exact SHA under `~/src/fx/AGENTS.md`. A
+stale, partial, skipped, cancelled, or merely local result is not sufficient.
 
 After the integration candidate passes, push it with the lease and invoke the
 fxnk installer, which fast-forwards the bound checkout to that published tip:
@@ -82,8 +91,10 @@ Update `SCRATCHPAD.md` during the cycle, not as an afterthought:
 
 - replace the completed baseline with the exact upstream and integration SHAs;
 - keep one current entry per carried feature, including implementation branch,
-  upstream replacement or PR, verification evidence, and retirement condition;
-- keep current PR attention items and noteworthy upstream opportunities;
+  exact integration commit, historical upstream reference or verified
+  replacement, verification evidence, and retirement condition;
+- keep noteworthy upstream replacement opportunities without tracking PR
+  review health or implying that the Workshop maintains those requests;
 - retain rerere or conflict context only while it can change a later decision;
 - remove superseded state and append one compact dated history entry.
 
@@ -102,7 +113,7 @@ terminal-notifier -title "Fx Maintenance" -message "<concise outcome>" \
   -group fxnk.maintain
 ```
 
-Finish with the installed integration SHA, feature disposition, PR attention
-items, checks run, scratchpad commit, and anything deliberately left for the
-human. Silence is appropriate when no noteworthy capability or decision was
-found.
+Finish with the installed integration SHA, feature disposition, checks run,
+scratchpad commit, upstream replacements considered, and anything deliberately
+left for the human. Silence is appropriate when no noteworthy capability or
+decision was found.

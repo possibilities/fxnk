@@ -13,6 +13,8 @@ or its installer.
   an unbounded transcript.
 - `scripts/install.sh` consumes the published `fork/integration` branch. It
   must not rebase, push, inspect PRs, or decide which patches should be carried.
+- Upstream pull requests are historical references only. Maintenance may read
+  them for evidence, but must not update their branches or mutate the requests.
 
 The checkout being maintained is `~/src/fx`, with `fork` pointing to
 `possibilities/fx` and `origin` pointing to `vercel-labs/fx`. Its
@@ -22,9 +24,10 @@ The checkout being maintained is `~/src/fx`, with `fork` pointing to
 ## Working topology
 
 Work directly on `main` in this repository. Outside this repository, create a
-dedicated worktree and branch, commit the finished change, merge it into the
-target repository's `main` or integration branch as appropriate, and remove
-the worktree after the merge. Never do feature work in the bound Fx checkout.
+dedicated worktree and carry branch, commit the finished change, merge it into
+the target repository's `main` or integration branch as appropriate, and remove
+the worktree after the merge. Never do feature work in the bound Fx checkout or
+push a carry branch onto a historical upstream PR branch.
 
 Keep Fx's rerere support enabled. A recorded resolution is evidence, not proof:
 after upstream changes, reread the affected behavior before accepting it.

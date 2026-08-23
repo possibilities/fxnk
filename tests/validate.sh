@@ -45,5 +45,11 @@ grep -F 'SCRATCHPAD.md' skills/maintain/SKILL.md >/dev/null \
     || fail "maintain skill does not maintain current state"
 grep -F -- '--force-with-lease' skills/maintain/SKILL.md >/dev/null \
     || fail "maintain skill does not protect integration publication"
+grep -F 'push the exact candidate commit' skills/maintain/SKILL.md >/dev/null \
+    || fail "maintain skill does not gate an unpublished integration candidate"
+grep -F 'independent adversarial review' skills/maintain/SKILL.md >/dev/null \
+    || fail "maintain skill does not require substantial-work review"
+grep -F 'otherwise mutate the requests' skills/maintain/SKILL.md >/dev/null \
+    || fail "maintain skill does not protect historical upstream requests"
 
 printf 'fxnk validation passed.\n'
