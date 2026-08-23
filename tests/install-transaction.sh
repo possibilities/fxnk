@@ -15,7 +15,10 @@ fail() {
 
 test_root=$(mktemp -d "${TMPDIR:-/tmp}/fxnk-transaction-test.XXXXXX")
 cleanup_test() {
+    local status=$?
+    trap - EXIT
     rm -rf -- "$test_root"
+    exit "$status"
 }
 trap cleanup_test EXIT
 

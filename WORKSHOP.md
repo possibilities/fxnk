@@ -14,13 +14,23 @@ repo-local `maintain` skill owns that operating procedure.
 
 ## Branch model
 
+- `main` is an exact mirror of current `vercel-labs/fx:main`, both locally and
+  on the fork. It is never an integration base with downstream-only commits.
 - `integration` contains every feature installed locally. It is the only branch
   the installer consumes.
-- Each carried feature may use a local carry branch while being developed or
-  repaired. Integration owns the installed commits; carry branches are never
-  install sources.
+- Each carried feature has a stable moving `carry/<feature>` branch. Carry
+  branches are published to the fork for visibility, but integration owns the
+  installed composition and carry branches are never install sources.
 - Existing upstream pull requests and issues are historical references. Their
   branches are not maintained, and maintenance never relies on upstream action.
+  The exact head of a currently open pull request remains frozen under its
+  existing name only while that request is open. Carry branches never track or
+  push to those names, even when they contain related commits.
+- `/maintain` owns the complete fork branch namespace. Any branch other than
+  `main`, `integration`, a current `carry/*`, or a currently open pull-request
+  head is atomically moved at the same commit to `DELETEME/<original-name>`.
+  Existing `DELETEME/*` branches are permanent quarantine: maintenance reports
+  them but never removes them automatically.
 - An upstream implementation replaces a carried patch only after its behavior
   is verified against this inventory.
 - Reuse recorded rerere resolutions when they remain semantically correct.

@@ -13,8 +13,12 @@ or its installer.
   an unbounded transcript.
 - `scripts/install.sh` consumes the published `fork/integration` branch. It
   must not rebase, push, inspect PRs, or decide which patches should be carried.
+- `scripts/reconcile-branches.sh` owns fork branch publication and quarantine.
+  It mirrors `main`, publishes `carry/*`, preserves exact open-PR heads, and
+  moves every other non-quarantine fork branch to `DELETEME/<original>`.
 - Upstream pull requests are historical references only. Maintenance may read
   them for evidence, but must not update their branches or mutate the requests.
+  Only the exact heads of currently open requests retain their original names.
 
 The checkout being maintained is `~/src/fx`, with `fork` pointing to
 `possibilities/fx` and `origin` pointing to `vercel-labs/fx`. Its
@@ -28,6 +32,11 @@ dedicated worktree and carry branch, commit the finished change, merge it into
 the target repository's `main` or integration branch as appropriate, and remove
 the worktree after the merge. Never do feature work in the bound Fx checkout or
 push a carry branch onto a historical upstream PR branch.
+
+Maintenance owns the complete fork branch namespace. It must preserve unknown
+work by moving it to `DELETEME/<original>` at the same commit, never by deleting
+it. Existing `DELETEME/*` branches are permanent quarantine and are not removed
+automatically.
 
 Keep Fx's rerere support enabled. A recorded resolution is evidence, not proof:
 after upstream changes, reread the affected behavior before accepting it.

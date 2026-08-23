@@ -12,11 +12,20 @@ fail() {
 
 bash -n scripts/install.sh
 bash -n scripts/ship-gate.sh
+bash -n scripts/reconcile-branches.sh
 bash -n tests/install-transaction.sh
+bash -n tests/branch-policy.sh
+bash -n tests/fixtures/race-git.sh
 [ -x scripts/install.sh ] || fail "scripts/install.sh is not executable"
 [ -x scripts/ship-gate.sh ] || fail "scripts/ship-gate.sh is not executable"
+[ -x scripts/reconcile-branches.sh ] \
+    || fail "scripts/reconcile-branches.sh is not executable"
 [ -x tests/install-transaction.sh ] \
     || fail "tests/install-transaction.sh is not executable"
+[ -x tests/branch-policy.sh ] \
+    || fail "tests/branch-policy.sh is not executable"
+[ -x tests/fixtures/race-git.sh ] \
+    || fail "tests/fixtures/race-git.sh is not executable"
 [ "$(readlink CLAUDE.md)" = AGENTS.md ] || fail "CLAUDE.md must link to AGENTS.md"
 
 plan=$(scripts/install.sh --check)
@@ -48,6 +57,15 @@ grep -F "jq '.auto_upgrade = false'" scripts/install.sh >/dev/null \
 if grep -Eq 'git .*rebase|push .*force' scripts/install.sh; then
     fail "installer contains maintenance behavior"
 fi
+
+grep -F 'DELETEME/' scripts/reconcile-branches.sh >/dev/null \
+    || fail "branch reconciliation does not quarantine stale heads"
+grep -F -- '--force-with-lease' scripts/reconcile-branches.sh >/dev/null \
+    || fail "branch reconciliation does not use exact ref leases"
+grep -F -- '--atomic' scripts/reconcile-branches.sh >/dev/null \
+    || fail "branch reconciliation does not use atomic pushes"
+grep -F 'open pull-request heads' scripts/reconcile-branches.sh >/dev/null \
+    || fail "branch reconciliation does not inventory open PR heads"
 
 grep -F 'name: maintain' skills/maintain/SKILL.md >/dev/null \
     || fail "maintain skill name is missing"
@@ -104,6 +122,7 @@ if grep -F 'agentwiki' skills/maintain/SKILL.md >/dev/null; then
     fail "maintain skill depends on an external wiki policy"
 fi
 
+tests/branch-policy.sh
 tests/install-transaction.sh
 
 printf 'fxnk validation passed.\n'

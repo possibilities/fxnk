@@ -19,8 +19,14 @@ rules.
 
 - `~/src/fx` is the bound checkout. `origin` is `vercel-labs/fx`; `fork` is
   `possibilities/fx`; rerere stays enabled.
+- Local `main` pulls from `origin/main`, pushes to `fork/main`, and is kept at
+  the exact upstream commit. `fork/main` is the same exact mirror and never
+  contains downstream-only work.
 - `fork/integration` is the sole published install source. It contains every
   required behavior together, but it is never a feature-development branch.
+- Every maintained feature branch is a stable moving `carry/<feature>` ref and
+  is published to the matching name on `fork`. A carry branch tracks only that
+  fork ref; never point it at a historical pull-request branch.
 - Each cycle constructs a new integration candidate on current `origin/main`
   and composes the accepted carry heads onto it. The resulting lease-protected
   rewrite is expected; never merge upstream into the old published branch or
@@ -30,7 +36,18 @@ rules.
   reviewed carry heads into a scratch integration worktree.
 - Historical pull requests, issues, and their branches are evidence only.
   Never use them as live dependencies, publication targets, or work queues;
-  never update or otherwise mutate them during maintenance.
+  never update or otherwise mutate them during maintenance. Preserve the exact
+  existing fork branch for a pull request only while GitHub reports that request
+  open. Closed request heads receive no special treatment.
+- The only live fork heads are `main`, `integration`, current `carry/*` heads,
+  and exact heads of currently open upstream pull requests. Atomically move
+  every other head at the same commit to `DELETEME/<original-name>`. Never
+  delete a quarantine head, reuse its name for different content, or remove an
+  existing `DELETEME/*` head automatically; a collision is a hard refusal.
+- `scripts/reconcile-branches.sh` is the deterministic owner of this branch
+  policy. Its exact-SHA leases and atomic pushes are required; do not reproduce
+  its mutation logic by hand. `--check` is read-only and `--apply` is authorized
+  by `/maintain` after its plan has been inspected.
 - Keep the previously published integration ref and installed binary intact
   while working. A failed rebase, build, test, review, CI run, or ship gate
   publishes and installs nothing.
@@ -62,11 +79,24 @@ rules.
 
    Retain that exact value for the entire cycle; do not recompute it after a
    fetch or immediately before publication.
-3. Fetch both remotes. Compare upstream and integration with the last completed
+3. Reconcile the existing branch inventory before feature work. Inspect the
+   complete plan, then apply it:
+
+   ```sh
+   ~/code/fxnk/scripts/reconcile-branches.sh --check
+   ~/code/fxnk/scripts/reconcile-branches.sh --apply
+   ```
+
+   This fast-forwards local and fork `main`, publishes the current carry heads,
+   freezes only open-PR heads, quarantines every other fork head, and repairs
+   local carry tracking so an ordinary carry push cannot target a PR branch.
+   Stop on any divergence, missing or moved PR head, carry outside integration,
+   quarantine collision, lease failure, or unexpected remote identity.
+4. Fetch both remotes. Compare upstream and integration with the last completed
    baseline in the scratchpad. Read every upstream commit in that interval,
    grouping related changes before deciding whether they affect a carried
    feature.
-4. For each carried feature, inspect current upstream code and any historical
+5. For each carried feature, inspect current upstream code and any historical
    upstream reference in the scratchpad for a possible replacement or
    interaction. These references are evidence only: do not rebase or push their
    branches, or comment on, label, close, edit, or otherwise mutate the requests.
@@ -151,6 +181,21 @@ receipts:
 ~/code/fxnk/scripts/install.sh --install
 ```
 
+After installation, inspect and apply branch reconciliation once more. This
+publishes the final carry heads, preserves the newly installed integration,
+quarantines the temporary candidate branch, refreshes the main mirror, and
+proves the fork has no unexplained live heads:
+
+```sh
+~/code/fxnk/scripts/reconcile-branches.sh --check
+~/code/fxnk/scripts/reconcile-branches.sh --apply
+~/code/fxnk/scripts/reconcile-branches.sh --check
+```
+
+The final check should report only the core refs, current carries, exact open-PR
+heads, and permanent quarantine. Do not hand-delete a candidate or any other
+branch after the cycle.
+
 If rebase, validation, or publication fails, leave the previous integration
 branch and installed binary in place. Report the exact failed gate and retain a
 useful worktree when it is needed for follow-up.
@@ -166,7 +211,9 @@ Update `SCRATCHPAD.md` during the cycle, not as an afterthought:
 - keep noteworthy upstream replacement opportunities without tracking PR
   review health or implying that the Workshop maintains those requests;
 - retain rerere or conflict context only while it can change a later decision;
-- remove superseded state and append one compact dated history entry.
+- remove superseded state and append one compact dated history entry;
+- record the final branch reconciliation and any candidate's quarantine name;
+  do not list every permanent quarantine head unless one affects maintenance.
 
 Do not duplicate the workshop's feature specification, paste command logs, or
 store secrets. Commit and push scratchpad changes on fxnk `main` after the fork
