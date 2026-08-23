@@ -1,32 +1,48 @@
-This repo is a workshop for delivering and maintaining our own fork of `fx` for local use. We want to do wild experiments while keeping up with upstream `fx`. This repo is also our home base for contributing PRs to the project as desired, but it also helps us maintain features that we aren't trying to deliver upstream.
+# Fx fork workshop
 
-Installing fx via the install script in this repo gets you our patched fx on your system path.
+This repository delivers and maintains our local fork of
+[`vercel-labs/fx`](https://github.com/vercel-labs/fx). It is a place for
+experiments that may become upstream contributions and for features that we
+choose to carry locally while continuing to follow upstream.
 
-Running "/maintain" will do the work of reading this document and maintaining the project:
-- Keeps a scratch document SCRATCHPAD.md to keep track of history and other info needed to maintain the project over time, every time the skill is run it will add, update, or remove from the pad.
-- Looks at all of the commits since last maintenance looking for opportunities to update or retire our patches.
-- Rebases our fork on upstream main, handling merge conflicts, etc as much as possible
-- Walks the features section below ensuring that each item is in place and implemented in some way
-- Checks PRs for progress or attention needed
-- Sends notifications for interesting new features/capabilities found in codebase
-- When big changes happen upstream assess if human input is needed, if not do the work to ensure we are caught up, rebased, etc
+Run `scripts/install.sh --install` to build the published `fork/integration`
+branch from `~/src/fx` and install it on the system path. Installation consumes
+the published branch; it does not rebase or otherwise maintain the fork.
+
+Run `/maintain` from this repository to perform a maintenance cycle. The
+repo-local `maintain` skill owns that operating procedure.
+
+## Branch model
+
+- `integration` contains every feature installed locally. It is the only branch
+  the installer consumes.
+- A patch offered upstream lives on its own PR branch. Its review history can
+  move independently from the local integration implementation.
+- Local-only feature branches are allowed when the best integration patch and
+  the best upstream contribution need different shapes.
+- Reuse recorded rerere resolutions when they remain semantically correct.
 
 ## Features
 
-### System prompt features
+### System prompts
 
-- Support --append-system-prompt-file and --system-prompt-file for replacing and appending the system prompt
+- Support `--append-system-prompt-file` and `--system-prompt-file` for appending
+  to and replacing the system prompt.
 
-### Effort related features
+### Effort
 
-- Support FX_EFFORT and --effort parity with FX_MODEL and --model features.
-- Support effort list as part of the model catalog. It should be rendered in relavent places like `fx model --json` so that e.g. an ADE can present a list of possible models and efforts per provider.
+- Support `FX_EFFORT` and `--effort` with parity to `FX_MODEL` and `--model`.
+- Include supported efforts in the model catalog and structured surfaces such
+  as `fx model --json`, so an ADE can present valid models and efforts for each
+  provider.
 
 ### External editor support
 
-- Support the common Ctrl+G keybind to open fx in $EDITOR. We will need to override and rehome the fx default Ctrl+G functionality to antoher keybind.
+- Support the common `Ctrl+G` binding to open the composer in `$EDITOR`, moving
+  Fx's existing `Ctrl+G` behavior to another binding.
 
-### General
+### Scope
 
-- All features need to support only the codex provider today. If a feature can easily work for all providers it should but we should focus on a perfect codex experience for now.
-- As needed we can create PR specific branches and local feature branches so that e.g. we can make a feature easier to integrate locally in one branch and then a nearly identical branch for the equivilent upstream branch that can be rebased and altered based on feedback separately from the local one, etc. The `integration` branch is where all work must be merged that will be installed locally. We should record rerere resolutions where needed to make rebasing the same work easier over time.
+- Features only need a complete Codex-provider experience today. Supporting
+  every provider is welcome when it is straightforward, but must not dilute
+  the Codex path.

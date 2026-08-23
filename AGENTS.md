@@ -1,0 +1,46 @@
+# fxnk agent guidance
+
+This repository owns delivery and maintenance of the operator's local Fx fork.
+Read `CONTEXT.md`, `WORKSHOP.md`, and `SCRATCHPAD.md` before changing the fork
+or its installer.
+
+## Ownership
+
+- `WORKSHOP.md` is the project specification: purpose, branch model, and the
+  feature inventory that must remain true.
+- `skills/maintain/SKILL.md` is the operating procedure for `/maintain`.
+- `SCRATCHPAD.md` is current maintenance state, not a second specification or
+  an unbounded transcript.
+- `scripts/install.sh` consumes the published `fork/integration` branch. It
+  must not rebase, push, inspect PRs, or decide which patches should be carried.
+
+The checkout being maintained is `~/src/fx`, with `fork` pointing to
+`possibilities/fx` and `origin` pointing to `vercel-labs/fx`. Its
+`integration` branch is the only install source. Read that checkout's
+`AGENTS.md` completely before modifying or validating Fx.
+
+## Working topology
+
+Work directly on `main` in this repository. Outside this repository, create a
+dedicated worktree and branch, commit the finished change, merge it into the
+target repository's `main` or integration branch as appropriate, and remove
+the worktree after the merge. Never do feature work in the bound Fx checkout.
+
+Keep Fx's rerere support enabled. A recorded resolution is evidence, not proof:
+after upstream changes, reread the affected behavior before accepting it.
+
+## Validation
+
+Run:
+
+```sh
+tests/validate.sh
+```
+
+Installer changes also require an isolated real install using temporary binary,
+state, and settings paths, followed by execution of the built binary. Fx feature
+work follows every build, focused-test, Full CI, and real-binary requirement in
+`~/src/fx/AGENTS.md`.
+
+Finished work lands on `main` and is pushed. Never edit the installed Fx binary
+or live receipts by hand; rerun the installer.
