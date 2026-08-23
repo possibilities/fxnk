@@ -57,7 +57,9 @@ fi
 
 [ "$(uname -s)" = Darwin ] || die "macOS is required"
 [ "$(id -u)" -ne 0 ] || die "run as the target user, not root"
-[ -n "$zig_bin" ] && [ -x "$zig_bin" ] || die "zig is required"
+if [ -z "$zig_bin" ] || [ ! -x "$zig_bin" ]; then
+    die "zig is required"
+fi
 command -v git >/dev/null 2>&1 || die "git is required"
 command -v jq >/dev/null 2>&1 || die "jq is required"
 command -v shasum >/dev/null 2>&1 || die "shasum is required"
