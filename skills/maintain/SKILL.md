@@ -45,8 +45,11 @@ rules.
    repository. Read `~/src/fx/AGENTS.md` completely before touching Fx.
 2. Confirm fxnk is clean on `main`. Confirm `~/src/fx` is clean, its `fork`
    remote is `possibilities/fx`, its `origin` is `vercel-labs/fx`, rerere is
-   enabled, and the published install branch is `integration`. Before fetching,
-   capture and validate its exact remote tip for the later publication lease:
+   enabled, and the published install branch is `integration`. Inventory
+   `git worktree list --porcelain` before creating cycle worktrees; distinguish
+   the bound checkout, unrelated active worktrees, and worktrees owned by this
+   cycle so cleanup cannot cross those boundaries. Before fetching, capture and
+   validate the exact remote tip for the later publication lease:
 
    ```sh
    starting_integration_sha=$(
@@ -182,5 +185,9 @@ terminal-notifier -title "Fx Maintenance" -message "<concise outcome>" \
 
 Finish with the installed integration SHA, feature disposition, checks run,
 scratchpad commit, upstream replacements considered, and anything deliberately
-left for the human. Silence is appropriate when no noteworthy capability or
-decision was found.
+left for the human. After successful installation and scratchpad publication,
+confirm no live process uses a cycle-owned worktree, then remove only the clean
+worktrees created by this cycle. Keep their local carry branches and exact
+commits available for the next reconciliation; never remove unrelated or
+pre-existing worktrees in passing. Silence is appropriate when no noteworthy
+capability or decision was found.
