@@ -65,11 +65,11 @@ Also run focused tests for every changed feature and exercise each changed happy
 path with that worktree's freshly built `./zig-out/bin/fx`. A PR branch is not
 ready until its exact-commit Full CI and ship gate satisfy `~/src/fx/AGENTS.md`.
 
-After the integration candidate passes, push it with the lease, fast-forward
-the bound checkout to the published tip, and run:
+After the integration candidate passes, push it with the lease and invoke the
+fxnk installer, which fast-forwards the bound checkout to that published tip:
 
 ```sh
-scripts/install.sh --install
+~/code/fxnk/scripts/install.sh --install
 ```
 
 If rebase, validation, or publication fails, leave the previous integration
