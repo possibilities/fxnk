@@ -9,7 +9,8 @@ entries on every maintenance cycle and appends one compact history entry.
 - Upstream base: `04e0ae0b2076ccabb3c972351f5f0fbf2f67cc93`
 - Published and installed integration:
   `87fcac544d2f2ec576c099e4a794e3fa4e80b3bf`
-- Candidate ref: `fork/maintain/candidate-20260823-1`
+- Candidate quarantine ref:
+  `fork/DELETEME/maintain/candidate-20260823-1`
 - Full CI: run `32618954329`; all 20 matrix jobs and all four
   `Full suite (...)` aggregates passed for the published commit.
 - Ship gate: `SHIP 87fcac544d2f2ec576c099e4a794e3fa4e80b3bf`
@@ -52,6 +53,14 @@ entries on every maintenance cycle and appends one compact history entry.
 
 ## Current notes
 
+- Fork branches were reconciled on 2026-08-23: local, origin, and fork `main`
+  all name `04e0ae0b2076ccabb3c972351f5f0fbf2f67cc93`; all five carry heads are
+  published under matching `fork/carry/*` names; open PR heads #242, #244,
+  #320, and #323 remain frozen under their existing names; and 134 other heads
+  were preserved at the same commits under `DELETEME/*`. No branch remains
+  pending quarantine.
+- Local `main` pulls from `origin/main` and pushes to `fork/main`. Every local
+  carry branch tracks and pushes only its matching `fork/carry/*` ref.
 - All six completed `fxnk-*` feature and integration worktrees were removed
   after publication and live installation. The local carry branches and exact
   commits remain available for the next reconciliation.
