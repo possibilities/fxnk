@@ -40,13 +40,18 @@ shipping it.
   the fork. Never an integration base with downstream-only commits.
 - Integration branch: `integration`, containing every carried feature together.
   It is the only branch the installer consumes and never a feature-development
-  branch.
+  branch. A maintenance cycle publishes its locally proved composition once,
+  before the slow Full CI wait. Other agents may branch from that exact
+  published commit while the owning cycle monitors it, but they do not advance
+  `integration` until that cycle finishes its gate.
 - Composition: carry heads. Each carried feature has a stable moving
   `carry/<feature>` branch, published to the fork for visibility, developed or
   repaired in its own worktree on current `origin/main`, and composed — only
-  its committed, reviewed head — into a scratch integration candidate in
-  dependency order. Carry branches are never install sources and never track or
-  push to a pull-request branch, even when they contain related commits.
+  its committed, reviewed head — into a clean integration worktree in
+  dependency order. The resulting commit is published directly to
+  `integration` with an exact force-with-lease after the focused local gate.
+  Carry branches are never install sources and never track or push to a
+  pull-request branch, even when they contain related commits.
 - Quarantine prefix: `DELETEME/`. Any fork head other than `main`,
   `integration`, a current `carry/*`, or a preserved open-request head is moved
   at the same commit to `DELETEME/<original-name>`. Existing `DELETEME/*`
@@ -83,6 +88,26 @@ shipping it.
   as `fx models --json`, so an ADE can present valid models and efforts for each
   provider.
 
+### ADE event feed
+
+- Provide the opt-in schema `1` ADE event feed documented in
+  `docs/ade-event-feed.md`. An ADE binds a shared POSIX Unix socket and launches
+  each interactive Fx TUI with both `FX_ADE_SOCKET_PATH` and its own opaque
+  `FX_ADE_INSTANCE_ID`; Fx returns that identity unchanged on every record.
+- Publish `FxStarted`, `SessionChanged`, `PromptQueued`, `TurnStarted`,
+  `PreToolUse`, `Stop`, `PostTurnEnd`, `AttentionRequired`, and `FxStopped` as
+  newline-delimited JSON. Delivery remains passive, asynchronous, bounded,
+  ordered per process, and best-effort, so an absent or slow ADE cannot block
+  agent work or shutdown.
+- Install the feed only in the interactive TUI. `fx ask` and `fx acp` publish
+  nothing. Do not filter in-process subagents: every main-agent and subagent
+  lifecycle record carries its own session identity, child records also carry
+  the parent main-session identity, and all records retain the ADE instance
+  identity.
+- Keep the ADE feed independent of the existing Herdr integration. Enabling one
+  must not enable, disable, filter, or otherwise change the behavior of the
+  other.
+
 ### External editor support
 
 - Support the common `Ctrl+G` binding to open the composer in `$EDITOR`, moving
@@ -103,38 +128,49 @@ shipping it.
 
 ## Gate
 
-From the candidate worktree, following current Fx guidance:
+From each changed carry worktree and the composed integration worktree, follow
+the focused local part of current Fx guidance:
 
 ```sh
 zig fmt --check src/
 ./scripts/check-public-surface.sh
 zig build -Doptimize=ReleaseSafe
-fx_zdotdir=$(mktemp -d)
-ZDOTDIR="$fx_zdotdir" zig build test -Doptimize=ReleaseSafe
-rmdir "$fx_zdotdir"
 ```
 
 Also run focused tests for every changed feature and exercise each changed
 happy path with that worktree's freshly built `./zig-out/bin/fx`.
 
-External proof is required before publication: push the exact candidate
-commit to a newly named temporary branch on `possibilities/fx`, require Full
-CI for that SHA under `~/src/fx/AGENTS.md`, and run the project-owned ship
-gate, which re-reads the remote candidate, refreshes current upstream, and
-prints `SHIP <sha>` only when the local worktree, remote candidate, upstream
-ancestry, workflow run, and all four `Full suite (...)` aggregates agree on
-the exact commit:
+Do not run the complete slow Zig suite or deterministic E2E suite locally as a
+maintenance gate. After the focused proofs pass, refresh `origin/main` and
+`fork/integration`, compose the final commit, and publish it once to
+`fork/integration` with an exact force-with-lease against the integration tip
+captured before composition. Publication makes the commit available as the
+base for subsequent feature work, but does not authorize installation or
+completion of the maintenance cycle.
+
+The integration push starts Full CI. Hand that exact SHA to a standing monitor
+and stop occupying the feature-development loop while the slow suite runs.
+The monitor owns reruns and repair-forward work for real failures and does not
+finish until the exact-SHA run satisfies current `~/src/fx/AGENTS.md` guidance
+and all four `Full suite (...)` aggregates pass. A stale, superseded, partial,
+cancelled, skipped, or failed run is not proof.
+
+After Full CI succeeds, run the project-owned ship gate. It re-reads the remote
+integration branch, refreshes current upstream, and prints `SHIP <sha>` only
+when the local worktree, published integration commit, upstream ancestry,
+workflow run, and all four aggregates agree on the exact commit:
 
 ```sh
 ~/code/fxnk/scripts/ship-gate.sh \
-  --worktree "$candidate_worktree" \
-  --candidate "$candidate_branch" \
-  --sha "$candidate_sha"
+  --worktree "$integration_worktree" \
+  --branch integration \
+  --sha "$integration_sha"
 ```
 
 ## Consumer
 
-The installer. After the leased push of `integration`, run:
+The installer. Only after the ship gate passes for the still-published
+integration SHA, run:
 
 ```sh
 ~/code/fxnk/scripts/install.sh --install

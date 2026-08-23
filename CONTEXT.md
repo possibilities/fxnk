@@ -43,3 +43,9 @@ _Avoid_: update, install.
 **Installer** — `scripts/install.sh`, which only converges the published
 integration branch into a ReleaseSafe binary on the system path.
 _Avoid_: maintainer, updater.
+
+**ADE event feed** — Fx's opt-in, versioned, best-effort NDJSON lifecycle
+stream from an interactive TUI and its in-process agents to an ADE-owned Unix
+socket. The ADE supplies the socket and an opaque instance identity; Fx
+supplies agent and session context without presentation policy.
+_Avoid_: Herdr feed, control socket, ask feed.

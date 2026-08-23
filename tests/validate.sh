@@ -105,11 +105,32 @@ grep -F 'Full suite (macos-aarch64)' scripts/ship-gate.sh >/dev/null \
     || fail "ship gate does not require the macOS aarch64 aggregate"
 grep -F 'merge-base --is-ancestor' scripts/ship-gate.sh >/dev/null \
     || fail "ship gate does not require current upstream ancestry"
+gate_test_sha=0000000000000000000000000000000000000000
+set +e
+integration_gate_output=$(scripts/ship-gate.sh \
+    --worktree "$root/does-not-exist" \
+    --branch integration \
+    --sha "$gate_test_sha" 2>&1)
+integration_gate_status=$?
+main_gate_output=$(scripts/ship-gate.sh \
+    --worktree "$root/does-not-exist" \
+    --branch main \
+    --sha "$gate_test_sha" 2>&1)
+main_gate_status=$?
+set -e
+[ "$integration_gate_status" -ne 0 ] \
+    || fail "ship gate unexpectedly accepted a missing integration worktree"
+printf '%s\n' "$integration_gate_output" | grep -F 'is not a git worktree' >/dev/null \
+    || fail "ship gate does not accept integration as a published branch"
+[ "$main_gate_status" -ne 0 ] \
+    || fail "ship gate accepted the upstream main mirror"
+printf '%s\n' "$main_gate_output" | grep -F 'must not be the upstream mirror' >/dev/null \
+    || fail "ship gate does not reject the upstream main mirror"
 final_gate_tail=$(tail -n 10 scripts/ship-gate.sh)
-printf '%s\n' "$final_gate_tail" | grep -F 'verify_local_candidate' >/dev/null \
+printf '%s\n' "$final_gate_tail" | grep -F 'verify_local_branch' >/dev/null \
     || fail "ship gate does not recheck local state immediately before SHIP"
-printf '%s\n' "$final_gate_tail" | grep -F 'remote_candidate_sha' >/dev/null \
-    || fail "ship gate does not recheck the remote candidate immediately before SHIP"
+printf '%s\n' "$final_gate_tail" | grep -F 'remote_branch_sha' >/dev/null \
+    || fail "ship gate does not recheck the remote branch immediately before SHIP"
 
 tests/install-transaction.sh
 
