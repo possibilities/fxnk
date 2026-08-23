@@ -19,18 +19,17 @@ shipping it.
 
 - Bound checkout: `~/src/fx`. `origin` is `vercel-labs/fx`; `fork` is
   `possibilities/fx`. Read `~/src/fx/AGENTS.md` completely before touching Fx.
-- Rerere is enabled and relied on: recorded resolutions are reused when they
-  remain semantically correct, and rechecked after upstream changes.
 - Contribution conventions: high volume; every pull request needs one `type:`
   label, a Full CI matrix (Linux and macOS, x86_64 and arm64) with four
   `Full suite (...)` aggregates, changelog rules, and `CONTRIBUTING.md`.
   Landing is uncertain — our requests have stayed open for weeks, and one need
   was satisfied by someone else's merge — so nothing here waits on upstream.
 - What we offer: whole features, shaped like upstream, when the shape is
-  clear; we do not chase them. Existing pull requests and issues are
-  historical references only. Their branches are not maintained, maintenance
-  never relies on upstream action, and `watch-requests` tends the open ones
-  separately.
+  clear; we do not chase them. The existing pull requests (#242, #244, #320,
+  #323) and issues are historical references only — their branches are not
+  maintained, nobody tends them, and maintenance never relies on upstream
+  action. Reviving one would be a deliberate act outside the cycle, never a
+  side effect of it.
 - "Landed" means merged into `vercel-labs/fx:main` and verified against the
   inventory below by reading the code and exercising its path. A carried patch
   is retired only then.
@@ -55,6 +54,9 @@ shipping it.
 - Open pull-request heads: preserved. The exact head of a currently open
   request from the fork keeps its name only while the request is open; a
   closed request's head receives no special treatment.
+- Rerere: relied on. The bound checkout keeps it enabled; a recorded
+  resolution is reused when it remains semantically correct and rechecked
+  after upstream changes.
 - `scripts/reconcile-branches.sh` is this repository's entrypoint to the
   shared namespace script; it declares these values and nothing else.
 
