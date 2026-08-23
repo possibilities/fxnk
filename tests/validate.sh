@@ -12,8 +12,11 @@ fail() {
 
 bash -n scripts/install.sh
 bash -n scripts/ship-gate.sh
+bash -n tests/install-transaction.sh
 [ -x scripts/install.sh ] || fail "scripts/install.sh is not executable"
 [ -x scripts/ship-gate.sh ] || fail "scripts/ship-gate.sh is not executable"
+[ -x tests/install-transaction.sh ] \
+    || fail "tests/install-transaction.sh is not executable"
 [ "$(readlink CLAUDE.md)" = AGENTS.md ] || fail "CLAUDE.md must link to AGENTS.md"
 
 plan=$(scripts/install.sh --check)
@@ -26,9 +29,18 @@ for required in \
         || fail "installer plan is missing: $required"
 done
 
-# shellcheck disable=SC2016 # Match the installer's literal branch expression.
-grep -F 'merge --quiet --ff-only "fork/$fx_branch"' scripts/install.sh >/dev/null \
-    || fail "installer does not fast-forward only to published integration"
+# shellcheck disable=SC2016 # Match the installer's literal branch expressions.
+grep -F 'local_integration_sha=$(git -C "$fx_checkout" rev-parse' scripts/install.sh >/dev/null \
+    || fail "installer does not remember the local integration tip"
+# shellcheck disable=SC2016 # Match the installer's literal branch expressions.
+grep -F '[ "$local_integration_sha" = "$installed_before_fetch" ]' scripts/install.sh >/dev/null \
+    || fail "installer does not accept the installed commit receipt"
+# shellcheck disable=SC2016 # Match the installer's literal branch expressions.
+grep -F 'worktree add --quiet --detach' scripts/install.sh >/dev/null \
+    || fail "installer does not build the published tip in a detached worktree"
+# shellcheck disable=SC2016 # Match the installer's literal branch expressions.
+grep -F 'branch --quiet --force' scripts/install.sh >/dev/null \
+    || fail "installer does not align integration to the published tip"
 grep -F 'has unpublished commits' scripts/install.sh >/dev/null \
     || fail "installer does not reject unpublished integration commits"
 grep -F "jq '.auto_upgrade = false'" scripts/install.sh >/dev/null \
@@ -91,5 +103,7 @@ printf '%s\n' "$final_gate_tail" | grep -F 'remote_candidate_sha' >/dev/null \
 if grep -F 'agentwiki' skills/maintain/SKILL.md >/dev/null; then
     fail "maintain skill depends on an external wiki policy"
 fi
+
+tests/install-transaction.sh
 
 printf 'fxnk validation passed.\n'

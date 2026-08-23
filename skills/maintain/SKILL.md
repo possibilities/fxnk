@@ -21,6 +21,10 @@ rules.
   `possibilities/fx`; rerere stays enabled.
 - `fork/integration` is the sole published install source. It contains every
   required behavior together, but it is never a feature-development branch.
+- Each cycle constructs a new integration candidate on current `origin/main`
+  and composes the accepted carry heads onto it. The resulting lease-protected
+  rewrite is expected; never merge upstream into the old published branch or
+  force-update it in place while reconciling features.
 - A carried feature is built or repaired on a dedicated local carry branch in
   its own worktree, based on current `origin/main`. Compose only committed,
   reviewed carry heads into a scratch integration worktree.
@@ -81,10 +85,12 @@ rules.
 - For a substantial feature repair, conflict resolution, or cross-cutting
   integration, obtain an independent adversarial review when another agent is
   available. Repair every concrete finding or record why it does not apply.
-- Rebase integration in a scratch worktree onto current `origin/main`. Resolve
-  conflicts and compose the reviewed carry heads there. Repair or add a feature
-  on its carry branch, not directly on integration. Never leave the bound
-  checkout mid-rebase.
+- Start the scratch integration candidate at current `origin/main`, then
+  compose the reviewed carry heads there in dependency order. Rebase or repair
+  a carry branch in its own worktree when upstream movement requires it; do not
+  merge upstream into the previously published integration history. Repair or
+  add a feature on its carry branch, not directly on integration. Never leave
+  the bound checkout mid-rebase.
 - Preserve the old published integration ref and installed binary until the new
   candidate passes its gate. Publish only with an exact `--force-with-lease`
   against the previously observed `fork/integration` tip.
@@ -132,8 +138,11 @@ git -C "$candidate_worktree" push fork \
 ```
 
 After the integration candidate passes and the leased push succeeds, invoke
-the fxnk installer, which fast-forwards the bound checkout to that published
-tip:
+the fxnk installer. It proves any existing local integration tip from the
+installed commit receipt (or the pre-fetch remote-tracking ref on a first
+install), builds the published commit in a detached temporary worktree, and
+only then rebinds the clean checkout and atomically replaces the binary and
+receipts:
 
 ```sh
 ~/code/fxnk/scripts/install.sh --install

@@ -45,5 +45,8 @@ state, and settings paths, followed by execution of the built binary. Fx feature
 work follows every build, focused-test, Full CI, and real-binary requirement in
 `~/src/fx/AGENTS.md`.
 
-Finished work lands on `main` and is pushed. Never edit the installed Fx binary
-or live receipts by hand; rerun the installer.
+Finished work lands on `main` and is pushed. The installer may rebind a clean
+local integration branch only after proving it still equals the installed
+commit receipt or the pre-fetch remote-tracking tip. It builds a detached
+published candidate before changing the bound checkout. Never edit the
+installed Fx binary or live receipts by hand; rerun the installer.
