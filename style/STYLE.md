@@ -9,7 +9,9 @@ Ground truth is `style/tokens.json`, extracted from the fx source by
 `scripts/style-extract.sh`; the tables here mirror it, and on any conflict
 tokens.json wins. `style/captures/` holds rendered references: swatch sheets
 (`cat style/captures/swatch-dark.ansi` in a dark terminal) and PNG screens of
-the real binary. `MAINTAIN.md` § "Style guide" is the methodology for keeping
+the real binary; `scripts/style-view.sh` opens the interactive viewer —
+sections for roles, an assembled transcript, code, and glyphs, with a
+dark/light toggle. `MAINTAIN.md` § "Style guide" is the methodology for keeping
 all of it current.
 
 ## The design language
@@ -180,6 +182,7 @@ fx's fixed grays. So the rule is not "copy the hex":
 | `style/tokens.json` | machine-readable tokens, keyed by role, with SGR + hex per theme | `scripts/style-extract.sh` |
 | `style/captures/swatch-*.{ansi,txt}` | styled sample sheet of every token | `scripts/style-capture.sh --swatch-only` |
 | `style/captures/fx-welcome-*.{png,txt}` | the real binary's welcome screen, both themes | `scripts/style-capture.sh` |
+| `style/viewer/` | interactive visual guide (OpenTUI, same toolkit as fmx) | `scripts/style-view.sh` to open |
 
 `scripts/style-extract.sh --check` diffs a fresh extraction against the
 committed tokens.json and fails on drift — run it whenever the fx checkout

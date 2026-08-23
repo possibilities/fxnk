@@ -204,12 +204,20 @@ maintenance cycle qualifies, since carried features can touch UI):
    the generated stamp. No drift: done. Drift: run it without `--check`,
    read the diff, and update the tables and prose in `style/STYLE.md` to
    agree — the tables mirror tokens.json and must never contradict it.
-2. After any token drift, regenerate the visual references:
+2. After any token drift, prove the interactive viewer still works:
+   `scripts/style-view.sh` must open, switch all five sections, and toggle
+   themes against the new tokens.json. The viewer (`style/viewer/`, bun +
+   `@opentui/core`) reads tokens.json generically, so most drift needs no
+   code change; a schema change in tokens.json is the exception and must
+   update `style/viewer/index.ts` in the same commit. Keep its
+   `@opentui/core` pin matched to fmx's (`~/code/fmx/package.json`) —
+   rendering with fmx's own toolkit version is the point.
+3. After any token drift, regenerate the visual references:
    `scripts/style-capture.sh` (swatch sheets from tokens.json, plus
    welcome-screen PNGs of the freshly built `~/src/fx/zig-out/bin/fx` in
    both `FX_THEME` values). Commit the changed captures; they are small and
    diffable.
-3. If the extractor itself fails, fx refactored a styling site. Re-derive
+4. If the extractor itself fails, fx refactored a styling site. Re-derive
    the sites with the census greps below, fix the extractor's parsers, and
    reconcile STYLE.md prose against what actually changed.
 

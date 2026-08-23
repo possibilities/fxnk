@@ -1,0 +1,8 @@
+{
+  "name": "fxnk-style-viewer",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@opentui/core": "0.5.6"
+  }
+}
