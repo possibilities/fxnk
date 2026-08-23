@@ -11,7 +11,9 @@ fail() {
 }
 
 bash -n scripts/install.sh
+bash -n scripts/ship-gate.sh
 [ -x scripts/install.sh ] || fail "scripts/install.sh is not executable"
+[ -x scripts/ship-gate.sh ] || fail "scripts/ship-gate.sh is not executable"
 [ "$(readlink CLAUDE.md)" = AGENTS.md ] || fail "CLAUDE.md must link to AGENTS.md"
 
 plan=$(scripts/install.sh --check)
@@ -57,6 +59,35 @@ grep -F 'sole published install source' skills/maintain/SKILL.md >/dev/null \
     || fail "maintain skill does not define the integration branch contract"
 grep -F 'tip observed at the start of the cycle' skills/maintain/SKILL.md >/dev/null \
     || fail "maintain skill does not pin the integration publication lease"
+# shellcheck disable=SC2016 # The capture must retain the runtime variable.
+grep -F 'starting_integration_sha=$(' skills/maintain/SKILL.md >/dev/null \
+    || fail "maintain skill does not capture the starting integration tip"
+grep -F "grep -Eq '^[0-9a-f]{40}$'" skills/maintain/SKILL.md >/dev/null \
+    || fail "maintain skill does not validate the starting integration tip"
+grep -F 'scripts/ship-gate.sh' skills/maintain/SKILL.md >/dev/null \
+    || fail "maintain skill does not provide a concrete final ship gate"
+# shellcheck disable=SC2016 # Match literal Markdown and shell variable text.
+grep -F 'all four `Full suite (...)` aggregates' skills/maintain/SKILL.md >/dev/null \
+    || fail "maintain skill does not require every Full CI aggregate"
+# shellcheck disable=SC2016 # The lease command must retain the runtime variable.
+grep -F -- '--force-with-lease="refs/heads/integration:$starting_integration_sha"' \
+    skills/maintain/SKILL.md >/dev/null \
+    || fail "maintain skill does not provide an exact integration lease command"
+grep -F 'Full suite (linux-x86_64)' scripts/ship-gate.sh >/dev/null \
+    || fail "ship gate does not require the Linux x86_64 aggregate"
+grep -F 'Full suite (linux-aarch64)' scripts/ship-gate.sh >/dev/null \
+    || fail "ship gate does not require the Linux aarch64 aggregate"
+grep -F 'Full suite (macos-x86_64)' scripts/ship-gate.sh >/dev/null \
+    || fail "ship gate does not require the macOS x86_64 aggregate"
+grep -F 'Full suite (macos-aarch64)' scripts/ship-gate.sh >/dev/null \
+    || fail "ship gate does not require the macOS aarch64 aggregate"
+grep -F 'merge-base --is-ancestor' scripts/ship-gate.sh >/dev/null \
+    || fail "ship gate does not require current upstream ancestry"
+final_gate_tail=$(tail -n 10 scripts/ship-gate.sh)
+printf '%s\n' "$final_gate_tail" | grep -F 'verify_local_candidate' >/dev/null \
+    || fail "ship gate does not recheck local state immediately before SHIP"
+printf '%s\n' "$final_gate_tail" | grep -F 'remote_candidate_sha' >/dev/null \
+    || fail "ship gate does not recheck the remote candidate immediately before SHIP"
 if grep -F 'agentwiki' skills/maintain/SKILL.md >/dev/null; then
     fail "maintain skill depends on an external wiki policy"
 fi

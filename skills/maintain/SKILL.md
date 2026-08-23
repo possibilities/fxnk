@@ -41,9 +41,21 @@ rules.
    repository. Read `~/src/fx/AGENTS.md` completely before touching Fx.
 2. Confirm fxnk is clean on `main`. Confirm `~/src/fx` is clean, its `fork`
    remote is `possibilities/fx`, its `origin` is `vercel-labs/fx`, rerere is
-   enabled, and the published install branch is `integration`.
-3. Record the exact starting `fork/integration` tip for the later publication
-   lease. Fetch both remotes. Compare upstream and integration with the last completed
+   enabled, and the published install branch is `integration`. Before fetching,
+   capture and validate its exact remote tip for the later publication lease:
+
+   ```sh
+   starting_integration_sha=$(
+     git -C ~/src/fx ls-remote --exit-code --heads fork \
+       refs/heads/integration | awk 'NR == 1 { print $1 }'
+   ) || exit 1
+   printf '%s\n' "$starting_integration_sha" |
+     grep -Eq '^[0-9a-f]{40}$' || exit 1
+   ```
+
+   Retain that exact value for the entire cycle; do not recompute it after a
+   fetch or immediately before publication.
+3. Fetch both remotes. Compare upstream and integration with the last completed
    baseline in the scratchpad. Read every upstream commit in that interval,
    grouping related changes before deciding whether they affect a carried
    feature.
@@ -97,11 +109,31 @@ Before publishing integration, push the exact candidate commit to a newly named
 temporary branch on `possibilities/fx` without changing `fork/integration` or a
 historical request branch. Require Full CI and the final ship gate for that
 exact SHA under `~/src/fx/AGENTS.md`. A stale, partial, skipped, cancelled, or
-merely local result is not sufficient. Re-read the remote candidate ref before
-publication and require it to resolve to the gated SHA.
+merely local result is not sufficient. Run the project-owned gate; it re-reads
+the remote candidate, refreshes current upstream, and prints `SHIP <sha>` only
+when the local worktree, remote candidate, upstream ancestry, workflow run, and
+all four `Full suite (...)` aggregates agree on the exact commit:
 
-After the integration candidate passes, push it with the lease and invoke the
-fxnk installer, which fast-forwards the bound checkout to that published tip:
+```sh
+~/code/fxnk/scripts/ship-gate.sh \
+  --worktree "$candidate_worktree" \
+  --candidate "$candidate_branch" \
+  --sha "$candidate_sha"
+```
+
+Re-read `fork/integration` immediately before publication, then use the exact
+starting tip recorded before the fetch as the lease value. Publish the gated
+commit, never the ambient branch name:
+
+```sh
+git -C "$candidate_worktree" push fork \
+  "$candidate_sha:refs/heads/integration" \
+  --force-with-lease="refs/heads/integration:$starting_integration_sha"
+```
+
+After the integration candidate passes and the leased push succeeds, invoke
+the fxnk installer, which fast-forwards the bound checkout to that published
+tip:
 
 ```sh
 ~/code/fxnk/scripts/install.sh --install
