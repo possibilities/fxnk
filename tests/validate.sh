@@ -14,18 +14,12 @@ bash -n scripts/install.sh
 bash -n scripts/ship-gate.sh
 bash -n scripts/reconcile-branches.sh
 bash -n tests/install-transaction.sh
-bash -n tests/branch-policy.sh
-bash -n tests/fixtures/race-git.sh
 [ -x scripts/install.sh ] || fail "scripts/install.sh is not executable"
 [ -x scripts/ship-gate.sh ] || fail "scripts/ship-gate.sh is not executable"
 [ -x scripts/reconcile-branches.sh ] \
     || fail "scripts/reconcile-branches.sh is not executable"
 [ -x tests/install-transaction.sh ] \
     || fail "tests/install-transaction.sh is not executable"
-[ -x tests/branch-policy.sh ] \
-    || fail "tests/branch-policy.sh is not executable"
-[ -x tests/fixtures/race-git.sh ] \
-    || fail "tests/fixtures/race-git.sh is not executable"
 [ "$(readlink CLAUDE.md)" = AGENTS.md ] || fail "CLAUDE.md must link to AGENTS.md"
 
 plan=$(scripts/install.sh --check)
@@ -58,51 +52,49 @@ if grep -Eq 'git .*rebase|push .*force' scripts/install.sh; then
     fail "installer contains maintenance behavior"
 fi
 
-grep -F 'DELETEME/' scripts/reconcile-branches.sh >/dev/null \
-    || fail "branch reconciliation does not quarantine stale heads"
-grep -F -- '--force-with-lease' scripts/reconcile-branches.sh >/dev/null \
-    || fail "branch reconciliation does not use exact ref leases"
-grep -F -- '--atomic' scripts/reconcile-branches.sh >/dev/null \
-    || fail "branch reconciliation does not use atomic pushes"
-grep -F 'open pull-request heads' scripts/reconcile-branches.sh >/dev/null \
-    || fail "branch reconciliation does not inventory open PR heads"
+# The spec has every section the shared maintain skill reads by name.
+for section in Purpose Upstream 'Branch model' Features Gate Consumer Notify; do
+    grep -Fx "## $section" MAINTAIN.md >/dev/null \
+        || fail "MAINTAIN.md is missing the section: ## $section"
+done
+grep -F 'scripts/ship-gate.sh' MAINTAIN.md >/dev/null \
+    || fail "the gate does not name the ship gate"
+# shellcheck disable=SC2016 # Match literal Markdown text.
+grep -F 'all four `Full suite (...)` aggregates' MAINTAIN.md >/dev/null \
+    || fail "the gate does not require every Full CI aggregate"
+grep -F 'scripts/install.sh --install' MAINTAIN.md >/dev/null \
+    || fail "the consumer does not name the installer"
+# shellcheck disable=SC2016 # Match literal Markdown text.
+grep -F 'Title: `Fx Maintenance`' MAINTAIN.md >/dev/null \
+    || fail "the notification title is missing"
+if grep -F 'agentwiki' MAINTAIN.md >/dev/null; then
+    fail "the spec depends on an external wiki policy"
+fi
 
-grep -F 'name: maintain' skills/maintain/SKILL.md >/dev/null \
-    || fail "maintain skill name is missing"
-grep -F 'description:' skills/maintain/SKILL.md >/dev/null \
-    || fail "maintain skill description is missing"
-grep -F 'WORKSHOP.md' skills/maintain/SKILL.md >/dev/null \
-    || fail "maintain skill does not read the project specification"
-grep -F 'SCRATCHPAD.md' skills/maintain/SKILL.md >/dev/null \
-    || fail "maintain skill does not maintain current state"
-grep -F -- '--force-with-lease' skills/maintain/SKILL.md >/dev/null \
-    || fail "maintain skill does not protect integration publication"
-grep -F 'push the exact candidate commit' skills/maintain/SKILL.md >/dev/null \
-    || fail "maintain skill does not gate an unpublished integration candidate"
-grep -F 'independent adversarial review' skills/maintain/SKILL.md >/dev/null \
-    || fail "maintain skill does not require substantial-work review"
-grep -F 'otherwise mutate the requests' skills/maintain/SKILL.md >/dev/null \
-    || fail "maintain skill does not protect historical upstream requests"
-grep -F 'This skill is the complete operating contract for the Fx fork.' skills/maintain/SKILL.md >/dev/null \
-    || fail "maintain skill is not self-contained"
-grep -F 'sole published install source' skills/maintain/SKILL.md >/dev/null \
-    || fail "maintain skill does not define the integration branch contract"
-grep -F 'tip observed at the start of the cycle' skills/maintain/SKILL.md >/dev/null \
-    || fail "maintain skill does not pin the integration publication lease"
-# shellcheck disable=SC2016 # The capture must retain the runtime variable.
-grep -F 'starting_integration_sha=$(' skills/maintain/SKILL.md >/dev/null \
-    || fail "maintain skill does not capture the starting integration tip"
-grep -F "grep -Eq '^[0-9a-f]{40}$'" skills/maintain/SKILL.md >/dev/null \
-    || fail "maintain skill does not validate the starting integration tip"
-grep -F 'scripts/ship-gate.sh' skills/maintain/SKILL.md >/dev/null \
-    || fail "maintain skill does not provide a concrete final ship gate"
-# shellcheck disable=SC2016 # Match literal Markdown and shell variable text.
-grep -F 'all four `Full suite (...)` aggregates' skills/maintain/SKILL.md >/dev/null \
-    || fail "maintain skill does not require every Full CI aggregate"
-# shellcheck disable=SC2016 # The lease command must retain the runtime variable.
-grep -F -- '--force-with-lease="refs/heads/integration:$starting_integration_sha"' \
-    skills/maintain/SKILL.md >/dev/null \
-    || fail "maintain skill does not provide an exact integration lease command"
+# The namespace entrypoint declares exactly the branch model the spec states
+# and defers every mechanic to the shared script.
+for declared in \
+    'MAINTAIN_FORK_REPO=possibilities/fx' \
+    'MAINTAIN_UPSTREAM_REPO=vercel-labs/fx' \
+    'MAINTAIN_MAIN_BRANCH=main' \
+    'MAINTAIN_INTEGRATION_BRANCH=integration' \
+    'MAINTAIN_CARRY_PREFIX=carry/' \
+    'MAINTAIN_QUARANTINE_PREFIX=DELETEME/' \
+    'MAINTAIN_PRESERVE_OPEN_PRS=1'; do
+    grep -F "export $declared" scripts/reconcile-branches.sh >/dev/null \
+        || fail "branch entrypoint does not declare $declared"
+done
+if grep -E 'git .*(push|fetch|update-ref)' scripts/reconcile-branches.sh >/dev/null; then
+    fail "branch entrypoint carries namespace mechanics of its own"
+fi
+set +e
+missing_skill_output=$(MAINTAIN_SKILL_DIR=/nonexistent scripts/reconcile-branches.sh --check 2>&1)
+missing_skill_status=$?
+set -e
+[ "$missing_skill_status" -ne 0 ] || fail "branch entrypoint ran without the shared script"
+printf '%s\n' "$missing_skill_output" | grep -F 'the maintain skill is not installed' >/dev/null \
+    || fail "branch entrypoint does not explain a missing shared script"
+
 grep -F 'Full suite (linux-x86_64)' scripts/ship-gate.sh >/dev/null \
     || fail "ship gate does not require the Linux x86_64 aggregate"
 grep -F 'Full suite (linux-aarch64)' scripts/ship-gate.sh >/dev/null \
@@ -118,11 +110,7 @@ printf '%s\n' "$final_gate_tail" | grep -F 'verify_local_candidate' >/dev/null \
     || fail "ship gate does not recheck local state immediately before SHIP"
 printf '%s\n' "$final_gate_tail" | grep -F 'remote_candidate_sha' >/dev/null \
     || fail "ship gate does not recheck the remote candidate immediately before SHIP"
-if grep -F 'agentwiki' skills/maintain/SKILL.md >/dev/null; then
-    fail "maintain skill depends on an external wiki policy"
-fi
 
-tests/branch-policy.sh
 tests/install-transaction.sh
 
 printf 'fxnk validation passed.\n'

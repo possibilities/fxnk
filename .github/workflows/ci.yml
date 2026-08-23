@@ -12,4 +12,4 @@ jobs:
       - name: Validate repository contracts
         run: tests/validate.sh
       - name: Check shell scripts
-        run: shellcheck scripts/install.sh tests/validate.sh
+        run: shellcheck scripts/install.sh scripts/reconcile-branches.sh tests/validate.sh

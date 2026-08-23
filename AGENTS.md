@@ -1,21 +1,29 @@
 # fxnk agent guidance
 
 This repository owns delivery and maintenance of the operator's local Fx fork.
-Read `CONTEXT.md`, `WORKSHOP.md`, and `SCRATCHPAD.md` before changing the fork
+Read `CONTEXT.md`, `MAINTAIN.md`, and `SCRATCHPAD.md` before changing the fork
 or its installer.
 
 ## Ownership
 
-- `WORKSHOP.md` is the project specification: purpose, branch model, and the
-  feature inventory that must remain true.
-- `skills/maintain/SKILL.md` is the operating procedure for `/maintain`.
+- `MAINTAIN.md` is the project specification and the whole of what the shared
+  `maintain` skill knows about Fx: purpose, upstream and our stance toward it,
+  branch model, the feature inventory that must remain true, the gate, the
+  consumer, and the notification. Its section headings are fixed — the skill
+  reads them by name — so add to a section rather than renaming one.
+- `/maintain` is the shared `maintain` skill in `~/code/agentguidance`, the
+  operating procedure for every fork workshop on this machine. Fx-specific
+  procedure belongs in `MAINTAIN.md`, never in a copy of the skill here.
 - `SCRATCHPAD.md` is current maintenance state, not a second specification or
   an unbounded transcript.
 - `scripts/install.sh` consumes the published `fork/integration` branch. It
   must not rebase, push, inspect PRs, or decide which patches should be carried.
-- `scripts/reconcile-branches.sh` owns fork branch publication and quarantine.
-  It mirrors `main`, publishes `carry/*`, preserves exact open-PR heads, and
-  moves every other non-quarantine fork branch to `DELETEME/<original>`.
+- `scripts/reconcile-branches.sh` is the thin entrypoint to the skill's shared
+  namespace script: it declares the branch model `MAINTAIN.md` states and
+  nothing else. The mechanics — mirror `main`, publish `carry/*`, preserve
+  exact open-PR heads, move every other non-quarantine fork branch to
+  `DELETEME/<original>` in one atomic leased push — live and are tested in
+  agentguidance (`skills/maintain/scripts/`, `tests/branch-policy.sh`).
 - Upstream pull requests are historical references only. Maintenance may read
   them for evidence, but must not update their branches or mutate the requests.
   Only the exact heads of currently open requests retain their original names.

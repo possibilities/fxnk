@@ -1,7 +1,8 @@
 # fxnk context
 
-**Workshop** — This repository, which owns the specification, maintenance
-process, and installer for the local Fx fork.
+**Workshop** — This repository, which owns the specification (`MAINTAIN.md`),
+maintenance state, and installer for the local Fx fork; the maintenance
+procedure itself is the shared `maintain` skill, which every workshop runs.
 _Avoid_: wrapper, patch repo.
 
 **Integration branch** — `possibilities/fx:integration`, containing every
@@ -12,7 +13,7 @@ _Avoid_: install branch, local main.
 to the exact current `vercel-labs/fx:main` during every maintenance cycle.
 _Avoid_: integration base, development main.
 
-**Carried feature** — Behavior required by `WORKSHOP.md` that is not yet
+**Carried feature** — Behavior required by `MAINTAIN.md` that is not yet
 available in a suitable upstream form and therefore remains implemented on the
 integration branch.
 _Avoid_: permanent patch, downstream fix.
