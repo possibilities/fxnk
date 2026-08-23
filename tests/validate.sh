@@ -51,5 +51,14 @@ grep -F 'independent adversarial review' skills/maintain/SKILL.md >/dev/null \
     || fail "maintain skill does not require substantial-work review"
 grep -F 'otherwise mutate the requests' skills/maintain/SKILL.md >/dev/null \
     || fail "maintain skill does not protect historical upstream requests"
+grep -F 'This skill is the complete operating contract for the Fx fork.' skills/maintain/SKILL.md >/dev/null \
+    || fail "maintain skill is not self-contained"
+grep -F 'sole published install source' skills/maintain/SKILL.md >/dev/null \
+    || fail "maintain skill does not define the integration branch contract"
+grep -F 'tip observed at the start of the cycle' skills/maintain/SKILL.md >/dev/null \
+    || fail "maintain skill does not pin the integration publication lease"
+if grep -F 'agentwiki' skills/maintain/SKILL.md >/dev/null; then
+    fail "maintain skill depends on an external wiki policy"
+fi
 
 printf 'fxnk validation passed.\n'

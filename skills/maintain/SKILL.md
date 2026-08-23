@@ -11,20 +11,43 @@ publication as the authorized work of a `/maintain` invocation. Ask the human
 only when an upstream change creates a consequential product choice that the
 workshop and existing implementation do not resolve.
 
+## Fork contract
+
+This skill is the complete operating contract for the Fx fork. Do not depend
+on a wiki page, an upstream request, or remembered branch state to fill in its
+rules.
+
+- `~/src/fx` is the bound checkout. `origin` is `vercel-labs/fx`; `fork` is
+  `possibilities/fx`; rerere stays enabled.
+- `fork/integration` is the sole published install source. It contains every
+  required behavior together, but it is never a feature-development branch.
+- A carried feature is built or repaired on a dedicated local carry branch in
+  its own worktree, based on current `origin/main`. Compose only committed,
+  reviewed carry heads into a scratch integration worktree.
+- Historical pull requests, issues, and their branches are evidence only.
+  Never use them as live dependencies, publication targets, or work queues;
+  never update or otherwise mutate them during maintenance.
+- Keep the previously published integration ref and installed binary intact
+  while working. A failed rebase, build, test, review, CI run, or ship gate
+  publishes and installs nothing.
+- Publish a candidate to a new temporary branch on `fork`, gate that exact
+  commit, then update `fork/integration` with `--force-with-lease` against the
+  tip observed at the start of the cycle. Only the installer may bind the
+  checkout and installed binary to the newly published integration commit.
+
 ## Establish the state
 
 1. Read `AGENTS.md`, `CONTEXT.md`, `WORKSHOP.md`, and `SCRATCHPAD.md` in this
    repository. Read `~/src/fx/AGENTS.md` completely before touching Fx.
-2. Read the durable fork contract with
-   `agentwiki get fork-rebase-policy --json` when `agentwiki` is available.
-3. Confirm fxnk is clean on `main`. Confirm `~/src/fx` is clean, its `fork`
+2. Confirm fxnk is clean on `main`. Confirm `~/src/fx` is clean, its `fork`
    remote is `possibilities/fx`, its `origin` is `vercel-labs/fx`, rerere is
    enabled, and the published install branch is `integration`.
-4. Fetch both remotes. Compare upstream and integration with the last completed
+3. Record the exact starting `fork/integration` tip for the later publication
+   lease. Fetch both remotes. Compare upstream and integration with the last completed
    baseline in the scratchpad. Read every upstream commit in that interval,
    grouping related changes before deciding whether they affect a carried
    feature.
-5. For each carried feature, inspect current upstream code and any historical
+4. For each carried feature, inspect current upstream code and any historical
    upstream reference in the scratchpad for a possible replacement or
    interaction. These references are evidence only: do not rebase or push their
    branches, or comment on, label, close, edit, or otherwise mutate the requests.
@@ -47,7 +70,8 @@ workshop and existing implementation do not resolve.
   integration, obtain an independent adversarial review when another agent is
   available. Repair every concrete finding or record why it does not apply.
 - Rebase integration in a scratch worktree onto current `origin/main`. Resolve
-  conflicts and repair or add carried features there. Never leave the bound
+  conflicts and compose the reviewed carry heads there. Repair or add a feature
+  on its carry branch, not directly on integration. Never leave the bound
   checkout mid-rebase.
 - Preserve the old published integration ref and installed binary until the new
   candidate passes its gate. Publish only with an exact `--force-with-lease`
@@ -69,10 +93,12 @@ rmdir "$fx_zdotdir"
 Also run focused tests for every changed feature and exercise each changed happy
 path with that worktree's freshly built `./zig-out/bin/fx`.
 
-Before publishing integration, push the exact candidate commit to a temporary
-branch on `possibilities/fx` without changing `fork/integration`. Require Full
-CI and the final ship gate for that exact SHA under `~/src/fx/AGENTS.md`. A
-stale, partial, skipped, cancelled, or merely local result is not sufficient.
+Before publishing integration, push the exact candidate commit to a newly named
+temporary branch on `possibilities/fx` without changing `fork/integration` or a
+historical request branch. Require Full CI and the final ship gate for that
+exact SHA under `~/src/fx/AGENTS.md`. A stale, partial, skipped, cancelled, or
+merely local result is not sufficient. Re-read the remote candidate ref before
+publication and require it to resolve to the gated SHA.
 
 After the integration candidate passes, push it with the lease and invoke the
 fxnk installer, which fast-forwards the bound checkout to that published tip:
