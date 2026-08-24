@@ -1,6 +1,6 @@
 #!/bin/bash
 # Open the visual style guide: a small OpenTUI rendering of style/tokens.json
-# for humans. Keys inside: 1-5 or arrows switch section, t toggles dark/light,
+# for humans. Keys inside: 1-6 or arrows switch section, t toggles dark/light,
 # q quits.
 #
 # The viewer lives in style/viewer/ and pins @opentui/core to the version fmx

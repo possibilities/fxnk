@@ -205,7 +205,7 @@ maintenance cycle qualifies, since carried features can touch UI):
    read the diff, and update the tables and prose in `style/STYLE.md` to
    agree — the tables mirror tokens.json and must never contradict it.
 2. After any token drift, prove the interactive viewer still works:
-   `scripts/style-view.sh` must open, switch all five sections, and toggle
+   `scripts/style-view.sh` must open, switch all six sections, and toggle
    themes against the new tokens.json. The viewer (`style/viewer/`, bun +
    `@opentui/core`) reads tokens.json generically, so most drift needs no
    code change; a schema change in tokens.json is the exception and must
@@ -239,6 +239,16 @@ The extractor's five parsed sites (role palette `src/ui/render.zig`
 `store.zig`) are the authoritative producers; scattered literal SGR strings
 elsewhere in fx are always dark-ramp values covered by the retint map, so
 tracking the five sites plus the index census is complete coverage.
+
+Carve-outs are the one part of the guide that is not extracted. fx has no
+tabs, docks, or switchers, so surfaces fmx needs and fx never draws — today
+the Tools panel's rule tab — are designed from fx's principles and recorded
+in `style/STYLE.md` § "Carve-outs", with the viewer's "switching" section
+rendering them from ramp tokens. They are deliberately absent from
+`tokens.json`, invisible to `style-extract.sh --check`, and must never be
+"reconciled" toward fx: drift there is a design decision, not token drift.
+If upstream fx ever grows one of these surfaces, the carve-out becomes a
+candidate for extraction and the section is revisited in that cycle.
 
 The scripts read the fx checkout and never write to it; `style-capture.sh`
 requires an existing `zig-out/bin/fx` build and refuses to build one itself.

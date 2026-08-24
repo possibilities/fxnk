@@ -10,8 +10,8 @@ Ground truth is `style/tokens.json`, extracted from the fx source by
 tokens.json wins. `style/captures/` holds rendered references: swatch sheets
 (`cat style/captures/swatch-dark.ansi` in a dark terminal) and PNG screens of
 the real binary; `scripts/style-view.sh` opens the interactive viewer —
-sections for roles, an assembled transcript, code, and glyphs, with a
-dark/light toggle. `MAINTAIN.md` § "Style guide" is the methodology for keeping
+sections for roles, an assembled transcript, code, glyphs, and the
+carve-outs, with a dark/light toggle. `MAINTAIN.md` § "Style guide" is the methodology for keeping
 all of it current.
 
 ## The design language
@@ -152,6 +152,42 @@ Typography: **bold** for labels, titles, user prompt text, and the selected
 row; *bold italic* for tool-group summaries; no underline except OSC 8
 hyperlinks; no emoji anywhere in product output (fx house rule — Unicode
 symbols like `✓` and `→` are fine).
+
+## Carve-outs: what fx has no surface for
+
+fx is a transcript with a prompt; it has no tabs, no docks, no switcher. When
+fmx needs a surface fx never draws, the rule is to build it from fx's
+principles — one ramp, weight and glyph for state, no hue, no underline —
+and record it here as a carve-out. Nothing below is extracted from fx:
+`tokens.json` does not carry it, `style-extract.sh --check` cannot see it,
+and a maintenance cycle must not "correct" it back to fx.
+
+### Switching items in a panel: the rule tab
+
+The Tools panel's switcher (`fmx/src/tool-panel.ts`) is a **rule tab**: one
+row of labels over one row of hairline.
+
+```
+ Diff  Tests  Logs
+───────━━━━━───────────────
+```
+
+| part | role | dark | light |
+|---|---|---|---|
+| selected label | `selected_completion` (bold primary) | bold 255 | bold 235 |
+| other labels | `dim` | 245 | 247 |
+| rule under the selection | `hint` (primary), glyph `━` | 255 | 235 |
+| rule elsewhere | `divider`, glyph `─` | 240 | 250 |
+
+Why this shape and not another: the divider glyph does the underlining, so
+the no-underline rule holds; the selection is bold like fx's selected menu
+row; nothing in it takes the accent hue, which fmx keeps for focus and
+failure. In fmx the values are host-derived per "Borrowing into fmx" —
+`modalColors().foreground`, `.dim`, and `.divider` — and the column above is
+the no-answer fallback tier. Other shapes considered and not taken: weighted
+words with `·` separators (fx's statusline idiom, but reads as status rather
+than a control), an inverse chip (fx's button idiom, too loud for a
+persistent dock), a cycler (hides the other items).
 
 ## Borrowing into fmx
 

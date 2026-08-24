@@ -3,7 +3,7 @@
 // style/tokens.json. Everything painted here comes from the tokens (plus two
 // simulated canvas colors, so both themes are inspectable from any terminal).
 //
-// Run via scripts/style-view.sh. Keys: 1-5 or arrows switch section,
+// Run via scripts/style-view.sh. Keys: 1-6 or arrows switch section,
 // t toggles dark/light, q quits.
 //
 // @opentui/core is pinned to the version fmx uses, so what renders here is
@@ -37,7 +37,7 @@ type StyleValue = {
 // theme is inspectable on a dark terminal and vice versa.
 const CANVAS: Record<Theme, string> = { dark: "#121212", light: "#fafafa" }
 
-const SECTIONS = ["roles", "transcript", "code", "glyphs", "about"] as const
+const SECTIONS = ["roles", "transcript", "code", "glyphs", "switching", "about"] as const
 
 const role = (name: string, theme: Theme): StyleValue =>
   (tokens.roles as Record<string, Record<Theme, StyleValue>>)[name][theme]
@@ -164,6 +164,45 @@ function glyphsSection(theme: Theme): Line[] {
   return lines
 }
 
+/** The carve-outs: surfaces fx never draws, built from its principles. Not
+ * extracted — see STYLE.md "Carve-outs". */
+function switchingSection(theme: Theme): Line[] {
+  const t = theme
+  const items = ["Diff", "Tests", "Logs"]
+  const selected = 1
+  const lines: Line[] = []
+  lines.push([paint(role("tag", t), "switching items in a panel", t), note("  carve-out: fx has no tabs to ape", t)])
+  lines.push([])
+  lines.push([note("the rule tab — fmx's Tools panel switcher", t)])
+  lines.push([])
+  const labels: Line = []
+  const rule: Line = []
+  items.forEach((label, i) => {
+    labels.push(note(" ", t))
+    rule.push(paint(role("divider", t), "─", t))
+    labels.push(i === selected ? paint(role("selected_completion", t), label, t) : note(label, t))
+    rule.push(
+      i === selected
+        ? paint(role("hint", t), "━".repeat(label.length), t)
+        : paint(role("divider", t), "─".repeat(label.length), t),
+    )
+    labels.push(note(" ", t))
+    rule.push(paint(role("divider", t), "─", t))
+  })
+  rule.push(paint(role("divider", t), "─".repeat(12), t))
+  lines.push(labels)
+  lines.push(rule)
+  lines.push([note("  tool body …", t)])
+  lines.push([])
+  lines.push([paint(role("hint", t), "  selected   ", t), note("selected_completion — bold primary, like fx's selected row", t)])
+  lines.push([paint(role("hint", t), "  others     ", t), note("dim", t)])
+  lines.push([paint(role("hint", t), "  ━ under it ", t), note("hint (primary) — the divider glyph does the underlining", t)])
+  lines.push([paint(role("hint", t), "  ─ rule     ", t), note("divider — the faintest step, nearest the background", t)])
+  lines.push([])
+  lines.push([note("no hue, no underline SGR; fmx paints it host-derived, these are the fallback tier", t)])
+  return lines
+}
+
 function aboutSection(theme: Theme): Line[] {
   const t = theme
   const gen = tokens.generated
@@ -192,6 +231,7 @@ function buildSection(section: (typeof SECTIONS)[number], theme: Theme): StyledT
     transcript: transcriptSection,
     code: codeSection,
     glyphs: glyphsSection,
+    switching: switchingSection,
     about: aboutSection,
   }
   const lines = builders[section](theme)
