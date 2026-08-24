@@ -188,6 +188,14 @@ grep -F 'fxnk.maintain' scripts/ci-watch.sh >/dev/null \
     || fail "the watcher does not use the declared notification group"
 grep -F 'heartbeat_seconds' scripts/ci-watch.sh >/dev/null \
     || fail "the watcher cannot prove it is still running"
+grep -F 'classification=unclassified' scripts/ci-watch.sh >/dev/null \
+    || fail "the watcher guesses instead of escalating what it cannot classify"
+grep -F 'aggregate_job_prefix' scripts/ci-watch.sh >/dev/null \
+    || fail "the watcher lets aggregate jobs stand in for real evidence"
+grep -F 'lock_stale_seconds' scripts/ci-watch.sh >/dev/null \
+    || fail "the watcher does not serialize overlapping polls"
+grep -F 'overdue: true' MAINTAIN.md >/dev/null \
+    || fail "the gate does not make an overdue branch a cycle input"
 grep -F 'once a day when nothing has happened' MAINTAIN.md >/dev/null \
     || fail "the gate does not state the watcher's daily heartbeat"
 scripts/ci-watch-install.sh --check | grep -F 'scripts/ci-watch.sh' >/dev/null \

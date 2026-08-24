@@ -28,6 +28,7 @@ case "$1" in
                 if [[ " $* " == *' --log-failed '* ]]; then
                     cat "${FXNK_TEST_GH_LOG:-/dev/null}"
                 else
+                    [ "${FXNK_TEST_GH_JOBS_FAIL:-0}" -eq 0 ] || exit 1
                     cat "${FXNK_TEST_GH_JOBS:-/dev/null}"
                 fi
                 ;;

@@ -3,7 +3,12 @@
 # Watch the fork's hosted Full CI and drive every published Integration SHA to
 # a recorded verdict. Full CI gates nothing, so this script never blocks and
 # never publishes; it observes, retries what is mechanically retryable, and
-# escalates to the human when a verdict is bad or overdue.
+# escalates to the human when a verdict is bad, missing, or overdue.
+#
+# Two rules shape everything below. A verdict is only as good as its evidence,
+# so anything this cannot classify escalates rather than guessing. And silence
+# must never pass for health, so an unverified tip stays on the books and a
+# quiet watcher still says it is alive.
 
 set -euo pipefail
 
@@ -11,22 +16,38 @@ set -euo pipefail
 repo=possibilities/fx
 branch=integration
 workflow=full-ci.yml
+# Jobs that only restate other jobs' conclusions. They carry no evidence of
+# their own, and counting them makes every failure look like a test failure,
+# because the aggregate step fails whatever the real cause was.
+aggregate_job_prefix='Full suite'
 
 # A push that never produced a run within this window is a broken trigger.
 trigger_grace_seconds=900
-# The published tip may sit unverified this long before the human hears about it.
+# The published branch may go this long without a green verdict before the
+# human hears about it.
 max_unverified_seconds=$((3 * 24 * 60 * 60))
 # Re-escalate an unchanged overdue verdict at most this often.
 stale_repeat_seconds=$((24 * 60 * 60))
+# Repeat an escalation for one SHA at most this often, however much its
+# classification moves around.
+renotify_seconds=$((6 * 60 * 60))
 # Mechanical reruns before a run's failure becomes the human's problem.
 max_auto_reruns=1
 # Silence is indistinguishable from a dead watcher, so say something this often
 # even when there is nothing wrong.
 heartbeat_seconds=$((24 * 60 * 60))
+# A poll that died without releasing its lock must not wedge the watcher.
+lock_stale_seconds=1800
+# An obligation nobody revisited in this long describes a tip that is gone.
+carry_seconds=$((30 * 24 * 60 * 60))
 
 die() {
     printf 'fxnk ci watch: %s\n' "$*" >&2
     exit 1
+}
+
+warn() {
+    printf 'fxnk ci watch: %s\n' "$*" >&2
 }
 
 usage() {
@@ -37,28 +58,20 @@ mode=once
 state_dir_override=
 while [ "$#" -gt 0 ]; do
     case "$1" in
-        --once)
-            mode=once
-            shift
-            ;;
-        --declare)
-            mode=declare
-            shift
-            ;;
+        --once) mode=once; shift ;;
+        --declare) mode=declare; shift ;;
         --state-dir)
             [ "$#" -ge 2 ] || die "--state-dir requires a path"
             state_dir_override=$2
             shift 2
             ;;
-        -h|--help)
-            usage
-            exit 0
-            ;;
-        *)
-            usage >&2
-            exit 64
-            ;;
+        -h|--help) usage; exit 0 ;;
+        *) usage >&2; exit 64 ;;
     esac
+done
+
+for required in jq date; do
+    command -v "$required" >/dev/null 2>&1 || die "$required is required"
 done
 
 if [ "$mode" = declare ]; then
@@ -69,19 +82,20 @@ if [ "$mode" = declare ]; then
         --argjson trigger_grace_seconds "$trigger_grace_seconds" \
         --argjson max_unverified_seconds "$max_unverified_seconds" \
         --argjson max_auto_reruns "$max_auto_reruns" \
+        --argjson heartbeat_seconds "$heartbeat_seconds" \
         '{repo:$repo,branch:$branch,workflow:$workflow,
           trigger_grace_seconds:$trigger_grace_seconds,
           max_unverified_seconds:$max_unverified_seconds,
-          max_auto_reruns:$max_auto_reruns}'
+          max_auto_reruns:$max_auto_reruns,
+          heartbeat_seconds:$heartbeat_seconds}'
     exit 0
 fi
 
-for required in jq date; do
-    command -v "$required" >/dev/null 2>&1 || die "$required is required"
-done
 gh_bin="${FXNK_CI_WATCH_GH_BIN:-$(command -v gh || true)}"
 [ -n "$gh_bin" ] && [ -x "$gh_bin" ] || die "gh is required"
-notifier_bin="${FXNK_CI_WATCH_NOTIFIER_BIN:-$(command -v terminal-notifier || true)}"
+# An explicitly empty override means "no notifier", which must stay
+# distinguishable from "not overridden".
+notifier_bin="${FXNK_CI_WATCH_NOTIFIER_BIN-$(command -v terminal-notifier || true)}"
 
 now="${FXNK_CI_WATCH_NOW:-$(date +%s)}"
 case "$now" in
@@ -91,51 +105,96 @@ esac
 state_dir="${state_dir_override:-${FXNK_STATE_DIR:-$HOME/.local/state/fxnk}}"
 verdict_dir="$state_dir/full-ci"
 pending_file="$verdict_dir/pending.json"
+lock_dir="$verdict_dir/.lock"
 mkdir -p "$verdict_dir"
 chmod 0700 "$state_dir" "$verdict_dir"
 
+iso_now=$(date -u -r "$now" '+%Y-%m-%dT%H:%M:%SZ')
+
+# One poll at a time. A poll makes several network round trips, so launchd can
+# start the next before this one finishes; overlap would double-spend the rerun
+# budget and lose whichever file the loser wrote.
+if ! mkdir "$lock_dir" 2>/dev/null; then
+    lock_epoch=$(stat -f '%m' "$lock_dir" 2>/dev/null || printf '0')
+    if [ "$((now - lock_epoch))" -lt "$lock_stale_seconds" ]; then
+        printf 'CI-WATCH busy\n'
+        exit 0
+    fi
+    warn "breaking a stale poll lock"
+    rm -rf -- "$lock_dir"
+    mkdir "$lock_dir" 2>/dev/null || die "could not take the poll lock"
+fi
+
 scratch=$(mktemp -d "${TMPDIR:-/tmp}/fxnk-ci-watch.XXXXXX")
+pending_write=
 cleanup() {
     local status=$?
     trap - EXIT
-    rm -rf -- "$scratch"
+    if [ -n "$pending_write" ] && [ -e "$pending_write" ]; then
+        rm -f -- "$pending_write"
+    fi
+    rm -rf -- "$scratch" "$lock_dir"
     exit "$status"
 }
 trap cleanup EXIT
 
-iso_now=$(date -u -r "$now" '+%Y-%m-%dT%H:%M:%SZ')
-
+# GitHub timestamps are RFC 3339. Print epoch seconds, or nothing when the
+# stamp cannot be read: an unreadable time is unknown, and no caller may turn
+# unknown into an escalation.
 epoch_of() {
-    # GitHub timestamps are RFC 3339 in UTC.
-    date -u -j -f '%Y-%m-%dT%H:%M:%SZ' "$1" '+%s' 2>/dev/null || printf '0'
+    local stamp="$1" normalized
+    [ -n "$stamp" ] || return 0
+    normalized=${stamp/+00:00/Z}
+    date -u -j -f '%Y-%m-%dT%H:%M:%SZ' "$normalized" '+%s' 2>/dev/null || true
 }
 
-write_atomic() {
-    local destination="$1" source="$2" pending
-    pending=$(mktemp "$(dirname "$destination")/.$(basename "$destination").XXXXXX")
-    cat "$source" >"$pending"
-    chmod 0600 "$pending"
-    mv "$pending" "$destination" \
-        || die "could not atomically record $destination"
-}
-
-sent_message=false
-
-notify() {
-    local message="$1" url="$2"
-    [ -n "$notifier_bin" ] || return 0
-    sent_message=true
-    if [ -n "$url" ]; then
-        "$notifier_bin" -title 'Fx Maintenance' -group fxnk.maintain \
-            -message "$message" -open "$url" -ignoreDnD >/dev/null 2>&1 || true
+# A hand-edited, truncated, or half-written state file costs one poll's
+# history, never every future poll.
+read_json() {
+    local file="$1" text
+    [ -f "$file" ] || { printf '{}'; return 0; }
+    text=$(cat "$file" 2>/dev/null) || { printf '{}'; return 0; }
+    if printf '%s' "$text" | jq -e 'type == "object"' >/dev/null 2>&1; then
+        printf '%s' "$text"
     else
-        "$notifier_bin" -title 'Fx Maintenance' -group fxnk.maintain \
-            -message "$message" -ignoreDnD >/dev/null 2>&1 || true
+        warn "ignoring unreadable state file: $file"
+        printf '{}'
     fi
 }
 
-# ---------------------------------------------------------------------------
-# The published tip and its newest run.
+write_atomic() {
+    local destination="$1" source="$2"
+    pending_write=$(mktemp "$(dirname "$destination")/.$(basename "$destination").XXXXXX")
+    cat "$source" >"$pending_write"
+    chmod 0600 "$pending_write"
+    mv "$pending_write" "$destination" \
+        || die "could not atomically record $destination"
+    pending_write=
+}
+
+# Report whether the human was actually reached. Recording a notification that
+# never left would silently spend the escalation for that SHA.
+sent_message=false
+notify() {
+    local message="$1" url="$2"
+    if [ -z "$notifier_bin" ]; then
+        warn "no notifier available; not delivered: $message"
+        return 1
+    fi
+    if [ -n "$url" ]; then
+        "$notifier_bin" -title 'Fx Maintenance' -group fxnk.maintain \
+            -message "$message" -open "$url" -ignoreDnD >/dev/null 2>&1 \
+            || { warn "notifier failed; not delivered: $message"; return 1; }
+    else
+        "$notifier_bin" -title 'Fx Maintenance' -group fxnk.maintain \
+            -message "$message" -ignoreDnD >/dev/null 2>&1 \
+            || { warn "notifier failed; not delivered: $message"; return 1; }
+    fi
+    sent_message=true
+    return 0
+}
+
+# --- the published tip and its newest run ------------------------------------
 
 tip=$("$gh_bin" api "repos/$repo/git/ref/heads/$branch" --jq '.object.sha' 2>/dev/null) \
     || die "could not read the published $branch ref"
@@ -148,18 +207,19 @@ tip_committed_at=$(
 tip_epoch=$(epoch_of "$tip_committed_at")
 
 runs_file="$scratch/runs.json"
-"$gh_bin" run list --repo "$repo" --workflow "$workflow" --limit 50 \
+"$gh_bin" run list --repo "$repo" --workflow "$workflow" --limit 100 \
     --json databaseId,headSha,status,conclusion,createdAt,url \
     >"$runs_file" 2>/dev/null || die "could not list $workflow runs"
+jq -e 'type == "array"' "$runs_file" >/dev/null 2>&1 \
+    || die "could not parse the $workflow run list"
 
 run=$(jq -c --arg sha "$tip" \
     '[.[] | select(.headSha == $sha)] | sort_by(.createdAt) | last // empty' \
     "$runs_file")
 
 receipt="$verdict_dir/$tip.json"
-prior='{}'
-[ -f "$receipt" ] && prior=$(cat "$receipt")
-prior_reruns=$(printf '%s' "$prior" | jq -r '.reruns // 0')
+prior=$(read_json "$receipt")
+prior_reruns=$(printf '%s' "$prior" | jq -r '(.reruns | numbers) // 0')
 prior_first_seen=$(printf '%s' "$prior" | jq -r '.first_seen_at // empty')
 prior_notified=$(printf '%s' "$prior" | jq -r '.notified_at // empty')
 prior_notified_classification=$(
@@ -177,9 +237,25 @@ failing_tests='[]'
 reruns=$prior_reruns
 detail=
 
+request_rerun() {
+    local target="$1" scope="$2"
+    [ "$reruns" -lt "$max_auto_reruns" ] || return 1
+    if [ "$scope" = failed ]; then
+        "$gh_bin" run rerun "$target" --repo "$repo" --failed >/dev/null 2>&1 || return 1
+    else
+        "$gh_bin" run rerun "$target" --repo "$repo" >/dev/null 2>&1 || return 1
+    fi
+    reruns=$((reruns + 1))
+    return 0
+}
+
 if [ -z "$run" ]; then
-    conclusion=null
-    if [ $((now - tip_epoch)) -gt "$trigger_grace_seconds" ]; then
+    if [ -z "$tip_epoch" ]; then
+        # An unreadable commit time is not evidence that the trigger is broken.
+        status=pending
+        classification=awaiting_start
+        detail='waiting for the run to appear; the tip commit time is unreadable'
+    elif [ $((now - tip_epoch)) -gt "$trigger_grace_seconds" ]; then
         status=no_run
         classification=absent
         detail="no $workflow run exists for the published tip"
@@ -210,37 +286,25 @@ else
                 # cancel-in-progress fired, but this SHA is still the published
                 # tip, so nothing newer replaced its verdict — it is simply
                 # missing, and restarting it is mechanical.
-                status=no_verdict
-                classification=cancelled
-                detail="run $run_id was cancelled and left the tip unverified"
-                if [ "$reruns" -lt "$max_auto_reruns" ]; then
-                    if "$gh_bin" run rerun "$run_id" --repo "$repo" >/dev/null 2>&1; then
-                        reruns=$((reruns + 1))
-                        status=pending
-                        classification=rerun
-                        detail="restarted cancelled run $run_id for the current tip"
-                    fi
+                if request_rerun "$run_id" all; then
+                    status=pending
+                    classification=rerun
+                    detail="restarted cancelled run $run_id for the current tip"
+                else
+                    status=no_verdict
+                    classification=cancelled
+                    detail="run $run_id was cancelled and left the tip unverified"
                 fi
                 ;;
-            *)
+            failure|timed_out)
                 jobs_file="$scratch/jobs.json"
+                jobs_read=true
                 "$gh_bin" run view "$run_id" --repo "$repo" --json jobs \
-                    >"$jobs_file" 2>/dev/null || printf '{"jobs":[]}' >"$jobs_file"
-                failing_jobs=$(jq -c '[.jobs[]? | select(.conclusion != "success")
-                    | {name, conclusion,
-                       failed_step: ([.steps[]? | select(.conclusion != "success")
-                                      | .name] | first // "")}]' "$jobs_file")
-
-                # Classify from the step that failed. Setup and dependency steps
-                # are the runner's problem and are worth one mechanical retry;
-                # anything else — including anything unrecognized — is ours.
-                infrastructure=$(jq -r '
-                    def setupish:
-                        test("^(Set up job|Setup |Install |Restore |Post |Checkout|actions/)";
-                             "i");
-                    if ((. | length) == 0) then "false"
-                    elif all(.[]; (.failed_step | setupish) or .conclusion == "cancelled")
-                    then "true" else "false" end' <<<"$failing_jobs")
+                    >"$jobs_file" 2>/dev/null || jobs_read=false
+                if [ "$jobs_read" = true ]; then
+                    jq -e '.jobs | type == "array"' "$jobs_file" >/dev/null 2>&1 \
+                        || jobs_read=false
+                fi
 
                 log_file="$scratch/failed.log"
                 "$gh_bin" run view "$run_id" --repo "$repo" --log-failed \
@@ -252,46 +316,106 @@ else
                         | sed 's/^(fail) //; s/[[:space:]]*$//' | sort -u \
                         | jq -R . | jq -sc '.[0:20]'
                 )
+                named_failures=$(printf '%s' "$failing_tests" | jq -r 'length')
 
-                if [ "$infrastructure" = true ] && [ "$reruns" -lt "$max_auto_reruns" ]; then
-                    if "$gh_bin" run rerun "$run_id" --repo "$repo" --failed \
-                        >/dev/null 2>&1; then
-                        reruns=$((reruns + 1))
-                        status=pending
-                        classification=rerun
-                        detail="retried infrastructure failure in run $run_id"
+                if [ "$jobs_read" = false ]; then
+                    # No job evidence at all. Say that, rather than inventing a
+                    # cause; a transient API error must not read as a red build.
+                    status=failed
+                    classification=unclassified
+                    detail="run $run_id failed and its jobs could not be read"
+                else
+                    failing_jobs=$(jq -c '[.jobs[]? | select(.conclusion != "success")
+                        | {name, conclusion,
+                           failed_step: ([.steps[]? | select(.conclusion != "success")
+                                          | .name] | first // "")}]' "$jobs_file")
+                    # Aggregate jobs restate other jobs' results, so they are
+                    # evidence of nothing and would mask every real cause.
+                    leaf_jobs=$(printf '%s' "$failing_jobs" | jq -c \
+                        --arg prefix "$aggregate_job_prefix" \
+                        '[.[] | select(.name | startswith($prefix) | not)]')
+                    setup_only=$(jq -r '
+                        def setupish:
+                            test("^(Set up job|Set up |Setup |Install |Restore |Post |Run actions/)";
+                                 "i");
+                        if (length == 0) then "false"
+                        elif all(.[]; (.failed_step | length > 0) and
+                                      (.failed_step | setupish)) then "true"
+                        else "false" end' <<<"$leaf_jobs")
+
+                    if [ "$named_failures" -gt 0 ]; then
+                        # Named failing tests are the strongest evidence there
+                        # is, whatever the step names happen to look like.
+                        status=failed
+                        classification=real_failure
+                        detail="run $run_id has failing tests"
+                    elif [ "$setup_only" = true ]; then
+                        if request_rerun "$run_id" failed; then
+                            status=pending
+                            classification=rerun
+                            detail="retried infrastructure failure in run $run_id"
+                        else
+                            status=failed
+                            classification=infrastructure
+                            detail="run $run_id failed in setup and was not retried again"
+                        fi
+                    elif [ "$run_conclusion" = timed_out ]; then
+                        if request_rerun "$run_id" failed; then
+                            status=pending
+                            classification=rerun
+                            detail="retried timed-out run $run_id"
+                        else
+                            status=failed
+                            classification=infrastructure
+                            detail="run $run_id timed out again"
+                        fi
                     else
                         status=failed
-                        classification=infrastructure
-                        detail="run $run_id failed in setup and could not be retried"
+                        classification=unclassified
+                        detail="run $run_id failed without a recognizable cause"
                     fi
-                elif [ "$infrastructure" = true ]; then
-                    status=failed
-                    classification=infrastructure
-                    detail="run $run_id failed in setup again after $reruns retry"
-                else
-                    status=failed
-                    classification=real_failure
-                    detail="run $run_id has failing tests"
                 fi
+                ;;
+            *)
+                # skipped, neutral, startup_failure, action_required, stale.
+                # None of these is a red build, and none is a verdict.
+                status=no_verdict
+                classification="$run_conclusion"
+                detail="run $run_id ended $run_conclusion without a verdict"
                 ;;
         esac
     fi
 fi
 
-# ---------------------------------------------------------------------------
-# Escalate at most once per SHA, and record what was sent.
+# --- escalate on evidence, at most once per SHA per window -------------------
+
+needs_human=false
+case "$status" in
+    failed|no_run) needs_human=true ;;
+esac
 
 notified_at=$prior_notified
 notified_classification=$prior_notified_classification
-if [ "$status" = failed ] || [ "$status" = no_run ]; then
-    if [ "$prior_notified_classification" != "$classification" ]; then
+if [ "$needs_human" = true ]; then
+    send=false
+    if [ -z "$prior_notified" ]; then
+        send=true
+    elif [ "$prior_notified_classification" != "$classification" ]; then
+        # A changed classification is news, but a flapping one must not page
+        # every five minutes.
+        prior_epoch=$(epoch_of "$prior_notified")
+        if [ -z "$prior_epoch" ] || [ $((now - prior_epoch)) -ge "$renotify_seconds" ]; then
+            send=true
+        fi
+    fi
+    if [ "$send" = true ]; then
         summary=$(printf '%s' "$failing_tests" | jq -r 'if length == 0 then "" else .[0] end')
         message="Full CI ${classification//_/ } on ${tip:0:12}"
         [ -n "$summary" ] && message="$message — $summary"
-        notify "$message" "$run_url"
-        notified_at=$iso_now
-        notified_classification=$classification
+        if notify "$message" "$run_url"; then
+            notified_at=$iso_now
+            notified_classification=$classification
+        fi
     fi
 fi
 
@@ -324,30 +448,63 @@ jq -n \
     >"$scratch/receipt.json"
 write_atomic "$receipt" "$scratch/receipt.json"
 
-# ---------------------------------------------------------------------------
-# The overdue backstop. Serialization means a busy week can cancel every run;
-# that is accepted, but it must never be silent.
+# --- the books: every unresolved SHA, not only the current tip ---------------
 
-prior_pending='{}'
-[ -f "$pending_file" ] && prior_pending=$(cat "$pending_file")
+prior_pending=$(read_json "$pending_file")
 stale_notified=$(printf '%s' "$prior_pending" | jq -r '.stale_notified_at // empty')
 last_message=$(printf '%s' "$prior_pending" | jq -r '.last_message_at // empty')
+prior_unverified_since=$(printf '%s' "$prior_pending" | jq -r '.unverified_since // empty')
 
-last_green=$(
-    jq -sr '[.[] | select(.status == "green")] | sort_by(.recorded_at) | last // empty
-            | .recorded_at // ""' "$verdict_dir"/*.json 2>/dev/null || printf ''
-)
-unverified_since=${last_green:-}
-if [ -n "$unverified_since" ]; then
-    unverified_epoch=$(epoch_of "$unverified_since")
+open_file="$scratch/open.jsonl"
+: >"$open_file"
+last_green=
+for candidate in "$verdict_dir"/*.json; do
+    [ -e "$candidate" ] || continue
+    [ "$candidate" = "$pending_file" ] && continue
+    entry=$(read_json "$candidate")
+    entry_status=$(printf '%s' "$entry" | jq -r '.status // empty')
+    [ -n "$entry_status" ] || continue
+    entry_recorded=$(printf '%s' "$entry" | jq -r '.recorded_at // empty')
+    if [ "$entry_status" = green ]; then
+        if [ -z "$last_green" ] || [[ "$entry_recorded" > "$last_green" ]]; then
+            last_green=$entry_recorded
+        fi
+        continue
+    fi
+    case "$entry_status" in
+        failed|no_run|no_verdict) ;;
+        *) continue ;;
+    esac
+    entry_epoch=$(epoch_of "$entry_recorded")
+    if [ -n "$entry_epoch" ] && [ $((now - entry_epoch)) -gt "$carry_seconds" ]; then
+        continue
+    fi
+    printf '%s' "$entry" | jq -c \
+        '{fx_sha,kind:.classification,detail,run_url:.run.url,
+          since:.first_seen_at,recorded_at}' >>"$open_file"
+done
+open_list=$(jq -sc 'sort_by(.recorded_at) | reverse | .[0:20]' "$open_file")
+
+# --- overdue: anchored to CI reality, carried across pushes ------------------
+
+if [ "$status" = green ]; then
+    unverified_since=
 else
-    unverified_epoch=$(epoch_of "$prior_first_seen")
+    # Anchoring to the last green we recorded is what keeps a busy week of
+    # cancelled runs from resetting the clock with every new tip.
+    unverified_since=$prior_unverified_since
+    [ -z "$unverified_since" ] && unverified_since=$last_green
+    [ -z "$unverified_since" ] && unverified_since=$iso_now
 fi
-unverified_seconds=$((now - unverified_epoch))
 
 stale=false
-if [ "$status" != green ] && [ "$unverified_seconds" -gt "$max_unverified_seconds" ]; then
-    stale=true
+unverified_epoch=
+if [ -n "$unverified_since" ]; then
+    unverified_epoch=$(epoch_of "$unverified_since")
+    if [ -n "$unverified_epoch" ] \
+        && [ $((now - unverified_epoch)) -gt "$max_unverified_seconds" ]; then
+        stale=true
+    fi
 fi
 
 stale_notified_at=$stale_notified
@@ -355,69 +512,53 @@ if [ "$stale" = true ]; then
     send=true
     if [ -n "$stale_notified" ]; then
         last_epoch=$(epoch_of "$stale_notified")
-        [ $((now - last_epoch)) -ge "$stale_repeat_seconds" ] || send=false
+        if [ -n "$last_epoch" ] && [ $((now - last_epoch)) -lt "$stale_repeat_seconds" ]; then
+            send=false
+        fi
     fi
     if [ "$send" = true ]; then
-        notify \
-            "Full CI has not been green for $((unverified_seconds / 86400))d — pause Integration pushes to let a suite finish" \
-            "https://github.com/$repo/actions/workflows/$workflow"
-        stale_notified_at=$iso_now
+        days=$(( (now - unverified_epoch) / 86400 ))
+        if notify \
+            "Full CI has not been green for ${days}d — pause Integration pushes to let a suite finish" \
+            "https://github.com/$repo/actions/workflows/$workflow"; then
+            stale_notified_at=$iso_now
+        fi
     fi
 fi
 
-# A quiet day still gets one line, so a watcher that has silently died is
-# visible as absence rather than mistaken for good news.
+# --- proof of life -----------------------------------------------------------
+# A quiet day still gets one line, so a watcher that has silently died reads as
+# absence rather than as good news.
+
 if [ "$sent_message" = false ]; then
-    last_message_epoch=0
+    last_message_epoch=
     [ -n "$last_message" ] && last_message_epoch=$(epoch_of "$last_message")
-    if [ $((now - last_message_epoch)) -ge "$heartbeat_seconds" ]; then
+    if [ -z "$last_message_epoch" ] \
+        || [ $((now - last_message_epoch)) -ge "$heartbeat_seconds" ]; then
         heartbeat="Full CI watch alive — ${tip:0:12} is $status"
         [ -n "$last_green" ] && heartbeat="$heartbeat, last green $last_green"
-        notify "$heartbeat" "$run_url"
+        notify "$heartbeat" "$run_url" || true
     fi
 fi
 last_message_at=$last_message
 [ "$sent_message" = true ] && last_message_at=$iso_now
 
-open_kind=
-case "$status" in
-    failed) open_kind=$classification ;;
-    no_run) open_kind=absent ;;
-esac
-if [ "$stale" = true ] && [ -z "$open_kind" ]; then
-    open_kind=overdue
-fi
-
-if [ -n "$open_kind" ]; then
-    jq -n \
-        --arg updated_at "$iso_now" \
-        --arg sha "$tip" \
-        --arg kind "$open_kind" \
-        --arg detail "$detail" \
-        --arg url "$run_url" \
-        --arg since "$prior_first_seen" \
-        --arg stale_notified_at "$stale_notified_at" \
-        --arg last_message_at "$last_message_at" \
-        '{schema:1,updated_at:$updated_at,
-          stale_notified_at:(if $stale_notified_at == "" then null
-                             else $stale_notified_at end),
-          last_message_at:(if $last_message_at == "" then null
-                           else $last_message_at end),
-          open:[{fx_sha:$sha,kind:$kind,detail:$detail,run_url:$url,since:$since}]}' \
-        >"$scratch/pending.json"
-else
-    jq -n \
-        --arg updated_at "$iso_now" \
-        --arg stale_notified_at "$stale_notified_at" \
-        --arg last_message_at "$last_message_at" \
-        '{schema:1,updated_at:$updated_at,
-          stale_notified_at:(if $stale_notified_at == "" then null
-                             else $stale_notified_at end),
-          last_message_at:(if $last_message_at == "" then null
-                           else $last_message_at end),
-          open:[]}' \
-        >"$scratch/pending.json"
-fi
+jq -n \
+    --arg updated_at "$iso_now" \
+    --arg stale_notified_at "$stale_notified_at" \
+    --arg last_message_at "$last_message_at" \
+    --arg unverified_since "$unverified_since" \
+    --argjson open "$open_list" \
+    --argjson overdue "$stale" \
+    '{schema:1,updated_at:$updated_at,overdue:$overdue,
+      stale_notified_at:(if $stale_notified_at == "" then null
+                         else $stale_notified_at end),
+      last_message_at:(if $last_message_at == "" then null
+                       else $last_message_at end),
+      unverified_since:(if $unverified_since == "" then null
+                        else $unverified_since end),
+      open:$open}' \
+    >"$scratch/pending.json"
 write_atomic "$pending_file" "$scratch/pending.json"
 
 printf 'CI-WATCH %s %s %s\n' "${tip:0:12}" "$status" "$classification"

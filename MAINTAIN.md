@@ -240,7 +240,9 @@ escalates a real failure or an overdue verdict to the human. It also reports
 once a day when nothing has happened, so a silent watcher reads as broken
 rather than as good news. Read
 `~/.local/state/fxnk/full-ci/pending.json` at the start of every cycle: an open
-obligation there is work for this cycle, not a status note. The watcher polls
+obligation there, or `overdue: true`, is work for this cycle, not a status
+note. A verdict it could not classify escalates rather than guessing, so an
+`unclassified` obligation means read the run, not distrust the watcher. The watcher polls
 from launchd, bound once with:
 
 ```sh

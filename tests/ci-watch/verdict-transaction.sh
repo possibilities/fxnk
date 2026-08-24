@@ -21,6 +21,7 @@ trap cleanup EXIT
 
 sha=1111111111111111111111111111111111111111
 tip_date=2026-08-24T12:00:00Z
+lock_stale_seconds=1800
 # Two hours after the tip, so the trigger grace window has closed.
 now=$(date -u -j -f '%Y-%m-%dT%H:%M:%SZ' 2026-08-24T14:00:00Z '+%s')
 
@@ -33,6 +34,7 @@ notified="$test_root/notified.txt"
 run_watch() {
     local state_dir="$1" at="${2:-$now}"
     env \
+        FXNK_TEST_GH_JOBS_FAIL="${jobs_fail:-0}" \
         FXNK_CI_WATCH_GH_BIN="$fixtures/fake-gh.sh" \
         FXNK_CI_WATCH_NOTIFIER_BIN="$fixtures/fake-notifier.sh" \
         FXNK_CI_WATCH_NOW="$at" \
@@ -75,7 +77,8 @@ receipt="$state/full-ci/$sha.json"
 [ "$(stat -f '%Lp' "$receipt")" = 600 ] || fail "verdict receipt is not mode 0600"
 jq -e '.status == "green" and .classification == "green" and .notified_at == null' \
     "$receipt" >/dev/null || fail "green verdict recorded the wrong proof"
-jq -e '.open == []' "$state/full-ci/pending.json" >/dev/null \
+jq -e '.open == [] and .overdue == false and .unverified_since == null' \
+    "$state/full-ci/pending.json" >/dev/null \
     || fail "green verdict left an open obligation"
 [ ! -s "$notified" ] || fail "green verdict notified the human"
 
@@ -163,7 +166,7 @@ run_watch "$state" $((now + 5 * 24 * 60 * 60)) >/dev/null
 [ "$(wc -l <"$notified")" -eq 1 ] || fail "an overdue verdict did not reach the human"
 grep -F 'pause Integration pushes' "$notified" >/dev/null \
     || fail "overdue notification does not say what to do"
-jq -e '.open[0].kind == "overdue" and .stale_notified_at != null' \
+jq -e '.overdue == true and .stale_notified_at != null' \
     "$state/full-ci/pending.json" >/dev/null \
     || fail "overdue verdict left no obligation"
 
@@ -181,5 +184,171 @@ run_watch "$state" $((now + 25 * 60 * 60)) >/dev/null
 [ "$(wc -l <"$notified")" -eq 2 ] || fail "the heartbeat did not repeat after a day"
 jq -e '.last_message_at != null' "$state/full-ci/pending.json" >/dev/null \
     || fail "the heartbeat clock was not recorded"
+
+# --- an aggregate job must not mask an infrastructure failure ---------------
+# full-ci.yml's "Full suite" jobs restate the matrix result, so they fail
+# alongside anything. Counting them would make every failure look like a test
+# failure and leave the retry path dead.
+state="$test_root/aggregate"
+seed_quiet "$state"
+write_run completed failure
+jq -n '{jobs:[
+    {name:"E2E (ReleaseSafe, linux-x86_64, shard 2/4)",conclusion:"failure",
+     steps:[{name:"Install E2E system dependencies",conclusion:"failure"}]},
+    {name:"Full suite (linux-x86_64)",conclusion:"failure",
+     steps:[{name:"Verify native and E2E matrices",conclusion:"failure"}]}]}' >"$jobs"
+: >"$log"
+: >"$notified"
+: >"$calls"
+run_watch "$state" >/dev/null
+jq -e '.status == "pending" and .classification == "rerun" and .reruns == 1' \
+    "$state/full-ci/$sha.json" >/dev/null \
+    || fail "an aggregate job masked an infrastructure failure"
+[ ! -s "$notified" ] || fail "a retryable failure escalated immediately"
+
+# --- named failing tests outrank every step name ----------------------------
+state="$test_root/named"
+seed_quiet "$state"
+printf '(fail) some real test > does a thing [10ms]\n' >"$log"
+run_watch "$state" >/dev/null
+jq -e '.status == "failed" and .classification == "real_failure" and
+       (.failing_jobs | length) == 2' \
+    "$state/full-ci/$sha.json" >/dev/null \
+    || fail "named failing tests were not decisive"
+
+# --- unreadable job evidence is never reported as a red build ---------------
+state="$test_root/blind"
+seed_quiet "$state"
+: >"$log"
+: >"$notified"
+jobs_fail=1
+run_watch "$state" >/dev/null
+jobs_fail=0
+jq -e '.status == "failed" and .classification == "unclassified" and
+       (.detail | test("jobs could not be read"))' \
+    "$state/full-ci/$sha.json" >/dev/null \
+    || fail "an unreadable jobs list was reported as a test failure"
+[ "$(wc -l <"$notified")" -eq 1 ] || fail "an unclassified failure did not escalate"
+
+# --- a failure with no recognizable cause escalates, never reruns -----------
+state="$test_root/unknown"
+seed_quiet "$state"
+jq -n '{jobs:[{name:"Native checks (ReleaseSafe, macos-aarch64)",conclusion:"failure",
+               steps:[{name:"Run unit tests",conclusion:"failure"}]}]}' >"$jobs"
+: >"$log"
+: >"$calls"
+run_watch "$state" >/dev/null
+jq -e '.status == "failed" and .classification == "unclassified"' \
+    "$state/full-ci/$sha.json" >/dev/null \
+    || fail "an unrecognized failure was not escalated"
+if grep -F 'run rerun' "$calls" >/dev/null; then
+    fail "an unrecognized failure spent a rerun"
+fi
+
+# --- conclusions that are not verdicts are not red builds -------------------
+for outcome in startup_failure action_required skipped neutral stale; do
+    state="$test_root/outcome-$outcome"
+    seed_quiet "$state"
+    write_run completed "$outcome"
+    : >"$notified"
+    run_watch "$state" >/dev/null
+    jq -e --arg outcome "$outcome" \
+        '.status == "no_verdict" and .classification == $outcome' \
+        "$state/full-ci/$sha.json" >/dev/null \
+        || fail "$outcome was misread as a verdict"
+    [ ! -s "$notified" ] || fail "$outcome paged the human as a red build"
+    jq -e --arg sha "$sha" '[.open[].fx_sha] | index($sha) != null' \
+        "$state/full-ci/pending.json" >/dev/null \
+        || fail "$outcome left the tip unverified with nothing on the books"
+done
+
+# --- a corrupt state file costs one poll, not every poll --------------------
+state="$test_root/corrupt"
+seed_quiet "$state"
+write_run completed success
+printf '{"schema":1,"fx_sha":' >"$state/full-ci/$sha.json"
+printf 'not json at all' >"$state/full-ci/pending.json"
+run_watch "$state" >/dev/null 2>&1
+jq -e '.status == "green"' "$state/full-ci/$sha.json" >/dev/null \
+    || fail "a corrupt receipt wedged the watcher"
+jq -e '.schema == 1' "$state/full-ci/pending.json" >/dev/null \
+    || fail "a corrupt pending file wedged the watcher"
+
+# --- an undelivered notification is never recorded as delivered -------------
+state="$test_root/undeliverable"
+seed_quiet "$state"
+write_run completed failure
+jq -n '{jobs:[{name:"E2E (ReleaseSafe, macos-aarch64, shard 1/4)",conclusion:"failure",
+               steps:[{name:"Run deterministic E2E shard",conclusion:"failure"}]}]}' >"$jobs"
+printf '(fail) a real test > fails [1ms]\n' >"$log"
+env FXNK_CI_WATCH_GH_BIN="$fixtures/fake-gh.sh" \
+    FXNK_CI_WATCH_NOTIFIER_BIN="" \
+    FXNK_CI_WATCH_NOW="$now" \
+    FXNK_TEST_GH_TIP="$sha" FXNK_TEST_GH_TIP_DATE="$tip_date" \
+    FXNK_TEST_GH_RUNS="$runs" FXNK_TEST_GH_JOBS="$jobs" FXNK_TEST_GH_LOG="$log" \
+    FXNK_TEST_GH_CALLS="$calls" \
+    "$root/scripts/ci-watch.sh" --once --state-dir "$state" >/dev/null 2>&1
+jq -e '.status == "failed" and .notified_at == null' \
+    "$state/full-ci/$sha.json" >/dev/null \
+    || fail "an undelivered notification was recorded as delivered"
+
+# --- an obligation survives a newer, greener tip ----------------------------
+state="$test_root/carry"
+seed_quiet "$state"
+failed_sha=$sha
+write_run completed failure
+run_watch "$state" >/dev/null
+jq -e --arg sha "$failed_sha" '[.open[].fx_sha] | index($sha) != null' \
+    "$state/full-ci/pending.json" >/dev/null || fail "the failure was not booked"
+sha=2222222222222222222222222222222222222222
+write_run completed success
+run_watch "$state" >/dev/null
+jq -e --arg sha "$failed_sha" '[.open[].fx_sha] | index($sha) != null' \
+    "$state/full-ci/pending.json" >/dev/null \
+    || fail "a newer green tip erased an unresolved obligation"
+sha=$failed_sha
+
+# --- the overdue clock survives a stream of new tips ------------------------
+# The failure this guards: anchoring to the current SHA's first sighting means
+# every push resets the clock, so a never-green branch is never escalated.
+state="$test_root/never-green"
+seed_quiet "$state"
+: >"$notified"
+day=0
+while [ "$day" -lt 6 ]; do
+    sha=$(printf '3%039d' "$day")
+    write_run completed cancelled
+    FXNK_TEST_GH_RERUN_FAILS=1 \
+        run_watch "$state" $((now + day * 24 * 60 * 60)) >/dev/null
+    day=$((day + 1))
+done
+sha=1111111111111111111111111111111111111111
+grep -F 'has not been green' "$notified" >/dev/null \
+    || fail "a branch that was never green was never escalated"
+jq -e '.overdue == true and .unverified_since != null' \
+    "$state/full-ci/pending.json" >/dev/null \
+    || fail "the overdue clock was not carried across tips"
+
+# --- overlapping polls never double-spend the rerun budget ------------------
+state="$test_root/locked"
+seed_quiet "$state"
+write_run completed success
+mkdir -p "$state/full-ci/.lock"
+: >"$calls"
+run_watch "$state" | grep -Fx 'CI-WATCH busy' >/dev/null \
+    || fail "a concurrent poll did not defer to the lock holder"
+[ ! -f "$state/full-ci/$sha.json" ] || fail "a deferred poll wrote a receipt"
+rmdir "$state/full-ci/.lock"
+run_watch "$state" >/dev/null
+jq -e '.status == "green"' "$state/full-ci/$sha.json" >/dev/null \
+    || fail "the watcher did not resume once the lock cleared"
+# A lock left behind by a killed poll must not wedge the watcher forever.
+rm -f "$state/full-ci/$sha.json"
+mkdir -p "$state/full-ci/.lock"
+touch -d "$(date -u -r $((now - 2 * lock_stale_seconds)) '+%Y-%m-%dT%H:%M:%SZ')" \
+    "$state/full-ci/.lock"
+run_watch "$state" >/dev/null 2>&1
+jq -e '.status == "green"' "$state/full-ci/$sha.json" >/dev/null \
+    || fail "a stale lock was not broken"
 
 printf 'ci watch verdict transaction validation passed.\n'
