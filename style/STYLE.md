@@ -162,6 +162,35 @@ and record it here as a carve-out. Nothing below is extracted from fx:
 `tokens.json` does not carry it, `style-extract.sh --check` cannot see it,
 and a maintenance cycle must not "correct" it back to fx.
 
+### Unused space around a smaller sizing owner
+
+fmx renders one shared Runtime at the dimensions of the Client that most
+recently connected or interacted. When another Client's physical terminal is
+larger than that sizing-owner frame, its extra cells on the right and bottom
+are neither another pane nor a navigable viewport. They are one flat
+**unused field** behind the shared frame at the top left.
+
+| part | dark host | light host |
+|---|---|---|
+| shared frame | the host background | the host background |
+| unused field | host background mixed 25% toward black | host background mixed 25% toward white |
+
+The color difference is the whole affordance. There is no boundary line or
+outer border, and no glyph, hatch, grid, dither, noise, or other texture. On
+each sizing handoff fmx paints the physical Client with the unused field,
+then paints the owner-sized shared frame over its top-left corner. The field
+should read as the same instrument falling quiet, not as a second surface.
+
+A physically smaller observing Client simply crops the shared frame at the
+right and bottom; there is no pan, scroll, or viewport behavior. Connecting,
+focus gain, keyboard input, mouse motion or buttons, paste, and resize can
+make that Client the sizing owner, at which point the Runtime organically
+resizes and every Client repaints.
+
+Why this shape: a border made the shared frame look nested, and any repeated
+mark made unused space compete with the work. A theme-relative flat field is
+visible without becoming content of its own.
+
 ### Switching items in a panel: the rule tab
 
 The Tools panel's switcher (`fmx/src/tool-panel.ts`) is a **rule tab**: one

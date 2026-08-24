@@ -48,6 +48,7 @@ const role = (name: string, theme: Theme): StyleValue =>
 const FMX_FOCUS = "#7dd3fc"
 const FMX_ERROR = (tokens.diff_markers.removed.truecolor as StyleValue).fg!.hex
 const SURFACE_BLEND = 0.12
+const UNUSED_SPACE_BLEND = 0.25
 
 function mix(base: string, tint: string, amount: number): string {
   const channel = (offset: number) => {
@@ -59,6 +60,11 @@ function mix(base: string, tint: string, amount: number): string {
 }
 
 const surface = (theme: Theme): string => mix(CANVAS[theme], role("hint", theme).fg!.hex, SURFACE_BLEND)
+const unused = (theme: Theme): string => mix(
+  CANVAS[theme],
+  theme === "dark" ? "#000000" : "#ffffff",
+  UNUSED_SPACE_BLEND,
+)
 
 /** Paint text with an extracted style value, substituting the simulated
  * default foreground when the value carries no color of its own. */
@@ -192,7 +198,41 @@ function carveOutsSection(theme: Theme): Line[] {
   lines.push([paint(role("tag", t), "carve-outs", t), note("  surfaces fx never draws, built from its principles — fallback tier shown", t)])
   lines.push([])
 
-  // 1. The rule tab: the Tools panel's switcher.
+  // 1. A larger observing Client around a smaller sizing-owner frame.
+  lines.push(heading("unused space around a smaller sizing owner", "one flat host-relative field — no boundary or texture"))
+  const ownerWidth = 46
+  const unusedWidth = 14
+  const unusedFill = (width: number): TextChunk => bg(unused(t))(note(" ".repeat(width), t))
+  const ownerLine = (chunks: Line, used: number): Line => [
+    ...chunks.map((chunk) => bg(CANVAS[t])(chunk)),
+    bg(CANVAS[t])(note(" ".repeat(Math.max(0, ownerWidth - used)), t)),
+    unusedFill(unusedWidth),
+  ]
+  lines.push(ownerLine([
+    bold(paint(role("hint", t), " fmx", t)),
+    note("             ", t),
+    paint(role("hint", t), "Working on the UI gallery", t),
+  ], 42))
+  lines.push(ownerLine([
+    bold(paint(role("hint", t), "   main", t)),
+    note("          ", t),
+    paint(role("permission_auto", t), "✓ ", t),
+    paint(role("dim", t), "Inventory visible", t),
+  ], 36))
+  lines.push(ownerLine([
+    paint(role("dim", t), "     ◐ Review UI", t),
+    note(" ", t),
+    paint(role("dim", t), "◐ Review the gallery", t),
+  ], 37))
+  lines.push(ownerLine([
+    note("                 ", t),
+    paint(role("dim", t), "Deterministic state.", t),
+  ], 37))
+  lines.push([unusedFill(ownerWidth + unusedWidth)])
+  lines.push([unusedFill(ownerWidth + unusedWidth)])
+  lines.push([])
+
+  // 2. The rule tab: the Tools panel's switcher.
   lines.push(heading("the rule tab", "fmx's Tools panel switcher — selection by weight and the heavy rule span"))
   const items = ["Diff", "Tests", "Logs"]
   const selected = 1
@@ -215,7 +255,7 @@ function carveOutsSection(theme: Theme): Line[] {
   lines.push(rule)
   lines.push([])
 
-  // 2. Agent rows in the tray: state by glyph and weight.
+  // 3. Agent rows in the tray: state by glyph and weight.
   lines.push(heading("agent rows in the tray", "labels primary, names dim, the glyph carries the state — never a hue"))
   const name = (text: string) => paint(role("dim", t), text, t)
   const fill = (chunk: TextChunk) => bg(surface(t))(chunk)
@@ -235,7 +275,7 @@ function carveOutsSection(theme: Theme): Line[] {
   lines.push([paint(role("dim", t), "     · ", t), name("starting"), annotate(15, "unknown — dim")])
   lines.push([])
 
-  // 3. Surfaces over the stage: focus border takes keys, dim hairline takes none.
+  // 4. Surfaces over the stage: focus border takes keys, dim hairline takes none.
   lines.push(heading("surfaces over the stage", "focus border takes keys · dim hairline takes none · error border reports failure"))
   const F = (text: string) => fg(FMX_FOCUS)(text)
   const E = (text: string) => fg(FMX_ERROR)(text)

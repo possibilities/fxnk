@@ -51,7 +51,8 @@ supplies agent and session context without presentation policy.
 _Avoid_: Herdr feed, control socket, ask feed.
 
 **Carve-out** — a surface fmx needs that fx never draws (a tab, a tray row, a
-modal), designed from fx's principles and recorded in `style/STYLE.md`
+modal, or unused Client space), designed from fx's principles and recorded in
+`style/STYLE.md`
 § "Carve-outs", with the viewer rendering it from ramp tokens. It is not
 extracted, invisible to `style-extract.sh --check`, and never reconciled
 toward fx; a maintenance cycle revisits one only if upstream grows the

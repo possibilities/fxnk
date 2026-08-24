@@ -242,8 +242,9 @@ tracking the five sites plus the index census is complete coverage.
 
 Carve-outs are the one part of the guide that is not extracted. fx has no
 tabs, docks, trays, or modals, so surfaces fmx needs and fx never draws —
-today the Tools panel's rule tab, the tray's agent rows, and the surfaces
-drawn over the stage — are designed from fx's principles and recorded in
+today the Tools panel's rule tab, the tray's agent rows, the surfaces drawn
+over the stage, and the unused field around a smaller sizing owner — are
+designed from fx's principles and recorded in
 `style/STYLE.md` § "Carve-outs", with the viewer's "carve-outs" section
 rendering them from ramp tokens. They are deliberately absent from
 `tokens.json`, invisible to `style-extract.sh --check`, and must never be
