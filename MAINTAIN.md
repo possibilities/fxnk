@@ -94,20 +94,6 @@ later cycle reconciles only what this section names.
   as `fx models --json`, so an ADE can present valid models and efforts for each
   provider.
 
-### Session naming
-
-- Name an unnamed interactive session from its first prompt and adopt the
-  generated title through the same durable sidecar and index path a manual
-  rename uses. The interactive TUI only: `fx ask` and `fx acp` never name.
-- Keep the request a bounded one-shot. It carries its own instruction and a
-  bounded excerpt of that prompt with mentioned files inlined, and it carries
-  no tools, no agent system prompt, no session identity, and no reply beyond
-  the length a title needs. It runs off the agent worker, never delays or
-  blocks a turn, and stays silent on failure.
-- Resolve the naming model and effort per provider from `session_naming`
-  settings merged across profile and workspace. Codex compiles in a default;
-  a provider whose model does not resolve simply does not name.
-
 ### ADE event feed
 
 - Provide the opt-in schema `1` ADE event feed documented in
@@ -172,6 +158,11 @@ later cycle reconciles only what this section names.
   and generated titles through the native `/rename` persistence path before
   publishing `SessionMetadataChanged`; manual rename and session changes
   invalidate stale work.
+- Keep the request itself a bounded one-shot: its own instruction and that
+  excerpt, no tools, no agent system prompt, and no session identity. Stop the
+  stream as soon as it holds enough for a slug, because the Codex endpoint
+  refuses the Responses API output bound and stopping it is the only thing
+  that keeps a naming answer short.
 - Keep automatic naming disabled for `fx ask`, `fx acp`, subagents, and
   disabled or unconfigured providers. Naming must not block agent lifecycle.
   This carry depends on the ADE event feed for live consumer updates.
