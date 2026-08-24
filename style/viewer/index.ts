@@ -44,11 +44,12 @@ const role = (name: string, theme: Theme): StyleValue =>
 
 // fmx's own additions to the ramp, not extracted from fx (see STYLE.md
 // "Borrowing into fmx"): the focus hue is the host's blue in fmx and this
-// fallback here; the surface fill sits 12% from the canvas toward primary.
+// fallback here; the unused and surface fills sit 6% and 12% from the canvas
+// toward primary.
 const FMX_FOCUS = "#7dd3fc"
 const FMX_ERROR = (tokens.diff_markers.removed.truecolor as StyleValue).fg!.hex
+const UNUSED_SPACE_BLEND = 0.06
 const SURFACE_BLEND = 0.12
-const UNUSED_SPACE_BLEND = 0.25
 
 function mix(base: string, tint: string, amount: number): string {
   const channel = (offset: number) => {
@@ -60,11 +61,7 @@ function mix(base: string, tint: string, amount: number): string {
 }
 
 const surface = (theme: Theme): string => mix(CANVAS[theme], role("hint", theme).fg!.hex, SURFACE_BLEND)
-const unused = (theme: Theme): string => mix(
-  CANVAS[theme],
-  theme === "dark" ? "#000000" : "#ffffff",
-  UNUSED_SPACE_BLEND,
-)
+const unused = (theme: Theme): string => mix(CANVAS[theme], role("hint", theme).fg!.hex, UNUSED_SPACE_BLEND)
 
 /** Paint text with an extracted style value, substituting the simulated
  * default foreground when the value carries no color of its own. */

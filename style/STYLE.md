@@ -173,7 +173,7 @@ are neither another pane nor a navigable viewport. They are one flat
 | part | dark host | light host |
 |---|---|---|
 | shared frame | the host background | the host background |
-| unused field | host background mixed 25% toward black | host background mixed 25% toward white |
+| unused field | host background mixed 6% toward its foreground — lighter than the frame, below every surface | host background mixed 6% toward its foreground — darker than the frame, above every surface |
 
 The color difference is the whole affordance. There is no boundary line or
 outer border, and no glyph, hatch, grid, dither, noise, or other texture. On
@@ -313,8 +313,9 @@ shared principle than fx's fixed grays. So the rule is not "copy the hex":
    fractions of the way from the host's background to its foreground. The
    ratios are read off tokens.json (dark 255/252/250/245/240 on a
    near-black canvas, light 235/238/241/247/250 on a near-white one), and
-   fmx adds one step below the divider — a raised fill — for the active
-   tray row and the toast body.
+   fmx adds two steps below the divider: a raised surface fill for the active
+   tray row and toast body, then a quieter unused-field fill between that
+   surface and the terminal background.
 
    | ramp step | fx role | fraction bg → fg | fallback |
    |---|---|---|---|
@@ -324,12 +325,14 @@ shared principle than fx's fixed grays. So the rule is not "copy the hex":
    | dim | `dim`, `statusline` | 0.5 | 245 `#8a8a8a` |
    | divider | `divider` | 0.3 | 240 `#585858` |
    | surface | — (fmx's fill) | 0.12 | `#353535` |
+   | unused | — (fmx's unused Client field) | 0.06 | `#292929` |
    | background | the terminal's | the host background | 234 `#1c1c1c` |
 
-2. **The fallback tier is fx's dark column exactly.** A host that answers
-   no color query gets the fallback column verbatim, so it looks like one
-   instrument; on any real canvas the blends land within a step of it. A
-   host that answers only its background gets fx's light or dark primary
+2. **The fallback tier preserves fx's dark column exactly.** A host that
+   answers no color query gets fx's shared ramp values verbatim; fmx's two
+   fill steps are derived from that column's background and foreground at
+   their listed ratios. On any real canvas the blends land within a step of
+   it. A host that answers only its background gets fx's light or dark primary
    by that background's brightness.
 3. **Two hues, one job each.** `focus` is the host's blue (ANSI 4, then
    12; fallback `#7dd3fc`): the border of a surface that takes keys, the
