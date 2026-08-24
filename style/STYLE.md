@@ -183,33 +183,138 @@ Why this shape and not another: the divider glyph does the underlining, so
 the no-underline rule holds; the selection is bold like fx's selected menu
 row; nothing in it takes the accent hue, which fmx keeps for focus and
 failure. In fmx the values are host-derived per "Borrowing into fmx" —
-`modalColors().foreground`, `.dim`, and `.divider` — and the column above is
+`hostRamp().foreground`, `.dim`, and `.divider` — and the column above is
 the no-answer fallback tier. Other shapes considered and not taken: weighted
 words with `·` separators (fx's statusline idiom, but reads as status rather
 than a control), an inverse chip (fx's button idiom, too loud for a
 persistent dock), a cycler (hides the other items).
 
+### Agent rows in the tray
+
+fx has no tray: its transcript is one agent. fmx's Session list
+(`fmx/src/session-list.ts`) draws a project → branch → agent tree, and the
+state of every agent in it — which fx would say in words — has to be read
+off a glyph. The row is built from fx's principles: the brightest gray marks
+what matters now, bold marks the path, and no state is a hue.
+
+```
+ fmx
+   main
+     × needs-permission
+     ◐ implement-gallery      ← active: surface fill
+     ✓ review-complete
+     ○ available
+   (untracked)
+     · starting
+```
+
+| part | role | dark | light |
+|---|---|---|---|
+| project / branch label | `hint` (primary); bold on the path to the active agent | 255 | 235 |
+| `(untracked)` virtual branch | `system_notice_text` (secondary), italic, never bold | 250 | 241 |
+| agent / subagent name | `dim` | 245 | 247 |
+| blocked glyph `×` `?` `↻` | **bold `hint`** — the one bright thing, what needs the human | bold 255 | bold 235 |
+| done glyph `✓` | `permission_auto` (accent) — one step brighter than its row, fx's finished-tool idiom | 252 | 238 |
+| working `◐`, idle `○`, unknown `·` glyphs | `dim` | 245 | 247 |
+| active row | surface fill, 12% from the background toward the foreground — fmx's own step below `divider` | — | — |
+
+Why this shape: fx marks a running tool call dim and a finished one accent,
+which is exactly the working/done pair; blocked takes the brightest gray and
+bold because in fx's language "what matters now" is the only thing allowed
+to be loud. The fill rather than inversion or bold for the active row: bold
+is already the path, and fx's inverse-video button is far too loud for a
+row that is on screen all day. Before the host palette answers, names are
+the terminal's own ANSI gray (slot 8, dim on any theme) so the first frame
+needs no guess; afterwards they are `dim`. Not taken: the five ANSI status
+hues fmx used before this guide (red/yellow/cyan/green/gray — state by hue,
+which fx forbids), and a host-red "attention" exception for blocked (one
+more hue than fx spends, and the bold glyph already reads first).
+
+### Surfaces over the stage
+
+fx has no modal, dialog, picker, or toast; its prompts are inline. fmx's
+help modal and spawn error (`fmx/src/multiplexer.ts`), launch dialog and
+project/model pickers (`fmx/src/launch-dialog.ts`), and toast
+(`fmx/src/toast.ts`) are one family: a bordered body over a dimmed stage.
+
+```
+┌─ launch ─────────────────────────────┐
+│ ▎ prompt    what should the agent do?│      focus border: this takes keys
+│   project   ~/code/fmx               │
+│   worktree  no                       │
+└──────────────────────────────────────┘
+        ┌────────────────────────┐
+        │ fmx / main / agent 3 started │        dim hairline: this takes none
+        └────────────────────────┘
+```
+
+| part | role | dark | light |
+|---|---|---|---|
+| scrim behind a modal or dialog | `#00000033` — a 20% black darkening, fmx's one opacity; not a hue, and reads as a dimmed stage on either theme | — | — |
+| body | the host background (modal, dialog, picker); the surface fill (toast, lifted off the stage) | — | — |
+| border, surface that takes keys | **focus** — the host's blue, fmx's own; fallback `#7dd3fc` | — | — |
+| border, surface that takes no keys (toast) | `dim` | 245 | 247 |
+| border, surface reporting a failure | **error** — the host's red; fallback fx's `#e5484d` | — | — |
+| title in the border | `hint` (primary) | 255 | 235 |
+| label — a dialog row's name, a help key (bold) | `system_notice_text` (secondary) | 250 | 241 |
+| value, body text | `hint` (primary) | 255 | 235 |
+| standing hint, placeholder, an unavailable row's reason | `dim` | 245 | 247 |
+| error heading | bold `red` — which in fx is the accent gray | bold 252 | bold 238 |
+| row caret `▎`, picker `> `, prompt cursor | **focus** | — | — |
+| selected picker row | `selected_completion` (bold primary) | bold 255 | bold 235 |
+| other picker rows | `system_notice_text` (secondary) | 250 | 241 |
+
+Why this shape: focus is the one hue fx's guide lets fmx keep, and "this
+surface has your keys" is what focus means, so every surface that takes
+keys wears it on its border and nowhere else takes it; the toast takes no
+keys and gets the hairline instead. The picker is fx's completion menu
+(selected row bold primary). The help modal's key/description pairs and
+the dialog's label/value pairs are fx's notice-label/notice-text pairing.
+Not taken: a green success toast (fx's `green` is gray; "started" is in the
+words), red text inside the error modal (the border already says failure;
+one red per surface), bold titles (OpenTUI box titles take a color only).
+
 ## Borrowing into fmx
 
-fmx's own surfaces (`host-palette.ts` `modalColors`) derive from the host
-terminal's palette, which is *more* faithful to the shared principle than
-fx's fixed grays. So the rule is not "copy the hex":
+fmx's own surfaces derive from the host terminal's palette
+(`fmx/src/host-palette.ts`, `hostRamp`), which is *more* faithful to the
+shared principle than fx's fixed grays. So the rule is not "copy the hex":
 
-1. **Prefer host-derived colors** where fmx already derives them
-   (foreground, background, dim-by-blending). fx's ramp tells you the
-   *relationships* to reproduce: how far dim sits from primary, that
-   dividers sit nearest the background, that selection is inversion.
-2. **Use tokens.json hex as the fallback tier** — the values for a host
-   that answers no color query — the role `MODAL_FALLBACK_COLORS` plays
-   today. Aligning those fallbacks with the fx dark column keeps a
-   no-answer host looking like one instrument.
-3. **Spend chroma as rarely as fx does.** fmx's modal accent (host blue)
-   and error (host red) are already more chromatic than fx; keep them for
-   focus and failure, and resist adding more hues.
+1. **Reproduce the ramp as relationships.** fx's five steps become
+   fractions of the way from the host's background to its foreground. The
+   ratios are read off tokens.json (dark 255/252/250/245/240 on a
+   near-black canvas, light 235/238/241/247/250 on a near-white one), and
+   fmx adds one step below the divider — a raised fill — for the active
+   tray row and the toast body.
+
+   | ramp step | fx role | fraction bg → fg | fallback |
+   |---|---|---|---|
+   | foreground | `hint`, `tag` (primary) | the host foreground | 255 `#eeeeee` |
+   | accent | `warning`/`green`/`red`, `system_notice_label`, `permission_auto` | 0.85 | 252 `#d0d0d0` |
+   | secondary | `system_notice_text` | 0.75 | 250 `#bcbcbc` |
+   | dim | `dim`, `statusline` | 0.5 | 245 `#8a8a8a` |
+   | divider | `divider` | 0.3 | 240 `#585858` |
+   | surface | — (fmx's fill) | 0.12 | `#353535` |
+   | background | the terminal's | the host background | 234 `#1c1c1c` |
+
+2. **The fallback tier is fx's dark column exactly.** A host that answers
+   no color query gets the fallback column verbatim, so it looks like one
+   instrument; on any real canvas the blends land within a step of it. A
+   host that answers only its background gets fx's light or dark primary
+   by that background's brightness.
+3. **Two hues, one job each.** `focus` is the host's blue (ANSI 4, then
+   12; fallback `#7dd3fc`): the border of a surface that takes keys, the
+   row caret `▎`, the prompt cursor. `error` is the host's red (ANSI 1,
+   then 9; fallback fx's own `#e5484d`): the border of a surface that
+   reports a failure. Nothing else in fmx is chromatic. A new state gets a
+   glyph and a weight, never a hue.
 4. **Match the glyph vocabulary** where fmx shows the same concepts:
-   agent/tool state dots, tree connectors, `·` separators, prompt rails.
+   agent/tool state glyphs, `·` separators, prompt rails.
 5. **State by shape and weight first**, color second — a colorblind-safe
    habit fx enforces by having almost no color at all.
+
+The scrim behind a modal (`#00000033`) is the one opacity fmx uses: a 20%
+darkening of whatever the stage is, not a color of its own.
 
 ## Artifacts and regeneration
 

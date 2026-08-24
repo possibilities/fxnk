@@ -37,10 +37,28 @@ type StyleValue = {
 // theme is inspectable on a dark terminal and vice versa.
 const CANVAS: Record<Theme, string> = { dark: "#121212", light: "#fafafa" }
 
-const SECTIONS = ["roles", "transcript", "code", "glyphs", "switching", "about"] as const
+const SECTIONS = ["roles", "transcript", "code", "glyphs", "carve-outs", "about"] as const
 
 const role = (name: string, theme: Theme): StyleValue =>
   (tokens.roles as Record<string, Record<Theme, StyleValue>>)[name][theme]
+
+// fmx's own additions to the ramp, not extracted from fx (see STYLE.md
+// "Borrowing into fmx"): the focus hue is the host's blue in fmx and this
+// fallback here; the surface fill sits 12% from the canvas toward primary.
+const FMX_FOCUS = "#7dd3fc"
+const FMX_ERROR = (tokens.diff_markers.removed.truecolor as StyleValue).fg!.hex
+const SURFACE_BLEND = 0.12
+
+function mix(base: string, tint: string, amount: number): string {
+  const channel = (offset: number) => {
+    const from = parseInt(base.slice(offset, offset + 2), 16)
+    const to = parseInt(tint.slice(offset, offset + 2), 16)
+    return Math.round(from + (to - from) * amount).toString(16).padStart(2, "0")
+  }
+  return `#${channel(1)}${channel(3)}${channel(5)}`
+}
+
+const surface = (theme: Theme): string => mix(CANVAS[theme], role("hint", theme).fg!.hex, SURFACE_BLEND)
 
 /** Paint text with an extracted style value, substituting the simulated
  * default foreground when the value carries no color of its own. */
@@ -164,17 +182,20 @@ function glyphsSection(theme: Theme): Line[] {
   return lines
 }
 
-/** The carve-outs: surfaces fx never draws, built from its principles. Not
- * extracted — see STYLE.md "Carve-outs". */
-function switchingSection(theme: Theme): Line[] {
+/** The carve-outs: surfaces fx never draws, built from its principles and
+ * painted here from the fallback tier — the ramp tokens, plus fmx's focus
+ * hue and surface fill. Not extracted — see STYLE.md "Carve-outs". */
+function carveOutsSection(theme: Theme): Line[] {
   const t = theme
+  const lines: Line[] = []
+  const heading = (title: string, why: string): Line => [paint(role("system_notice_label", t), title, t), note("  " + why, t)]
+  lines.push([paint(role("tag", t), "carve-outs", t), note("  surfaces fx never draws, built from its principles — fallback tier shown", t)])
+  lines.push([])
+
+  // 1. The rule tab: the Tools panel's switcher.
+  lines.push(heading("the rule tab", "fmx's Tools panel switcher — selection by weight and the heavy rule span"))
   const items = ["Diff", "Tests", "Logs"]
   const selected = 1
-  const lines: Line[] = []
-  lines.push([paint(role("tag", t), "switching items in a panel", t), note("  carve-out: fx has no tabs to ape", t)])
-  lines.push([])
-  lines.push([note("the rule tab — fmx's Tools panel switcher", t)])
-  lines.push([])
   const labels: Line = []
   const rule: Line = []
   items.forEach((label, i) => {
@@ -192,14 +213,50 @@ function switchingSection(theme: Theme): Line[] {
   rule.push(paint(role("divider", t), "─".repeat(12), t))
   lines.push(labels)
   lines.push(rule)
-  lines.push([note("  tool body …", t)])
   lines.push([])
-  lines.push([paint(role("hint", t), "  selected   ", t), note("selected_completion — bold primary, like fx's selected row", t)])
-  lines.push([paint(role("hint", t), "  others     ", t), note("dim", t)])
-  lines.push([paint(role("hint", t), "  ━ under it ", t), note("hint (primary) — the divider glyph does the underlining", t)])
-  lines.push([paint(role("hint", t), "  ─ rule     ", t), note("divider — the faintest step, nearest the background", t)])
+
+  // 2. Agent rows in the tray: state by glyph and weight.
+  lines.push(heading("agent rows in the tray", "labels primary, names dim, the glyph carries the state — never a hue"))
+  const name = (text: string) => paint(role("dim", t), text, t)
+  const fill = (chunk: TextChunk) => bg(surface(t))(chunk)
+  lines.push([paint(role("hint", t), " fmx", t)])
+  lines.push([bold(paint(role("hint", t), "   main", t)), note("                      bold: on the path to the active agent", t)])
+  lines.push([bold(paint(role("hint", t), "     × ", t)), name("needs-permission"), note("           blocked — bold primary, what needs you", t)])
+  lines.push([
+    fill(paint(role("dim", t), "     ◐ ", t)),
+    fill(name("implement-gallery")),
+    fill(note("   ", t)),
+    note("       active — the surface fill; working — dim", t),
+  ])
+  lines.push([paint(role("permission_auto", t), "     ✓ ", t), name("review-complete"), note("            done — accent, one step brighter than its row", t)])
+  lines.push([paint(role("dim", t), "     ○ ", t), name("available"), note("                  idle — dim", t)])
+  lines.push([italic(paint(role("system_notice_text", t), "   (untracked)", t)), note("                 virtual branch — secondary, italic, never bold", t)])
+  lines.push([paint(role("dim", t), "     · ", t), name("starting"), note("                   unknown — dim", t)])
   lines.push([])
-  lines.push([note("no hue, no underline SGR; fmx paints it host-derived, these are the fallback tier", t)])
+
+  // 3. Surfaces over the stage: focus border takes keys, dim hairline takes none.
+  lines.push(heading("surfaces over the stage", "focus border takes keys · dim hairline takes none · error border reports failure"))
+  const F = (text: string) => fg(FMX_FOCUS)(text)
+  const E = (text: string) => fg(FMX_ERROR)(text)
+  const D = (text: string) => paint(role("dim", t), text, t)
+  const label = (text: string) => paint(role("system_notice_text", t), text, t)
+  const value = (text: string) => paint(role("hint", t), text, t)
+  const inner = 38
+  const pad = (used: number) => " ".repeat(Math.max(0, inner - used))
+  lines.push([F(" ┌─ "), value("launch"), F(" " + "─".repeat(inner - 9) + "┐"), note("   title primary; rows: label secondary, value primary", t)])
+  lines.push([F(" │ "), bold(F("▎ ")), label("prompt    "), D("what should the agent do?"), value(pad(37)), F("│"), note("   ▎ focus caret; placeholder dim", t)])
+  lines.push([F(" │ "), value("  "), label("project   "), value("~/code/fmx"), value(pad(22)), F("│")])
+  lines.push([F(" │ "), value("  "), label("worktree  "), value("no"), value(pad(14)), F("│")])
+  lines.push([F(" └" + "─".repeat(inner) + "┘")])
+  const toastText = " fmx / main / agent 3 started "
+  lines.push([D(" ┌" + "─".repeat(toastText.length) + "┐"), note("   toast: primary text on the surface fill", t)])
+  lines.push([D(" │"), bg(surface(t))(value(toastText)), D("│")])
+  lines.push([D(" └" + "─".repeat(toastText.length) + "┘")])
+  lines.push([E(" ┌─ "), value("error"), E(" ─────────────┐"), note("   a failure: the host red on the border, heading bold accent", t)])
+  lines.push([E(" │ "), bold(paint(role("red", t), "fx did not start", t)), value("   "), E("│")])
+  lines.push([E(" └" + "─".repeat(20) + "┘")])
+  lines.push([])
+  lines.push([note("no hue for a state, no underline; fmx paints all of this host-derived — these are the fallback values", t)])
   return lines
 }
 
@@ -231,7 +288,7 @@ function buildSection(section: (typeof SECTIONS)[number], theme: Theme): StyledT
     transcript: transcriptSection,
     code: codeSection,
     glyphs: glyphsSection,
-    switching: switchingSection,
+    "carve-outs": carveOutsSection,
     about: aboutSection,
   }
   const lines = builders[section](theme)
