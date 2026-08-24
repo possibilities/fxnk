@@ -8,7 +8,7 @@ set -euo pipefail
 # (a read-only check from a disposable snapshot, one atomic exact-leased
 # push, quarantine that never deletes) are the skill's and are tested there.
 
-skill_dir="${MAINTAIN_SKILL_DIR:-$HOME/.local/share/agentstart/core-marketplace/plugins/agentstart-core/skills/maintain}"
+skill_dir="${MAINTAIN_SKILL_DIR:-$HOME/.local/share/agentstart/capabilities/packs/common/skills/maintain}"
 script="$skill_dir/scripts/reconcile-branches.sh"
 if [ ! -f "$script" ]; then
     printf 'fxnk branches: the maintain skill is not installed at %s (render ~/code/agentguidance, or set MAINTAIN_SKILL_DIR)\n' \
