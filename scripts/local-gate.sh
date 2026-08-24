@@ -184,6 +184,22 @@ bun_step() {
     printf ' pass\n'
 }
 
+audit_step() {
+    local output="$scratch/direct-write-audit.log" status
+    printf 'LOCAL-GATE %-24s' direct-write-audit
+    set +e
+    run_in_dir "$fx_worktree" "$bun_bin" \
+        tests/e2e/render-lab/audit-direct-writes.ts --repo-root "$fx_worktree" \
+        >"$output" 2>&1
+    status=$?
+    set -e
+    sed -n '1,240p' "$output"
+    [ "$status" -eq 0 ] || die "direct-write-audit exited $status"
+    grep -Eq 'direct-write audit passed .* frame_commit=1 .*unclassified=0$' "$output" \
+        || die "direct-write-audit did not report a clean classified surface"
+    printf ' pass\n'
+}
+
 canary_step() {
     local output="$scratch/fxnk-unit-canaries.log" status
     printf 'LOCAL-GATE %-24s' fxnk-unit-canaries
@@ -199,8 +215,10 @@ canary_step() {
     printf ' pass\n'
 }
 
-step format "$zig_bin" fmt --check "$fx_worktree/src/" "$fx_worktree/build.zig"
+step format "$zig_bin" fmt --check "$fx_worktree/src/" "$fx_worktree/build.zig" \
+    "$fx_worktree/tests/fxnk/"
 step public-surface run_in_dir "$fx_worktree" ./scripts/check-public-surface.sh
+audit_step
 step release-safe-build run_in_dir "$fx_worktree" \
     "$zig_bin" build -Doptimize=ReleaseSafe
 canary_step
@@ -308,7 +326,8 @@ if [ "$record" -eq 1 ]; then
         '{schema:1,authority:$authority,fx_sha:$sha,platform:{os:$os,arch:$arch},
           contract_digest:$contract_digest,
           upstream:{ref:"origin/main",sha:$upstream_sha},
-          outcomes:{format:"pass",public_surface:"pass",release_safe_build:"pass",
+          outcomes:{format:"pass",public_surface:"pass",direct_write_audit:"pass",
+            release_safe_build:"pass",
             fxnk_unit_canaries:"pass",cli_integration:"pass",ade_integration:"pass",
             fresh_binary:"pass",quarantine:$quarantine},
           duration_seconds:$duration,recorded_at:$recorded_at}' \

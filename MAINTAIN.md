@@ -193,9 +193,24 @@ later cycle reconciles only what this section names.
 - Provide `zig build test-fxnk -Doptimize=ReleaseSafe` as the narrow native
   canary target for every carried behavior. It must not discover or execute the
   complete native suite.
+- Keep that canary runner outside `src/`, at `tests/fxnk/runner.zig`. Upstream's
+  direct-write audit scans `src/` only, so a downstream harness that prints
+  diagnostics belongs beside upstream's own `tests/` Zig support code. Carrying
+  an allowlist patch to the audit instead would conflict on a file upstream
+  edits continuously.
 - Keep the fork's agent guidance aligned with the Workshop-owned Local
   development gate, Integration workflow, and downstream-only contribution
   stance.
+
+### Hosted Full CI
+
+- Start the fork's hosted Full CI only for the Integration branch and manual
+  dispatch. No other fork head, quarantine included, may trigger a run.
+- Serialize the workflow into one constant concurrency group with in-progress
+  cancellation, so at most one suite runs across the whole fork and a newer
+  Integration tip cancels the run in flight. Only the current tip's verdict is
+  worth waiting for, and a suite that never completes under sustained churn is
+  an accepted cost because Full CI gates nothing.
 
 ## Gate
 
@@ -206,9 +221,9 @@ each changed feature worktree before merge:
 ~/code/fxnk/scripts/local-gate.sh --worktree "$feature_worktree"
 ```
 
-The gate runs formatting and the public-surface audit, builds ReleaseSafe,
-executes the narrow `test-fxnk` native target, runs focused CLI and ADE
-integration tests, and exercises the fresh binary. It also runs bounded probes
+The gate runs formatting, the public-surface audit, and upstream's direct-write
+audit, builds ReleaseSafe, executes the narrow `test-fxnk` native target, runs
+focused CLI and ADE integration tests, and exercises the fresh binary. It also runs bounded probes
 from the known fragile macOS-arm64 terminal surface. A green probe passes; a
 failure is quarantined only when its file and harness blobs still match
 `gate/macos-arm64-quarantine.json` and every failure has a declared normalized
@@ -219,6 +234,19 @@ our work without turning that surface into untested code.
 Do not run monolithic `zig build test` or the complete deterministic E2E suite
 as a local gate. Full CI is nonblocking observability: it may finish after we
 ship, and neither its success nor its failure authorizes or prevents shipping.
+It must still eventually reach a verdict. `scripts/ci-watch.sh` records one
+verdict per published Integration SHA under `~/.local/state/fxnk/full-ci/` and
+escalates a real failure or an overdue verdict to the human. It also reports
+once a day when nothing has happened, so a silent watcher reads as broken
+rather than as good news. Read
+`~/.local/state/fxnk/full-ci/pending.json` at the start of every cycle: an open
+obligation there is work for this cycle, not a status note. The watcher polls
+from launchd, bound once with:
+
+```sh
+~/code/fxnk/scripts/ci-watch-install.sh --install
+```
+
 The authoritative platform is macOS arm64 because it is the installed consumer
 platform; the explicit quarantine prevents chronic upstream terminal failures
 on that same platform from swallowing new failures.

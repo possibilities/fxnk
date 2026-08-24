@@ -62,6 +62,17 @@ socket. The ADE supplies the socket and an opaque instance identity; Fx
 supplies agent and session context without presentation policy.
 _Avoid_: Herdr feed, control socket, ask feed.
 
+**Full CI verdict** — The recorded outcome of one hosted Full CI run for one
+exact published Integration SHA, written by `scripts/ci-watch.sh` under
+`~/.local/state/fxnk/full-ci/`. It is evidence that the slow suite eventually
+ran; it never authorizes or prevents shipping.
+_Avoid_: gate result, approval, receipt.
+
+**Deferred verdict** — A published Integration SHA that has no completed Full
+CI verdict yet, because the suite is still running, was cancelled by a newer
+publication, or never started. Deferred is normal; overdue is escalated.
+_Avoid_: pending gate, blocked ship.
+
 **Carve-out** — a surface fmx needs that fx never draws (a tab, a tray row, a
 modal, or unused Client space), designed from fx's principles and recorded in
 `style/STYLE.md`

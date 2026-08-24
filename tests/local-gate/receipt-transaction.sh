@@ -79,7 +79,10 @@ upstream_repo="$test_root/upstream.git"
 fork_repo="$test_root/fork.git"
 state_dir="$test_root/state"
 manifest="$test_root/quarantine.json"
-mkdir -p "$fx_worktree/src" "$fx_worktree/scripts" "$fx_worktree/tests/e2e"
+mkdir -p "$fx_worktree/src" "$fx_worktree/scripts" "$fx_worktree/tests/e2e" \
+    "$fx_worktree/tests/e2e/render-lab" "$fx_worktree/tests/fxnk"
+printf 'fixture\n' >"$fx_worktree/tests/e2e/render-lab/audit-direct-writes.ts"
+printf 'pub fn main() void {}\n' >"$fx_worktree/tests/fxnk/runner.zig"
 printf 'test {}\n' >"$fx_worktree/src/main.zig"
 printf 'pub fn build() void {}\n' >"$fx_worktree/build.zig"
 printf 'fixture\n' >"$fx_worktree/tests/e2e/quarantined.test.ts"
@@ -127,11 +130,24 @@ receipt="$state_dir/local-gates/$sha.json"
     || fail "recorded gate receipt is not mode 0600"
 jq -e --arg sha "$sha" \
     '.authority == "test" and .fx_sha == $sha and
+     .outcomes.direct_write_audit == "pass" and
      .outcomes.quarantine[0].status == "quarantined" and
      .outcomes.quarantine[0].failure_count == 1 and
      .outcomes.quarantine[0].signatures == ["fixture"] and
      (.outcomes.quarantine[0].blob | test("^[0-9a-f]{40}$"))' \
     "$receipt" >/dev/null || fail "recorded gate receipt has the wrong proof"
+
+set +e
+audit_output=$(
+    FXNK_TEST_FAKE_BUN_AUDIT_FAIL=1 \
+    env "${gate_env[@]}" "$root/scripts/local-gate.sh" \
+        --worktree "$fx_worktree" 2>&1
+)
+audit_status=$?
+set -e
+[ "$audit_status" -ne 0 ] || fail "unclassified direct write did not block the gate"
+printf '%s\n' "$audit_output" | grep -F 'direct-write-audit exited' >/dev/null \
+    || fail "direct-write audit refusal was not explained"
 
 before=$(shasum -a 256 "$receipt" | awk '{print $1}')
 count_file="$test_root/mv-count"

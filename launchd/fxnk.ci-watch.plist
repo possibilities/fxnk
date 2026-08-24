@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>fxnk.ci-watch</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>__FXNK_WATCH__</string>
+        <string>--once</string>
+    </array>
+
+    <!-- Every invocation is a complete poll, so a missed or slow tick costs
+         nothing and a reboot needs no recovery. -->
+    <key>StartInterval</key>
+    <integer>300</integer>
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>__FXNK_PATH__</string>
+    </dict>
+
+    <key>StandardOutPath</key>
+    <string>__FXNK_LOG__</string>
+    <key>StandardErrorPath</key>
+    <string>__FXNK_LOG__</string>
+
+    <key>ProcessType</key>
+    <string>Background</string>
+</dict>
+</plist>

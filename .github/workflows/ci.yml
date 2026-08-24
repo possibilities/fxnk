@@ -12,4 +12,9 @@ jobs:
       - name: Validate repository contracts
         run: tests/validate.sh
       - name: Check shell scripts
-        run: shellcheck scripts/install.sh scripts/reconcile-branches.sh tests/validate.sh
+        run: |
+          shellcheck scripts/*.sh tests/validate.sh \
+            tests/install-transaction.sh \
+            tests/local-gate/receipt-transaction.sh \
+            tests/ci-watch/verdict-transaction.sh \
+            tests/ci-watch/fixtures/*.sh
