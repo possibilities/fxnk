@@ -19,17 +19,15 @@ shipping it.
 
 - Bound checkout: `~/src/fx`. `origin` is `vercel-labs/fx`; `fork` is
   `possibilities/fx`. Read `~/src/fx/AGENTS.md` completely before touching Fx.
-- Contribution conventions: high volume; every pull request needs one `type:`
-  label, a Full CI matrix (Linux and macOS, x86_64 and arm64) with four
-  `Full suite (...)` aggregates, changelog rules, and `CONTRIBUTING.md`.
-  Landing is uncertain — our requests have stayed open for weeks, and one need
-  was satisfied by someone else's merge — so nothing here waits on upstream.
-- What we offer: whole features, shaped like upstream, when the shape is
-  clear; we do not chase them. The existing pull requests (#242, #244, #320,
-  #323) and issues are historical references only — their branches are not
-  maintained, nobody tends them, and maintenance never relies on upstream
-  action. Reviving one would be a deliberate act outside the cycle, never a
-  side effect of it.
+- Contribution stance: regular maintenance is downstream-only. We do not open,
+  update, support, or preserve upstream pull requests, and we do not wait on
+  upstream review. Pull requests #242, #244, #320, and #323 and related issues
+  are historical evidence only. A future contribution would require a
+  deliberate project decision outside a maintenance cycle.
+- Upstream Full CI runs on non-main pushes but normally not on upstream main
+  merge commits. Our fork's hosted Full CI therefore remains useful late
+  observability across four architectures, not proof that upstream or our
+  Integration branch is shippable.
 - "Landed" means merged into `vercel-labs/fx:main` and verified against the
   inventory below by reading the code and exercising its path. A carried patch
   is retired only then.
@@ -39,28 +37,22 @@ shipping it.
 - Mirror branch: `main`, an exact mirror of `vercel-labs/fx:main` locally and on
   the fork. Never an integration base with downstream-only commits.
 - Integration branch: `integration`, containing every carried feature together.
-  It is the only branch the installer consumes and never a feature-development
-  branch. One publication lease serializes exact-leased updates. During a
-  coordinated batch, each owner may publish its locally proved composition and
-  immediately hand the exact new tip and lease to the next owner; intermediate
-  tips are available as composition bases but are not installed or treated as
-  completed maintenance cycles. Only the declared final combined tip enters
-  the slow Full CI gate.
-- Composition: carry heads. Each carried feature has a stable moving
-  `carry/<feature>` branch, published to the fork for visibility, developed or
-  repaired in its own worktree on current `origin/main`, and composed — only
-  its committed, reviewed head — into a clean integration worktree in
-  dependency order. The resulting commit is published directly to
-  `integration` with an exact force-with-lease after the focused local gate.
-  Carry branches are never install sources and never track or push to a
-  pull-request branch, even when they contain related commits.
+  It is the fork's GitHub default branch, the base and merge target for
+  downstream development, and the only branch the installer consumes. One
+  publication lease serializes exact-leased updates.
+- Composition: one linear downstream Integration history. Create a short-lived
+  local feature branch from the exact current Integration tip, work in its own
+  worktree, pass the Local development gate, and merge the committed result
+  back into Integration. Do not publish feature or `carry/*` branches. During
+  upstream maintenance, replay the downstream stack on the current Main mirror
+  and publish the proved exact commit under the captured Integration lease.
 - Quarantine prefix: `DELETEME/`. Any fork head other than `main`,
-  `integration`, a current `carry/*`, or a preserved open-request head is moved
-  at the same commit to `DELETEME/<original-name>`. Existing `DELETEME/*`
-  heads are permanent: reported, never removed automatically.
-- Open pull-request heads: preserved. The exact head of a currently open
-  request from the fork keeps its name only while the request is open; a
-  closed request's head receives no special treatment.
+  `integration`, or an existing quarantine head is moved at the same commit to
+  `DELETEME/<original-name>`. Existing `DELETEME/*` heads are permanent:
+  reported, never removed automatically.
+- Open pull-request heads: not preserved. Requests are historical references,
+  and their fork branches follow the same quarantine rule as every other
+  obsolete branch.
 - Rerere: relied on. The bound checkout keeps it enabled; a recorded
   resolution is reused when it remains semantically correct and rechecked
   after upstream changes.
@@ -196,53 +188,58 @@ later cycle reconciles only what this section names.
   every provider is welcome when it is straightforward, but must not dilute
   the Codex path.
 
+### Local gate support
+
+- Provide `zig build test-fxnk -Doptimize=ReleaseSafe` as the narrow native
+  canary target for every carried behavior. It must not discover or execute the
+  complete native suite.
+- Keep the fork's agent guidance aligned with the Workshop-owned Local
+  development gate, Integration workflow, and downstream-only contribution
+  stance.
+
 ## Gate
 
-From each changed carry worktree and the composed integration worktree, follow
-the focused local part of current Fx guidance:
+The Local development gate is the only blocking test authority. Run it from
+each changed feature worktree before merge:
 
 ```sh
-zig fmt --check src/
-./scripts/check-public-surface.sh
-zig build -Doptimize=ReleaseSafe
+~/code/fxnk/scripts/local-gate.sh --worktree "$feature_worktree"
 ```
 
-Also run focused tests for every changed feature and exercise each changed
-happy path with that worktree's freshly built `./zig-out/bin/fx`.
+The gate runs formatting and the public-surface audit, builds ReleaseSafe,
+executes the narrow `test-fxnk` native target, runs focused CLI and ADE
+integration tests, and exercises the fresh binary. It also runs bounded probes
+from the known fragile macOS-arm64 terminal surface. A green probe passes; a
+failure is quarantined only when its file and harness blobs still match
+`gate/macos-arm64-quarantine.json` and every failure has a declared normalized
+signature. A changed blob, undeclared file, assertion, error, or signature
+blocks and requires explicit review. This keeps upstream fragility from gating
+our work without turning that surface into untested code.
 
-Do not run the complete slow Zig suite or deterministic E2E suite locally as a
-maintenance gate. In particular, do not invoke monolithic `zig build test`
-with a runner `--test-filter`: Fx's build graph still executes the complete
-native suite. Use a narrow Zig harness or target, isolated Bun E2E files, the
-ReleaseSafe build, and a real freshly built binary; leave the complete native
-and deterministic E2E suites to Full CI. After the focused proofs pass,
-refresh `origin/main` and `fork/integration`, compose the final commit, and
-publish it once to `fork/integration` with an exact force-with-lease against
-the integration tip captured before composition. Publication makes the commit
-available as the base for subsequent feature work, but does not authorize
-installation or completion of the maintenance cycle.
+Do not run monolithic `zig build test` or the complete deterministic E2E suite
+as a local gate. Full CI is nonblocking observability: it may finish after we
+ship, and neither its success nor its failure authorizes or prevents shipping.
+The authoritative platform is macOS arm64 because it is the installed consumer
+platform; the explicit quarantine prevents chronic upstream terminal failures
+on that same platform from swallowing new failures.
 
-When several proved carries are queued, batch their publications. The current
-owner publishes one exact-leased Integration tip, reports that SHA, and hands
-the publication lease directly to the next owner without waiting for Full CI,
-the ship gate, or installation. Each successor composes on the exact published
-tip it received. Full CI starts automatically for every push; cancel a
-superseded intermediate run once its successor is published, and never treat an
-intermediate result as gate evidence. Do not cancel the one run selected for
-the declared final combined tip, and cancel duplicate same-SHA runs only after
-identifying which exact run is the keeper.
+After merging the proved feature commit into the final Integration worktree,
+rerun the gate with `--record` on the clean exact Integration SHA:
 
-Hand the final combined Integration SHA to a standing monitor and stop
-occupying the feature-development loop while the slow suite runs. The monitor
-owns duplicate cancellation, reruns, and repair-forward work for real failures
-and does not finish until one exact-SHA run satisfies current
-`~/src/fx/AGENTS.md` guidance and all four `Full suite (...)` aggregates pass. A
-stale, superseded, partial, cancelled, skipped, or failed run is not proof.
+```sh
+~/code/fxnk/scripts/local-gate.sh \
+  --worktree "$integration_worktree" \
+  --record
+```
 
-After Full CI succeeds, run the project-owned ship gate. It re-reads the remote
-integration branch, refreshes current upstream, and prints `SHIP <sha>` only
-when the local worktree, published integration commit, upstream ancestry,
-workflow run, and all four aggregates agree on the exact commit:
+The record is an atomic mode-0600 JSON receipt under
+`~/.local/state/fxnk/local-gates/`, bound to the Fx SHA, tracked upstream SHA,
+platform, gate-contract digest, quarantine outcomes, and duration. Publish that
+exact Integration commit once with the lease captured before refresh. Then run
+the project-owned ship gate; it re-reads the remote Integration branch,
+refreshes current upstream, validates the exact-SHA receipt and current
+contract, and prints `SHIP <sha>` only when every local, remote, receipt, and
+upstream identity still agrees:
 
 ```sh
 ~/code/fxnk/scripts/ship-gate.sh \
@@ -253,11 +250,11 @@ workflow run, and all four aggregates agree on the exact commit:
 
 ## Consumer
 
-The installer. Only after the ship gate passes for the still-published
-integration SHA, run:
+The installer. Only after the local receipt and ship gate pass for the
+still-published Integration SHA, run:
 
 ```sh
-~/code/fxnk/scripts/install.sh --install
+~/code/fxnk/scripts/install.sh --install --sha "$integration_sha"
 ```
 
 It proves any existing local integration tip from the installed commit receipt

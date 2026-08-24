@@ -1,0 +1,86 @@
+{
+  "schema": 1,
+  "platform": {
+    "os": "Darwin",
+    "arch": "arm64"
+  },
+  "evidence": {
+    "characterization": "Chronic terminal and tmux fragility on macOS arm64, amplified under CI load; not introduced by upstream PR #165 and not attributable to an fxnk carry.",
+    "pre_pr_165": {
+      "sha": "78a183545905c70b3aa8b28465bcb008af82e447",
+      "result": "43 pass, 2 fail in tui-subagent-manager.test.ts"
+    },
+    "upstream_after_pr_165": {
+      "sha": "88cb3da8d5559a960fc3d08fbaed45e0ba6df863",
+      "result": "44 pass, 1 fail in tui-subagent-manager.test.ts"
+    },
+    "fork_candidate": {
+      "sha": "5e81d90193adc3dc145a2e80fbd8642998b37253",
+      "result": "44 pass, 1 fail in tui-subagent-manager.test.ts"
+    },
+    "ci_job": {
+      "id": 97485268413,
+      "result": "Seven failures across the two declared files, dominated by tmux teardown timeouts"
+    },
+    "coverage_gap": "Upstream full-ci.yml ignores pushes to main, so merge commits are not normally exercised by Full CI."
+  },
+  "entries": [
+    {
+      "file": "tests/e2e/tui-subagent-manager.test.ts",
+      "test_name_pattern": "Ctrl-X isolates an idle child from active parent streaming and restores the current parent immediately|child file always approval reuses canonical scope and keeps external writes governed|selected child preserves and resolves its approval across Ctrl-X reopen",
+      "required_blobs": [
+        {
+          "path": "tests/e2e/tui-subagent-manager.test.ts",
+          "oid": "3566cdf9b3c1d7c4c4ad091e27bbfca35318965b"
+        },
+        {
+          "path": "tests/e2e/tmux-helpers.ts",
+          "oid": "b6429696da4f7196df190d3212013fd855dc0e77"
+        }
+      ],
+      "allowed_signatures": [
+        {
+          "id": "tmux-session-exit-timeout",
+          "kind": "runtime",
+          "regex": "Timed out waiting for tmux session fx-test-[0-9]+-[0-9]+ to exit after 5000ms"
+        },
+        {
+          "id": "pane-predicate-timeout",
+          "kind": "runtime",
+          "regex": "Timed out waiting for pane predicate"
+        },
+        {
+          "id": "ctrl-x-child-row-race",
+          "kind": "assertion",
+          "regex": "Expected:\\s*>=\\s*0\\s+Received:\\s*-1"
+        }
+      ]
+    },
+    {
+      "file": "tests/e2e/tui-render-replay.test.ts",
+      "test_name_pattern": "automatic recording writes a private tape under the test home|composer frames omit synchronized updates when disabled|composer frames restore the visible cursor after synchronized updates|frame trace scopes are metadata-only during prompt resize and replay|opt-in input recording captures bracketed paste and Return without changing replay|recorded stdout and resize bytes replay to a valid final grid",
+      "required_blobs": [
+        {
+          "path": "tests/e2e/tui-render-replay.test.ts",
+          "oid": "0ed09c27daa896ecd05e8458670b694b8326c005"
+        },
+        {
+          "path": "tests/e2e/tmux-helpers.ts",
+          "oid": "b6429696da4f7196df190d3212013fd855dc0e77"
+        }
+      ],
+      "allowed_signatures": [
+        {
+          "id": "tmux-session-exit-timeout",
+          "kind": "runtime",
+          "regex": "Timed out waiting for tmux session fx-test-[0-9]+-[0-9]+ to exit after 5000ms"
+        },
+        {
+          "id": "pane-predicate-timeout",
+          "kind": "runtime",
+          "regex": "Timed out waiting for pane predicate"
+        }
+      ]
+    }
+  ]
+}

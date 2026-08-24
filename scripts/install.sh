@@ -8,14 +8,27 @@ die() {
 }
 
 usage() {
-    printf 'Usage: scripts/install.sh --install|--check\n'
+    printf 'Usage: scripts/install.sh --install --sha SHA|--check\n'
 }
 
 case "${1:-}" in
     --install)
+        [ "$#" -eq 3 ] && [ "${2:-}" = --sha ] || {
+            usage >&2
+            exit 64
+        }
+        expected_sha=$3
+        [ "${#expected_sha}" -eq 40 ] || die "--sha must be a full lowercase commit SHA"
+        case "$expected_sha" in
+            *[!0-9a-f]*) die "--sha must be a full lowercase commit SHA" ;;
+        esac
         ;;
     --check)
         check_only=1
+        [ "$#" -eq 1 ] || {
+            usage >&2
+            exit 64
+        }
         ;;
     -h|--help)
         usage
@@ -26,10 +39,6 @@ case "${1:-}" in
         exit 64
         ;;
 esac
-[ "$#" -eq 1 ] || {
-    usage >&2
-    exit 64
-}
 
 fx_checkout="${FXNK_FX_CHECKOUT:-$HOME/src/fx}"
 fx_branch=integration
@@ -301,6 +310,8 @@ fi
 git -C "$fx_checkout" fetch --quiet fork "$fx_branch" \
     || die "could not fetch fork/$fx_branch"
 published_sha=$(git -C "$fx_checkout" rev-parse "fork/$fx_branch")
+[ "$published_sha" = "$expected_sha" ] \
+    || die "fork/$fx_branch is at $published_sha, approved SHA is $expected_sha"
 short=$(git -C "$fx_checkout" rev-parse --short "$published_sha")
 original_branch=$(git -C "$fx_checkout" branch --show-current)
 original_head=$(git -C "$fx_checkout" rev-parse HEAD)
@@ -344,6 +355,13 @@ if [ "$already_installed" -eq 0 ]; then
     rmdir "$build_root" || die "could not remove the build directory"
     build_root=
 fi
+
+# Do not let a publication between SHIP and install redirect the consumer.
+published_now=$(git -C "$fx_checkout" ls-remote --exit-code --heads fork \
+    "refs/heads/$fx_branch" | awk 'NR == 1 { print $1 }') \
+    || die "could not re-read fork/$fx_branch before installation"
+[ "$published_now" = "$expected_sha" ] \
+    || die "fork/$fx_branch moved to $published_now before installation"
 
 stage_auto_upgrade_setting
 prepare_artifact_backups \

@@ -11,19 +11,28 @@ fail() {
 }
 
 bash -n scripts/install.sh
+bash -n scripts/local-gate.sh
+bash -n scripts/gate-contract.sh
 bash -n scripts/ship-gate.sh
 bash -n scripts/reconcile-branches.sh
 bash -n tests/install-transaction.sh
+bash -n tests/local-gate/receipt-transaction.sh
 bash -n scripts/style-extract.sh
 bash -n scripts/style-swatch.sh
 bash -n scripts/style-capture.sh
 bash -n scripts/style-view.sh
 [ -x scripts/install.sh ] || fail "scripts/install.sh is not executable"
+[ -x scripts/local-gate.sh ] || fail "scripts/local-gate.sh is not executable"
+[ -x scripts/classify-quarantine.py ] \
+    || fail "scripts/classify-quarantine.py is not executable"
+[ -x scripts/gate-contract.sh ] || fail "scripts/gate-contract.sh is not executable"
 [ -x scripts/ship-gate.sh ] || fail "scripts/ship-gate.sh is not executable"
 [ -x scripts/reconcile-branches.sh ] \
     || fail "scripts/reconcile-branches.sh is not executable"
 [ -x tests/install-transaction.sh ] \
     || fail "tests/install-transaction.sh is not executable"
+[ -x tests/local-gate/receipt-transaction.sh ] \
+    || fail "tests/local-gate/receipt-transaction.sh is not executable"
 for style_script in style-extract.sh style-swatch.sh style-capture.sh style-view.sh; do
     [ -x "scripts/$style_script" ] \
         || fail "scripts/$style_script is not executable"
@@ -79,10 +88,12 @@ for section in Purpose Upstream 'Branch model' Features Gate Consumer Notify; do
 done
 grep -F 'scripts/ship-gate.sh' MAINTAIN.md >/dev/null \
     || fail "the gate does not name the ship gate"
-# shellcheck disable=SC2016 # Match literal Markdown text.
-grep -F 'all four `Full suite (...)` aggregates' MAINTAIN.md >/dev/null \
-    || fail "the gate does not require every Full CI aggregate"
-grep -F 'scripts/install.sh --install' MAINTAIN.md >/dev/null \
+grep -F 'scripts/local-gate.sh' MAINTAIN.md >/dev/null \
+    || fail "the gate does not name the local development gate"
+grep -F 'Full CI is nonblocking observability' MAINTAIN.md >/dev/null \
+    || fail "the gate does not state that Full CI is nonblocking"
+# shellcheck disable=SC2016 # Match the literal documented SHA variable.
+grep -F 'scripts/install.sh --install --sha "$integration_sha"' MAINTAIN.md >/dev/null \
     || fail "the consumer does not name the installer"
 # shellcheck disable=SC2016 # Match literal Markdown text.
 grep -F 'Title: `Fx Maintenance`' MAINTAIN.md >/dev/null \
@@ -98,9 +109,9 @@ for declared in \
     'MAINTAIN_UPSTREAM_REPO=vercel-labs/fx' \
     'MAINTAIN_MAIN_BRANCH=main' \
     'MAINTAIN_INTEGRATION_BRANCH=integration' \
-    'MAINTAIN_CARRY_PREFIX=carry/' \
+    'MAINTAIN_CARRY_PREFIX=' \
     'MAINTAIN_QUARANTINE_PREFIX=DELETEME/' \
-    'MAINTAIN_PRESERVE_OPEN_PRS=1'; do
+    'MAINTAIN_PRESERVE_OPEN_PRS=0'; do
     grep -F "export $declared" scripts/reconcile-branches.sh >/dev/null \
         || fail "branch entrypoint does not declare $declared"
 done
@@ -115,14 +126,14 @@ set -e
 printf '%s\n' "$missing_skill_output" | grep -F 'the maintain skill is not installed' >/dev/null \
     || fail "branch entrypoint does not explain a missing shared script"
 
-grep -F 'Full suite (linux-x86_64)' scripts/ship-gate.sh >/dev/null \
-    || fail "ship gate does not require the Linux x86_64 aggregate"
-grep -F 'Full suite (linux-aarch64)' scripts/ship-gate.sh >/dev/null \
-    || fail "ship gate does not require the Linux aarch64 aggregate"
-grep -F 'Full suite (macos-x86_64)' scripts/ship-gate.sh >/dev/null \
-    || fail "ship gate does not require the macOS x86_64 aggregate"
-grep -F 'Full suite (macos-aarch64)' scripts/ship-gate.sh >/dev/null \
-    || fail "ship gate does not require the macOS aarch64 aggregate"
+if grep -Eq 'gh run|Full suite \(' scripts/ship-gate.sh; then
+    fail "ship gate still treats hosted Full CI as shipping authority"
+fi
+# shellcheck disable=SC2016 # Match the literal receipt path expression.
+grep -F 'local-gates/$expected_sha.json' scripts/ship-gate.sh >/dev/null \
+    || fail "ship gate does not require an exact-SHA local receipt"
+grep -F 'fxnk_gate_contract_digest' scripts/ship-gate.sh >/dev/null \
+    || fail "ship gate does not bind the receipt to the gate contract"
 grep -F 'merge-base --is-ancestor' scripts/ship-gate.sh >/dev/null \
     || fail "ship gate does not require current upstream ancestry"
 gate_test_sha=0000000000000000000000000000000000000000
@@ -144,8 +155,8 @@ printf '%s\n' "$integration_gate_output" | grep -F 'is not a git worktree' >/dev
     || fail "ship gate does not accept integration as a published branch"
 [ "$main_gate_status" -ne 0 ] \
     || fail "ship gate accepted the upstream main mirror"
-printf '%s\n' "$main_gate_output" | grep -F 'must not be the upstream mirror' >/dev/null \
-    || fail "ship gate does not reject the upstream main mirror"
+printf '%s\n' "$main_gate_output" | grep -F 'published branch must be integration' >/dev/null \
+    || fail "ship gate does not reject a branch other than integration"
 final_gate_tail=$(tail -n 10 scripts/ship-gate.sh)
 printf '%s\n' "$final_gate_tail" | grep -F 'verify_local_branch' >/dev/null \
     || fail "ship gate does not recheck local state immediately before SHIP"
@@ -153,5 +164,6 @@ printf '%s\n' "$final_gate_tail" | grep -F 'remote_branch_sha' >/dev/null \
     || fail "ship gate does not recheck the remote branch immediately before SHIP"
 
 tests/install-transaction.sh
+tests/local-gate/receipt-transaction.sh
 
 printf 'fxnk validation passed.\n'

@@ -6,7 +6,8 @@ procedure itself is the shared `maintain` skill, which every workshop runs.
 _Avoid_: wrapper, patch repo.
 
 **Integration branch** — `possibilities/fx:integration`, containing every
-carried feature and serving as the only source the installer builds.
+carried feature, serving as the fork's default development branch, and
+remaining the only source the installer builds.
 _Avoid_: install branch, local main.
 
 **Main mirror** — Local `main` and `possibilities/fx:main`, both fast-forwarded
@@ -20,25 +21,36 @@ _Avoid_: permanent patch, downstream fix.
 
 **Historical upstream reference** — An upstream pull request, issue, or commit
 that explains a carried feature or may later replace it. It is evidence only.
-An open pull request keeps its frozen head branch; the Workshop does not update
-that branch or depend on upstream action.
-_Avoid_: active contribution, maintained PR.
+The Workshop does not update, support, or preserve a request branch and never
+depends on upstream action.
+_Avoid_: active contribution, maintained PR, open offer.
 
-**Carry branch** — A Workshop-owned `carry/<feature>` branch, published to the
-fork for visibility and used to develop or repair one carried feature before
-its commits are composed into integration. It never tracks or updates a pull
-request branch.
-_Avoid_: PR branch, install branch.
+**Fork feature branch** — A short-lived local branch cut from Integration for
+one coherent change, gated locally and merged back into Integration. It is not
+published to the fork and is removed after the published result is installed.
+_Avoid_: carry branch, PR branch, remote feature branch.
 
 **Quarantine branch** — A preserved fork branch renamed to
-`DELETEME/<original-name>` because it is neither core, carried, nor the head of
-an open pull request. Maintenance never deletes quarantine branches.
+`DELETEME/<original-name>` because it is neither Main nor Integration.
+Maintenance never deletes quarantine branches.
 _Avoid_: deleted branch, archive tag.
 
 **Maintenance cycle** — One `/maintain` run that reviews upstream movement and
-historical references, reconciles every carried feature, gates and publishes
-integration, updates the scratchpad, and installs the published result.
+historical references, reconciles every carried feature, passes the Local
+development gate, publishes Integration, updates the scratchpad, and installs
+the published result.
 _Avoid_: update, install.
+
+**Local development gate** — The macOS-arm64 proof owned by this Workshop and
+run from an Fx worktree. It combines a ReleaseSafe build, narrow carried-unit
+canaries, focused deterministic integration tests, fresh-binary probes, and an
+explicit upstream terminal quarantine; it is the only blocking test authority.
+_Avoid_: carve-out, Full CI, smoke test.
+
+**Gate receipt** — A mode-0600 atomic JSON record proving that one exact Fx SHA
+passed the current Local development gate contract against one exact upstream
+revision. A changed gate or quarantine contract invalidates an older receipt.
+_Avoid_: CI result, approval, mutable status.
 
 **Installer** — `scripts/install.sh`, which only converges the published
 integration branch into a ReleaseSafe binary on the system path.

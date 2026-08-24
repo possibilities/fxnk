@@ -33,13 +33,13 @@ or its installer.
   must not rebase, push, inspect PRs, or decide which patches should be carried.
 - `scripts/reconcile-branches.sh` is the thin entrypoint to the skill's shared
   namespace script: it declares the branch model `MAINTAIN.md` states and
-  nothing else. The mechanics — mirror `main`, publish `carry/*`, preserve
-  exact open-PR heads, move every other non-quarantine fork branch to
-  `DELETEME/<original>` in one atomic leased push — live and are tested in
+  nothing else. The mechanics — mirror `main` and move every branch other than
+  `main`, `integration`, and existing quarantine to `DELETEME/<original>` in
+  one atomic leased push — live and are tested in
   agentguidance (`skills/maintain/scripts/`, `tests/branch-policy.sh`).
 - Upstream pull requests are historical references only. Maintenance may read
-  them for evidence, but must not update their branches or mutate the requests.
-  Only the exact heads of currently open requests retain their original names.
+  them for evidence, but must not update, support, or preserve their branches.
+  Regular maintenance does not open or tend upstream requests.
 
 The checkout being maintained is `~/src/fx`, with `fork` pointing to
 `possibilities/fx` and `origin` pointing to `vercel-labs/fx`. Its
@@ -49,10 +49,10 @@ The checkout being maintained is `~/src/fx`, with `fork` pointing to
 ## Working topology
 
 Work directly on `main` in this repository. Outside this repository, create a
-dedicated worktree and carry branch, commit the finished change, merge it into
-the target repository's `main` or integration branch as appropriate, and remove
-the worktree after the merge. Never do feature work in the bound Fx checkout or
-push a carry branch onto a historical upstream PR branch.
+dedicated worktree and local feature branch from Fx Integration, commit the
+finished change, merge it into Integration, and remove the worktree after the
+published result is installed. Never do feature work in the bound Fx checkout,
+publish feature branches, or push onto a historical upstream PR branch.
 
 Maintenance owns the complete fork branch namespace. It must preserve unknown
 work by moving it to `DELETEME/<original>` at the same commit, never by deleting
@@ -72,11 +72,13 @@ tests/validate.sh
 
 Installer changes also require an isolated real install using temporary binary,
 state, and settings paths, followed by execution of the built binary. Fx feature
-work follows every build, focused-test, Full CI, and real-binary requirement in
-`~/src/fx/AGENTS.md`.
+work follows the Local development gate and real-binary requirements in
+`~/src/fx/AGENTS.md`. Hosted Full CI is nonblocking observability and is never a
+shipping prerequisite.
 
 Finished work lands on `main` and is pushed. The installer may rebind a clean
-local integration branch only after proving it still equals the installed
-commit receipt or the pre-fetch remote-tracking tip. It builds a detached
-published candidate before changing the bound checkout. Never edit the
-installed Fx binary or live receipts by hand; rerun the installer.
+local integration branch only after receiving the exact SHA approved by the
+ship gate, proving the branch still equals the installed commit receipt or the
+pre-fetch remote-tracking tip, and re-reading the published ref. It builds that
+exact SHA detached before changing the bound checkout. Never edit the installed
+Fx binary or live receipts by hand; rerun the installer.

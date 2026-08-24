@@ -82,7 +82,7 @@ transaction_output=$(
     FXNK_STATE_DIR="$state_dir" \
     FXNK_FX_SETTINGS="$settings" \
     FXNK_ZIG_BIN="$root/tests/fixtures/fake-zig.sh" \
-    "$root/scripts/install.sh" --install 2>&1
+    "$root/scripts/install.sh" --install --sha "$new_sha" 2>&1
 )
 transaction_status=$?
 set -e
@@ -114,7 +114,7 @@ FXNK_FX_BIN="$test_bin" \
 FXNK_STATE_DIR="$state_dir" \
 FXNK_FX_SETTINGS="$settings" \
 FXNK_ZIG_BIN="$root/tests/fixtures/fake-zig.sh" \
-"$root/scripts/install.sh" --install >/dev/null
+"$root/scripts/install.sh" --install --sha "$new_sha" >/dev/null
 
 [ "$(git -C "$checkout" rev-parse HEAD)" = "$new_sha" ] \
     || fail "successful transaction did not bind the published commit"
@@ -136,7 +136,7 @@ FXNK_FX_BIN="$test_bin" \
 FXNK_STATE_DIR="$state_dir" \
 FXNK_FX_SETTINGS="$settings" \
 FXNK_ZIG_BIN=/usr/bin/false \
-"$root/scripts/install.sh" --install >/dev/null
+"$root/scripts/install.sh" --install --sha "$new_sha" >/dev/null
 
 git -C "$checkout" commit --quiet --allow-empty -m unpublished
 published_digest=$(shasum -a 256 "$test_bin" | awk '{print $1}')
@@ -149,7 +149,7 @@ unpublished_output=$(
     FXNK_STATE_DIR="$state_dir" \
     FXNK_FX_SETTINGS="$settings" \
     FXNK_ZIG_BIN="$root/tests/fixtures/fake-zig.sh" \
-    "$root/scripts/install.sh" --install 2>&1
+    "$root/scripts/install.sh" --install --sha "$new_sha" 2>&1
 )
 unpublished_status=$?
 set -e
