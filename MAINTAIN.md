@@ -166,9 +166,12 @@ later cycle reconciles only what this section names.
   Codex defaults to `gpt-5.4-mini` at low effort.
 - Remove a leading slash command and its long flags, expand readable `@path`
   mentions relative to the workspace or home, and send a UTF-8-safe bounded
-  excerpt. Install fallback and generated titles through the native `/rename`
-  persistence path before publishing `SessionMetadataChanged`; manual rename
-  and session changes invalidate stale work.
+  excerpt. Normalize the completion to a lowercase hyphenated ASCII slug,
+  bounded and re-trimmed, and ask once more when a completion slugs to nothing
+  — both attempts spending the admission's single deadline. Install fallback
+  and generated titles through the native `/rename` persistence path before
+  publishing `SessionMetadataChanged`; manual rename and session changes
+  invalidate stale work.
 - Keep automatic naming disabled for `fx ask`, `fx acp`, subagents, and
   disabled or unconfigured providers. Naming must not block agent lifecycle.
   This carry depends on the ADE event feed for live consumer updates.
