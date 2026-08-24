@@ -56,6 +56,12 @@ _Avoid_: CI result, approval, mutable status.
 integration branch into a ReleaseSafe binary on the system path.
 _Avoid_: maintainer, updater.
 
+**Provider authorization** — One tagged libfx `auth` entry, or an ordered list
+of entries, that supplies the credential authority for each enabled provider;
+the first entry selects the initial provider and later switching remains inside
+that set.
+_Avoid_: provider option, ambient credential fallback.
+
 **ADE event feed** — Fx's opt-in, versioned, best-effort NDJSON lifecycle
 stream from an interactive TUI and its in-process agents to an ADE-owned Unix
 socket. The ADE supplies the socket and an opaque instance identity; Fx

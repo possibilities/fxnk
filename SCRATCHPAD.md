@@ -7,36 +7,43 @@ entries on every maintenance cycle and appends one compact history entry.
 
 - Last completed maintenance: 2026-08-24
 - Upstream base and Main mirror:
-  `f79d2ca4d6faa0c9cdf700f454b3b045a7b227e4`
+  `ccba4a7cf2f856e2740b442c2ea60b02a7405f8b`
 - Published and installed Integration:
-  `0fa09b02a0c76d88bdb942d1d35ccdb9c228e9ea`
+  `ec1cbc3aba202348f047791f3466b1ab792caa0b`
 - Local development gate: exact-SHA receipt
-  `~/.local/state/fxnk/local-gates/0fa09b02a0c76d88bdb942d1d35ccdb9c228e9ea.json`;
-  contract `5135afc869e9fa2cee80f9173f8ad9d33de149f342a191274dfbcde9d8702d00`;
-  cold replay completed in 372 seconds. `ship-gate.sh` printed
-  `SHIP 0fa09b02a0c76d88bdb942d1d35ccdb9c228e9ea`.
+  `~/.local/state/fxnk/local-gates/ec1cbc3aba202348f047791f3466b1ab792caa0b.json`;
+  contract `acbd3c5b516c5123ae732f6aa4da5d4ce6d619122cfae595aa4681e0e68a3e74`;
+  final replay completed in 61 seconds. `ship-gate.sh` printed
+  `SHIP ec1cbc3aba202348f047791f3466b1ab792caa0b`.
 - Installed SHA-256:
-  `dadf2108e46a89b29f8cdf005db165d142db2041948ee8ea6747b39fe9e0fb68`.
+  `7006c85636feee1143947c2c090d8b1f1d14430479c828c724472dff3b4e9a4b`.
   The receipt, clean bound checkout, published ref, and installed binary all
-  match; `--fxnk-version` reports `fxnk 0.3.0 (fx 0.0.5)`, `auto_upgrade` is
-  `false`, the model catalog exposes reasoning efforts, and the installed TUI
-  opened `/help` and exited cleanly through `/quit`.
+  match; `--fxnk-version` reports `fxnk 0.4.0 (fx 0.0.5)`, `auto_upgrade` is
+  `false`, and a real native libfx turn through explicit `fxProfileSession()`
+  streamed from Codex and shut down cleanly.
 
 ## Carried state
 
-Integration is one linear three-commit downstream stack on the upstream base:
+Integration is one linear four-commit downstream stack on the upstream base:
 
-- `59486198a4a16097d90eb070f06dacd9b8d971e7` applies the carried product
+- `9662e70827bf60486bd8cb41ecedd80a48198789` applies the carried product
   behaviors: fork identity, system-prompt files, effort override and catalog,
   ADE event feed and edited-root recovery, native session naming,
   invocation-scoped skill roots, external-editor support, and transcript
   resume bounds. The former clean carry heads remain preserved only under
   `DELETEME/carry/*`; they are not development or publication branches.
-- `5156b0b040e26cee3beac79e6ae53815aafea973` adds the terminal replay coverage
+- `182ddff22422b74cc557ead0b71673eed0663502` adds the terminal replay coverage
   to the narrow downstream canary target.
-- `0fa09b02a0c76d88bdb942d1d35ccdb9c228e9ea` keeps the 17-canary target on
-  Zig's ordinary incremental cache path, so an unchanged post-commit rerun is
-  sub-second. A changed upstream graph still incurs a cold ReleaseSafe build.
+- `e29a81138a4a66988b51ce9eb26b093f4baa3dcd` keeps the narrow canary target on
+  Zig's ordinary incremental cache path, so an unchanged post-commit rerun
+  reuses the selected graph. A changed upstream graph still incurs a cold
+  ReleaseSafe build.
+- `ec1cbc3aba202348f047791f3466b1ab792caa0b` adds explicit Gateway and Codex
+  provider authorization to native libfx, including bounded optimistic OAuth
+  session stores, account pinning, refresh write-back, native-only Codex
+  catalogs and streaming, browser rejection, and strict native MCP isolation
+  across session creation and restoration. The gate now selects 20 carried
+  canaries.
 - Direct Codex usage beyond 64 sequential provider calls remains satisfied by
   upstream commit `dd409c27a7719e4dccaa30152c4e9087ec30edea`; no downstream
   carry exists for it.
@@ -81,3 +88,6 @@ Integration is one linear three-commit downstream stack on the upstream base:
   support for upstream PRs and remote feature branches, replayed onto current
   upstream, published and installed `0fa09b0`, and reconciled the fork to Main,
   Integration, and permanent quarantine only.
+- 2026-08-24: Replayed the downstream stack onto `ccba4a7`, added native libfx
+  Codex provider authorization with explicit session ownership and restore-path
+  MCP isolation, published and installed `ec1cbc3`, and advanced fxnk to 0.4.0.

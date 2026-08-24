@@ -155,9 +155,40 @@ later cycle reconciles only what this section names.
   stream as soon as it holds enough for a slug, because the Codex endpoint
   refuses the Responses API output bound and stopping it is the only thing
   that keeps a naming answer short.
-- Keep automatic naming disabled for `fx ask`, `fx acp`, subagents, and
-  disabled or unconfigured providers. Naming must not block agent lifecycle.
+- Keep automatic naming disabled for `fx ask`, `fx acp`, browser and
+  WebAssembly hosts, subagents, and disabled or unconfigured providers. Naming
+  must not block agent lifecycle.
   This carry depends on the ADE event feed for live consumer updates.
+
+### Libfx provider authorization
+
+- Let native Node `createFxAgent()` accept one tagged `auth` entry or an
+  ordered list for Gateway and Codex. The first entry selects the initial
+  provider; `env.AI_GATEWAY_API_KEY` remains Gateway shorthand; provider
+  switching may select only an authorization the host supplied. Do not compile
+  Grok into native libfx.
+- Keep Codex credential access explicit. A host may supply a bounded session
+  store with opaque load and optimistic revisioned commit operations, or opt
+  into the fx profile with `fxProfileSession()`. Never fall back from a custom
+  store or an ordinary libfx home to ambient ChatGPT credentials. An explicit
+  libfx home also owns profile usage state; do not read or publish that state
+  through ambient `HOME`.
+- Refresh expired Codex access tokens through the native OAuth transport and
+  commit the complete rotated session at the expected revision. Pin an active
+  runtime to its selected ChatGPT account and reject a swapped account before
+  any refresh request or write-back. Treat conflicts, malformed stores,
+  timeouts, cancellation, and stale completions as bounded failures without
+  leaking credential bytes or wedging later store operations; quarantine a
+  host promise that ignores abort until it actually settles, keep its session
+  bytes in a separate scrubbed copy, and close the native runtime on timeout.
+- Load the authenticated Codex catalog before native libfx initialization
+  succeeds. Select an available Codex model when no model was supplied, reject
+  an unavailable explicit model, and fail clearly when the catalog is
+  unavailable or has no supported model.
+- Keep browser and direct WebAssembly libfx Gateway-only and reject Codex
+  authorization before instantiation. Native tools, ACP MCP, background
+  processes, Grok, and the native secret store remain unavailable on every
+  libfx surface.
 
 ### Invocation skill roots
 
