@@ -1,0 +1,16 @@
+  File  View  Navigate  Agent  Help                repo working tree  3 files  +5  -1
+ ──────────────────────────────────────────────────────────────────────────────────────────────────
+
+  added.txt                                                                                 +1 -1
+ ▌@@ -1,2 +1,2 @@
+ ▌1 1    a brand new file
+ ▌2   -  with two lines
+ ▌  2 +  with two edited lines
+  ──────────────────────────────────────────────────────────────────────────────────────────────
+  f.txt                                                                                     +1 -0
+ ▌▾ 1 unchanged line
+ ▌@@ -2,3 +2,4 @@ one one
+ ▌2 2    TWO point five
+ ▌3 3    three
+ ▌4 4    four
+ ▌  5 +  five
