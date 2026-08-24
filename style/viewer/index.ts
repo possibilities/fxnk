@@ -219,19 +219,20 @@ function carveOutsSection(theme: Theme): Line[] {
   lines.push(heading("agent rows in the tray", "labels primary, names dim, the glyph carries the state — never a hue"))
   const name = (text: string) => paint(role("dim", t), text, t)
   const fill = (chunk: TextChunk) => bg(surface(t))(chunk)
+  const annotate = (used: number, text: string): TextChunk => note(" ".repeat(Math.max(2, 34 - used)) + text, t)
   lines.push([paint(role("hint", t), " fmx", t)])
-  lines.push([bold(paint(role("hint", t), "   main", t)), note("                      bold: on the path to the active agent", t)])
-  lines.push([bold(paint(role("hint", t), "     × ", t)), name("needs-permission"), note("           blocked — bold primary, what needs you", t)])
+  lines.push([bold(paint(role("hint", t), "   main", t)), annotate(7, "bold: on the path to the active agent")])
+  lines.push([bold(paint(role("hint", t), "     × ", t)), name("needs-permission"), annotate(23, "blocked — bold primary, what needs you")])
   lines.push([
     fill(paint(role("dim", t), "     ◐ ", t)),
     fill(name("implement-gallery")),
     fill(note("   ", t)),
-    note("       active — the surface fill; working — dim", t),
+    annotate(27, "active — the surface fill; working — dim"),
   ])
-  lines.push([paint(role("permission_auto", t), "     ✓ ", t), name("review-complete"), note("            done — accent, one step brighter than its row", t)])
-  lines.push([paint(role("dim", t), "     ○ ", t), name("available"), note("                  idle — dim", t)])
-  lines.push([italic(paint(role("system_notice_text", t), "   (untracked)", t)), note("                 virtual branch — secondary, italic, never bold", t)])
-  lines.push([paint(role("dim", t), "     · ", t), name("starting"), note("                   unknown — dim", t)])
+  lines.push([paint(role("permission_auto", t), "     ✓ ", t), name("review-complete"), annotate(22, "done — accent, one step brighter than its row")])
+  lines.push([paint(role("dim", t), "     ○ ", t), name("available"), annotate(16, "idle — dim")])
+  lines.push([italic(paint(role("system_notice_text", t), "   (untracked)", t)), annotate(14, "virtual branch — secondary, italic, never bold")])
+  lines.push([paint(role("dim", t), "     · ", t), name("starting"), annotate(15, "unknown — dim")])
   lines.push([])
 
   // 3. Surfaces over the stage: focus border takes keys, dim hairline takes none.
@@ -243,16 +244,16 @@ function carveOutsSection(theme: Theme): Line[] {
   const value = (text: string) => paint(role("hint", t), text, t)
   const inner = 38
   const pad = (used: number) => " ".repeat(Math.max(0, inner - used))
-  lines.push([F(" ┌─ "), value("launch"), F(" " + "─".repeat(inner - 9) + "┐"), note("   title primary; rows: label secondary, value primary", t)])
+  lines.push([F(" ┌─ "), value("launch"), F(" " + "─".repeat(inner - 8) + "┐"), note("   title primary; rows: label secondary, value primary", t)])
   lines.push([F(" │ "), bold(F("▎ ")), label("prompt    "), D("what should the agent do?"), value(pad(37)), F("│"), note("   ▎ focus caret; placeholder dim", t)])
   lines.push([F(" │ "), value("  "), label("project   "), value("~/code/fmx"), value(pad(22)), F("│")])
   lines.push([F(" │ "), value("  "), label("worktree  "), value("no"), value(pad(14)), F("│")])
-  lines.push([F(" └" + "─".repeat(inner) + "┘")])
+  lines.push([F(" └" + "─".repeat(inner + 1) + "┘")])
   const toastText = " fmx / main / agent 3 started "
   lines.push([D(" ┌" + "─".repeat(toastText.length) + "┐"), note("   toast: primary text on the surface fill", t)])
   lines.push([D(" │"), bg(surface(t))(value(toastText)), D("│")])
   lines.push([D(" └" + "─".repeat(toastText.length) + "┘")])
-  lines.push([E(" ┌─ "), value("error"), E(" ─────────────┐"), note("   a failure: the host red on the border, heading bold accent", t)])
+  lines.push([E(" ┌─ "), value("error"), E(" ────────────┐"), note("   a failure: the host red on the border, heading bold accent", t)])
   lines.push([E(" │ "), bold(paint(role("red", t), "fx did not start", t)), value("   "), E("│")])
   lines.push([E(" └" + "─".repeat(20) + "┘")])
   lines.push([])
