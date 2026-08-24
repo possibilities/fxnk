@@ -18,6 +18,10 @@
       "sha": "5e81d90193adc3dc145a2e80fbd8642998b37253",
       "result": "44 pass, 1 fail in tui-subagent-manager.test.ts"
     },
+    "upstream_bounded_terminal": {
+      "sha": "c8b6cf65484d1ac15f89ba573ac9b2be795817f0",
+      "result": "The three declared subagent probes produced 2 pass and the same Ctrl-X assertion failure; all six render/replay probes passed after the upstream test added explicit terminal deadlines"
+    },
     "ci_job": {
       "id": 97485268413,
       "result": "Seven failures across the two declared files, dominated by tmux teardown timeouts"
@@ -31,7 +35,7 @@
       "required_blobs": [
         {
           "path": "tests/e2e/tui-subagent-manager.test.ts",
-          "oid": "3566cdf9b3c1d7c4c4ad091e27bbfca35318965b"
+          "oid": "86db02dfb2f985b911dfd13edbeb41019e108342"
         },
         {
           "path": "tests/e2e/tmux-helpers.ts",
