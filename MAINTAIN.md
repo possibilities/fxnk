@@ -69,6 +69,10 @@ shipping it.
 
 ## Features
 
+Every entry is a behavior the fork must keep. Work that adds one writes its
+entry in the same change; an unrecorded feature is unfinished work, because a
+later cycle reconciles only what this section names.
+
 ### Fork identity
 
 - Support the intentionally undocumented `--fxnk-version` consumer probe. It
@@ -89,6 +93,20 @@ shipping it.
 - Include supported efforts in the model catalog and structured surfaces such
   as `fx models --json`, so an ADE can present valid models and efforts for each
   provider.
+
+### Session naming
+
+- Name an unnamed interactive session from its first prompt and adopt the
+  generated title through the same durable sidecar and index path a manual
+  rename uses. The interactive TUI only: `fx ask` and `fx acp` never name.
+- Keep the request a bounded one-shot. It carries its own instruction and a
+  bounded excerpt of that prompt with mentioned files inlined, and it carries
+  no tools, no agent system prompt, no session identity, and no reply beyond
+  the length a title needs. It runs off the agent worker, never delays or
+  blocks a turn, and stays silent on failure.
+- Resolve the naming model and effort per provider from `session_naming`
+  settings merged across profile and workspace. Codex compiles in a default;
+  a provider whose model does not resolve simply does not name.
 
 ### ADE event feed
 

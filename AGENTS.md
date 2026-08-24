@@ -14,6 +14,10 @@ or its installer.
 - `/maintain` is the shared `maintain` skill in `~/code/agentguidance`, the
   operating procedure for every fork workshop on this machine. Fx-specific
   procedure belongs in `MAINTAIN.md`, never in a copy of the skill here.
+- Every behavior the fork carries is reversed into `MAINTAIN.md` § Features by
+  the same change that builds it, in the same commit. The entry is part of the
+  work, never a follow-up: a carried feature the inventory does not name is
+  unfinished, because the next cycle reconciles only what that section states.
 - `SCRATCHPAD.md` is current maintenance state, not a second specification or
   an unbounded transcript.
 - `style/` is the fx style guide for fmx: `style/STYLE.md` (prose for fmx
