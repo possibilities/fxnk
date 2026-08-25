@@ -40,26 +40,27 @@ shipping it.
   It is the fork's GitHub default branch, the base and merge target for
   downstream development, and the only branch the installer consumes. One
   publication lease serializes exact-leased updates.
-- Composition: one linear downstream Integration history. Create a short-lived
-  local feature branch from the exact current Integration tip, work in its own
-  worktree, pass the Local development gate, and merge the committed result
-  back into Integration. Do not publish feature or `carry/*` branches. During
-  upstream maintenance, replay the downstream stack on the current Main mirror
-  and publish the proved exact commit under the captured Integration lease.
-- Publication: standing authorization. Pushing Integration to `fork` needs no
+- Composition: stable published `carry/<feature>` heads, one per current entry
+  in the feature inventory. Develop each carry in its own worktree from current
+  Main or a declared carry dependency, then compose every carry into
+  Integration. Every published carry head must be an ancestor of published
+  Integration. During upstream maintenance, replay each carry on current Main
+  or its declared dependency and publish the proved graph under exact leases.
+- Publication: standing authorization. Pushing the declared carry heads and
+  Integration to `fork` needs no
   per-cycle approval and is not a question to bring to the operator. A green
   Local development gate on the exact commit is the authority that permits it,
   so an ungated commit is never published no matter who asks. This authorizes
-  the `fork` remote's `integration` ref alone: `main`, `origin`, and every
-  upstream ref stay untouched by maintenance, and publishing never implies
+  only `fork/integration` and the current declared `fork/carry/*` refs: `origin`
+  and all other fork heads stay untouched, and publishing never implies
   installing.
-- Quarantine prefix: `DELETEME/`. Any fork head other than `main`,
-  `integration`, or an existing quarantine head is moved at the same commit to
-  `DELETEME/<original-name>`. Existing `DELETEME/*` heads are permanent:
-  reported, never removed automatically.
+- Deletion marker prefix: `DELETEME/`. Creating, moving, or removing
+  `DELETEME/<original-name>` requires an explicit human decision naming the
+  branch. Maintenance never infers deletion from branch age, ownership,
+  request state, namespace, or absence from the carry inventory. All other
+  fork heads remain unchanged.
 - Open pull-request heads: not preserved. Requests are historical references,
-  and their fork branches follow the same quarantine rule as every other
-  obsolete branch.
+  and their fork branches are ordinary untouched refs.
 - Rerere: relied on. The bound checkout keeps it enabled; a recorded
   resolution is reused when it remains semantically correct and rechecked
   after upstream changes.

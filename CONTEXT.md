@@ -25,15 +25,16 @@ The Workshop does not update, support, or preserve a request branch and never
 depends on upstream action.
 _Avoid_: active contribution, maintained PR, open offer.
 
-**Fork feature branch** — A short-lived local branch cut from Integration for
-one coherent change, gated locally and merged back into Integration. It is not
-published to the fork and is removed after the published result is installed.
-_Avoid_: carry branch, PR branch, remote feature branch.
+**Carry branch** — A durable published `carry/<feature>` head containing one
+current downstream behavior, based on Main or a declared carry dependency and
+composed into Integration. Its name remains stable across upstream refreshes.
+_Avoid_: patch branch, PR branch, temporary feature branch.
 
-**Quarantine branch** — A preserved fork branch renamed to
-`DELETEME/<original-name>` because it is neither Main nor Integration.
-Maintenance never deletes quarantine branches.
-_Avoid_: deleted branch, archive tag.
+**DELETEME branch** — An explicit human marker at
+`DELETEME/<original-name>` recording a decision to remove that named fork
+branch. Maintenance never creates the marker by heuristic and never treats an
+unknown branch as deletion intent.
+_Avoid_: quarantine branch, stale branch, automatic archive.
 
 **Maintenance cycle** — One `/maintain` run that reviews upstream movement and
 historical references, reconciles every carried feature, passes the Local

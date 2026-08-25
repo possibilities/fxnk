@@ -32,10 +32,9 @@ or its installer.
 - `scripts/install.sh` consumes the published `fork/integration` branch. It
   must not rebase, push, inspect PRs, or decide which patches should be carried.
 - `scripts/reconcile-branches.sh` is the thin entrypoint to the skill's shared
-  namespace script: it declares the branch model `MAINTAIN.md` states and
-  nothing else. The mechanics — mirror `main` and move every branch other than
-  `main`, `integration`, and existing quarantine to `DELETEME/<original>` in
-  one atomic leased push — live and are tested in
+  branch script: it declares the branch model `MAINTAIN.md` states and nothing
+  else. The mechanics — mirror `main`, publish declared `carry/*` heads, and
+  leave every other fork head unchanged — live and are tested in
   agentguidance (`skills/maintain/scripts/`, `tests/branch-policy.sh`).
 - Upstream pull requests are historical references only. Maintenance may read
   them for evidence, but must not update, support, or preserve their branches.
@@ -48,16 +47,18 @@ The checkout being maintained is `~/src/fx`, with `fork` pointing to
 
 ## Working topology
 
-Work directly on `main` in this repository. Outside this repository, create a
-dedicated worktree and local feature branch from Fx Integration, commit the
-finished change, merge it into Integration, and remove the worktree after the
-published result is installed. Never do feature work in the bound Fx checkout,
-publish feature branches, or push onto a historical upstream PR branch.
+Work directly on `main` in this repository. Outside this repository, develop
+each carried Fx feature in a dedicated worktree on its `carry/<feature>` branch,
+based on current Main or a declared carry dependency. Gate and publish that
+carry, compose it into Integration, and remove the worktree after the published
+result is installed. Never do feature work in the bound Fx checkout or push
+onto a historical upstream PR branch.
 
-Maintenance owns the complete fork branch namespace. It must preserve unknown
-work by moving it to `DELETEME/<original>` at the same commit, never by deleting
-it. Existing `DELETEME/*` branches are permanent quarantine and are not removed
-automatically.
+Maintenance owns only Main, Integration, and the declared `carry/*` heads.
+Every other fork head remains unchanged. Creating, moving, or removing a
+`DELETEME/<original>` ref requires an explicit human decision naming that
+branch; maintenance never infers deletion from age, ownership, request state,
+or namespace.
 
 Keep Fx's rerere support enabled. A recorded resolution is evidence, not proof:
 after upstream changes, reread the affected behavior before accepting it.

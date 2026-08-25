@@ -5,8 +5,9 @@ set -euo pipefail
 # fxnk's entrypoint to the maintain skill's shared namespace script. It
 # declares what MAINTAIN.md's Branch model says — the checkout, the remotes,
 # the branch names, the composition model — and nothing else; the mechanics
-# (a read-only check from a disposable snapshot, one atomic exact-leased
-# push, quarantine that never deletes) are the skill's and are tested there.
+# (a read-only check from a disposable snapshot and one atomic exact-leased
+# push of declared refs that leaves all other heads unchanged) are the skill's
+# and are tested there.
 
 skill_dir="${MAINTAIN_SKILL_DIR:-$HOME/.local/share/agentstart/capabilities/packs/common/skills/maintain}"
 script="$skill_dir/scripts/reconcile-branches.sh"
@@ -23,7 +24,7 @@ export MAINTAIN_FORK_REMOTE=fork
 export MAINTAIN_UPSTREAM_REMOTE=origin
 export MAINTAIN_MAIN_BRANCH=main
 export MAINTAIN_INTEGRATION_BRANCH=integration
-export MAINTAIN_CARRY_PREFIX=
+export MAINTAIN_CARRY_PREFIX=carry/
 export MAINTAIN_QUARANTINE_PREFIX=DELETEME/
 export MAINTAIN_PRESERVE_OPEN_PRS=0
 

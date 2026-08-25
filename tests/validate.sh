@@ -116,7 +116,7 @@ for declared in \
     'MAINTAIN_UPSTREAM_REPO=vercel-labs/fx' \
     'MAINTAIN_MAIN_BRANCH=main' \
     'MAINTAIN_INTEGRATION_BRANCH=integration' \
-    'MAINTAIN_CARRY_PREFIX=' \
+    'MAINTAIN_CARRY_PREFIX=carry/' \
     'MAINTAIN_QUARANTINE_PREFIX=DELETEME/' \
     'MAINTAIN_PRESERVE_OPEN_PRS=0'; do
     grep -F "export $declared" scripts/reconcile-branches.sh >/dev/null \
