@@ -57,6 +57,12 @@ _Avoid_: CI result, approval, mutable status.
 integration branch into a ReleaseSafe binary on the system path.
 _Avoid_: maintainer, updater.
 
+**Supervision policy** — fxnk's tracked `supervision/SUPERVISE.md`, installed
+locally into the upstream checkout with `supervisor.trunk=integration`. It keeps
+Fx work visible to `supervise` while routing product integration to the
+carry/composition workflow.
+_Avoid_: repository documentation, supervisor integration recipe.
+
 **Provider authorization** — One tagged libfx `auth` entry, or an ordered list
 of entries, that supplies the credential authority for each enabled provider;
 the first entry selects the initial provider and later switching remains inside

@@ -67,6 +67,11 @@ shipping it.
   after upstream changes.
 - `scripts/reconcile-branches.sh` is this repository's entrypoint to the
   shared namespace script; it declares these values and nothing else.
+- `scripts/configure-supervision.sh --install` converges the local-only
+  `SUPERVISE.md` and `supervisor.trunk=integration` setting. Supervision keeps
+  Fx work visible and may reap clean landed worktrees, but it never integrates
+  product branches: a one-trunk fast-forward cannot publish a durable carry and
+  the exact Integration composition together.
 
 ## Features
 

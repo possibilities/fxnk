@@ -2,6 +2,8 @@
 
 set -euo pipefail
 
+script_dir=$(cd "$(dirname "$0")" && pwd)
+
 die() {
     printf 'fxnk installer: %s\n' "$*" >&2
     exit 1
@@ -59,6 +61,7 @@ Fx fork installation:
   upstream: origin/main ($fx_upstream_url; maintained by /maintain)
   binary: $fx_bin
   receipts: $state_dir
+  supervision: install fxnk's local report-and-route policy and Integration trunk config
   action: align the clean checkout to the published integration branch, build ReleaseSafe, and install atomically
 EOF
     exit 0
@@ -267,6 +270,9 @@ ensure_remote fork "$fx_fork_url" \
     'https://github.com/possibilities/fx.git' 'git@github.com:possibilities/fx.git'
 ensure_remote origin "$fx_upstream_url" \
     'https://github.com/vercel-labs/fx.git' 'git@github.com:vercel-labs/fx.git'
+
+FXNK_FX_CHECKOUT="$fx_checkout" \
+    "$script_dir/configure-supervision.sh" --install
 
 [ -z "$(git -C "$fx_checkout" status --porcelain)" ] \
     || die "$fx_checkout has local changes; refusing to install them"

@@ -15,7 +15,9 @@ bash -n scripts/local-gate.sh
 bash -n scripts/gate-contract.sh
 bash -n scripts/ship-gate.sh
 bash -n scripts/reconcile-branches.sh
+bash -n scripts/configure-supervision.sh
 bash -n tests/install-transaction.sh
+bash -n tests/supervision-transaction.sh
 bash -n tests/local-gate/receipt-transaction.sh
 bash -n scripts/style-extract.sh
 bash -n scripts/style-swatch.sh
@@ -29,8 +31,12 @@ bash -n scripts/style-view.sh
 [ -x scripts/ship-gate.sh ] || fail "scripts/ship-gate.sh is not executable"
 [ -x scripts/reconcile-branches.sh ] \
     || fail "scripts/reconcile-branches.sh is not executable"
+[ -x scripts/configure-supervision.sh ] \
+    || fail "scripts/configure-supervision.sh is not executable"
 [ -x tests/install-transaction.sh ] \
     || fail "tests/install-transaction.sh is not executable"
+[ -x tests/supervision-transaction.sh ] \
+    || fail "tests/supervision-transaction.sh is not executable"
 [ -x tests/local-gate/receipt-transaction.sh ] \
     || fail "tests/local-gate/receipt-transaction.sh is not executable"
 for style_script in style-extract.sh style-swatch.sh style-capture.sh style-view.sh; do
@@ -55,11 +61,22 @@ plan=$(scripts/install.sh --check)
 for required in \
     'source: fork/integration' \
     'maintained by /maintain' \
+    "supervision: install fxnk's local report-and-route policy" \
     'build ReleaseSafe' \
     'install atomically'; do
     printf '%s\n' "$plan" | grep -F "$required" >/dev/null \
         || fail "installer plan is missing: $required"
 done
+
+for supervision_contract in \
+    'durable published `carry/<feature>` head' \
+    'Treat every Fx merge candidate as report-and-route evidence' \
+    'Never force-push or delete a'; do
+    grep -F "$supervision_contract" supervision/SUPERVISE.md >/dev/null \
+        || fail "the supervision policy omits: $supervision_contract"
+done
+grep -F '"$script_dir/configure-supervision.sh" --install' scripts/install.sh >/dev/null \
+    || fail "the installer does not converge Fx supervision"
 
 # shellcheck disable=SC2016 # Match the installer's literal branch expressions.
 grep -F 'local_integration_sha=$(git -C "$fx_checkout" rev-parse' scripts/install.sh >/dev/null \

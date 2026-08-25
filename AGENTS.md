@@ -31,6 +31,9 @@ or its installer.
   write outside this repository.
 - `scripts/install.sh` consumes the published `fork/integration` branch. It
   must not rebase, push, inspect PRs, or decide which patches should be carried.
+  It also converges fxnk's local-only `SUPERVISE.md` and
+  `supervisor.trunk=integration` configuration so a fresh checkout cannot
+  mistake an Integration-only fast-forward for a valid carried-feature landing.
 - `scripts/reconcile-branches.sh` is the thin entrypoint to the skill's shared
   branch script: it declares the branch model `MAINTAIN.md` states and nothing
   else. The mechanics — mirror `main`, publish declared `carry/*` heads, and
@@ -61,6 +64,12 @@ Every other fork head remains unchanged. Creating, moving, or removing a
 `DELETEME/<original>` ref requires an explicit human decision naming that
 branch; maintenance never infers deletion from age, ownership, request state,
 or namespace.
+
+The generic `supervise` skill provides visibility and guarded worktree reaping
+for Fx, but never integrates Fx product branches. Its one-trunk fast-forward
+cannot publish the carry heads and exact Integration composition together.
+`supervision/SUPERVISE.md` is the source for the local checkout policy;
+`scripts/configure-supervision.sh` installs and verifies it.
 
 Keep Fx's rerere support enabled. A recorded resolution is evidence, not proof:
 after upstream changes, reread the affected behavior before accepting it.
