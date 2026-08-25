@@ -359,6 +359,22 @@ clean checkout and atomically replaces the binary and receipts under
 rebase, push, inspect requests, or decide which patches are carried. Never edit
 the installed binary or live receipts by hand; rerun the installer.
 
+AgentStart is Fx's consumer and pins that approved SHA rather than following a
+moving Integration ref. The maintenance cycle is not complete until it advances
+`fx_integration_sha` in `~/code/agentstart/scripts/install.sh`, updates the
+matching plan, validation, and fleet-map facts in that checkout, and proves the
+handoff with:
+
+```sh
+~/code/agentstart/tests/validate.sh
+~/code/agentstart/scripts/install.sh --install
+```
+
+Then compare the installed `collab` manifest with agentguidance's source
+template as AgentStart's own guidance requires. A published and installed Fx
+commit with AgentStart still pinned to the prior Integration SHA is unfinished:
+the next machine convergence will correctly reject that stale consumer pin.
+
 ## Notify
 
 - Title: `Fx Maintenance`

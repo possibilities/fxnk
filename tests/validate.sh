@@ -102,6 +102,14 @@ grep -Fx '### Hosted Full CI' MAINTAIN.md >/dev/null \
 # shellcheck disable=SC2016 # Match the literal documented SHA variable.
 grep -F 'scripts/install.sh --install --sha "$integration_sha"' MAINTAIN.md >/dev/null \
     || fail "the consumer does not name the installer"
+for consumer_handoff in \
+    'fx_integration_sha' \
+    '~/code/agentstart/tests/validate.sh' \
+    '~/code/agentstart/scripts/install.sh --install' \
+    'compare the installed `collab` manifest'; do
+    grep -F "$consumer_handoff" MAINTAIN.md >/dev/null \
+        || fail "the consumer omits the AgentStart handoff: $consumer_handoff"
+done
 # shellcheck disable=SC2016 # Match literal Markdown text.
 grep -F 'Title: `Fx Maintenance`' MAINTAIN.md >/dev/null \
     || fail "the notification title is missing"
