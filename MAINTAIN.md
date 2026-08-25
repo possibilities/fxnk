@@ -411,11 +411,10 @@ The extractor's five parsed sites (role palette `src/ui/render.zig`
 elsewhere in fx are always dark-ramp values covered by the retint map, so
 tracking the five sites plus the index census is complete coverage.
 
-Carve-outs are the one part of the guide that is not extracted. fx has no
-tabs, docks, trays, or modals, so surfaces fmx needs and fx never draws —
-today the Tools panel's rule tab, the tray's agent rows, the surfaces drawn
-over the stage, the unused field around a smaller sizing owner, and the hunk
-diff panel — are designed from fx's principles and recorded in
+Carve-outs are the one part of the guide that is not extracted. Surfaces fmx
+needs and fx never draws — today the tray's agent rows, surfaces drawn over
+the stage, and the unused field around a smaller sizing owner — are designed
+from fx's principles and recorded in
 `style/STYLE.md` § "Carve-outs", with the viewer's "carve-outs" section
 rendering them from ramp tokens. They are deliberately absent from
 `tokens.json`, invisible to `style-extract.sh --check`, and must never be

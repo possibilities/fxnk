@@ -50,10 +50,6 @@ const FMX_FOCUS = "#7dd3fc"
 const FMX_ERROR = (tokens.diff_markers.removed.truecolor as StyleValue).fg!.hex
 const UNUSED_SPACE_BLEND = 0.06
 const SURFACE_BLEND = 0.12
-// The diff panel's two hues, carried into a row and into the word-diff span
-// inside it — the one carve-out that spends color (see STYLE.md).
-const DIFF_ROW_TINT = 0.14
-const DIFF_SPAN_TINT = 0.28
 
 function mix(base: string, tint: string, amount: number): string {
   const channel = (offset: number) => {
@@ -233,30 +229,7 @@ function carveOutsSection(theme: Theme): Line[] {
   lines.push([unusedFill(ownerWidth + unusedWidth)])
   lines.push([])
 
-  // 2. The rule tab: the Tools panel's switcher.
-  lines.push(heading("the rule tab", "fmx's Tools panel switcher — selection by weight and the heavy rule span"))
-  const items = ["Diff", "Tests", "Logs"]
-  const selected = 1
-  const labels: Line = []
-  const rule: Line = []
-  items.forEach((label, i) => {
-    labels.push(note(" ", t))
-    rule.push(paint(role("divider", t), "─", t))
-    labels.push(i === selected ? paint(role("selected_completion", t), label, t) : note(label, t))
-    rule.push(
-      i === selected
-        ? paint(role("hint", t), "━".repeat(label.length), t)
-        : paint(role("divider", t), "─".repeat(label.length), t),
-    )
-    labels.push(note(" ", t))
-    rule.push(paint(role("divider", t), "─", t))
-  })
-  rule.push(paint(role("divider", t), "─".repeat(12), t))
-  lines.push(labels)
-  lines.push(rule)
-  lines.push([])
-
-  // 3. Agent rows in the tray: state by glyph and weight.
+  // 2. Agent rows in the tray: state by glyph and weight.
   lines.push(heading("agent rows in the tray", "labels primary, names dim, the glyph carries the state — never a hue"))
   const name = (text: string) => paint(role("dim", t), text, t)
   const fill = (chunk: TextChunk) => bg(surface(t))(chunk)
@@ -276,7 +249,7 @@ function carveOutsSection(theme: Theme): Line[] {
   lines.push([paint(role("dim", t), "     · ", t), name("starting"), annotate(15, "unknown — dim")])
   lines.push([])
 
-  // 4. Surfaces over the stage: focus border takes keys, dim hairline takes none.
+  // 3. Surfaces over the stage: focus border takes keys, dim hairline takes none.
   lines.push(heading("surfaces over the stage", "focus border takes keys · dim hairline takes none · error border reports failure"))
   const F = (text: string) => fg(FMX_FOCUS)(text)
   const E = (text: string) => fg(FMX_ERROR)(text)
@@ -299,40 +272,6 @@ function carveOutsSection(theme: Theme): Line[] {
   lines.push([E(" └" + "─".repeat(20) + "┘")])
   lines.push([])
 
-  // 5. The diff panel: the one surface where two more hues are spent.
-  lines.push(heading("reviewing a diff: the hunk panel", "two more hues, one job each — the sign, its row, the span inside it"))
-  const added = (tokens.diff_markers.added.truecolor as StyleValue).fg!.hex
-  const removed = (tokens.diff_markers.removed.truecolor as StyleValue).fg!.hex
-  const row = (tint: string) => mix(CANVAS[t], tint, DIFF_ROW_TINT)
-  const span = (tint: string) => mix(CANVAS[t], tint, DIFF_SPAN_TINT)
-  const gutter = (text: string) => paint(role("dim", t), text, t)
-  const code = (text: string) => paint(role("hint", t), text, t)
-  const diffWidth = 44
-  const diffRow = (rail: string, gutterText: string, text: string, fill: string | null, tail: string): Line => {
-    const body: Line = [gutter(gutterText), code(text), note(" ".repeat(Math.max(0, diffWidth - gutterText.length - text.length)), t)]
-    return [
-      fg(rail)("▌"),
-      ...(fill ? body.map((chunk) => bg(fill)(chunk)) : body),
-      note("  " + tail, t),
-    ]
-  }
-  lines.push([code(" added.txt"), note(" ".repeat(diffWidth - 15), t), fg(added)("+1"), note(" ", t), fg(removed)("-1"), note("   counts take the sign colors", t)])
-  // The cursor lift is hunk's own derivation: text blended 20% from the
-  // appearance's extreme, not from the host's background.
-  const cursorLift = mix(t === "dark" ? "#000000" : "#ffffff", role("hint", t).fg!.hex, 0.2)
-  lines.push(diffRow(role("divider", t).fg!.hex, "1 1    ", "a brand new file", cursorLift, "cursor lift — hunk's own, from text"))
-  lines.push(diffRow(removed, "2   ", "-  with two lines", row(removed), "removed row — its sign at 14%"))
-  lines.push(diffRow(added, "  2 ", "+  with two edited lines", row(added), "added row — its sign at 14%"))
-  lines.push([
-    fg(added)("▌"),
-    bg(row(added))(gutter("  3 ")),
-    bg(row(added))(code("+  with ")),
-    bg(span(added))(code("two edited")),
-    bg(row(added))(code(" lines")),
-    bg(row(added))(note(" ".repeat(diffWidth - 30), t)),
-    note("  word-diff span — the same sign at 28%", t),
-  ])
-  lines.push([])
   lines.push([note("no hue for a state, no underline; fmx paints all of this host-derived — these are the fallback values", t)])
   return lines
 }

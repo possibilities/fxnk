@@ -1,7 +1,7 @@
 # The fx style guide, for fmx
 
 fx is the living style guide for fmx: whenever fmx draws its own chrome —
-modals, toasts, panels, status rows — it should look like it belongs in the
+modals, toasts, tray rows, status rows — it should look like it belongs in the
 same instrument as the fx it embeds. This document extracts fx's visual
 language into rules and values fmx developers can borrow directly.
 
@@ -155,10 +155,10 @@ symbols like `✓` and `→` are fine).
 
 ## Carve-outs: what fx has no surface for
 
-fx is a transcript with a prompt; it has no tabs, no docks, no switcher. When
-fmx needs a surface fx never draws, the rule is to build it from fx's
-principles — one ramp, weight and glyph for state, no hue, no underline —
-and record it here as a carve-out. Nothing below is extracted from fx:
+fx is a transcript with a prompt; it has no tray, transient stage surfaces, or
+shared Client field. When fmx needs a surface fx never draws, the rule is to
+build it from fx's principles — one ramp, weight and glyph for state, no hue,
+no underline — and record it here as a carve-out. Nothing below is extracted from fx:
 `tokens.json` does not carry it, `style-extract.sh --check` cannot see it,
 and a maintenance cycle must not "correct" it back to fx.
 
@@ -190,33 +190,6 @@ resizes and every Client repaints.
 Why this shape: a border made the shared frame look nested, and any repeated
 mark made unused space compete with the work. A theme-relative flat field is
 visible without becoming content of its own.
-
-### Switching items in a panel: the rule tab
-
-The Tools panel's switcher (`fmx/src/tool-panel.ts`) is a **rule tab**: one
-row of labels over one row of hairline.
-
-```
- Diff  Tests  Logs
-───────━━━━━───────────────
-```
-
-| part | role | dark | light |
-|---|---|---|---|
-| selected label | `selected_completion` (bold primary) | bold 255 | bold 235 |
-| other labels | `dim` | 245 | 247 |
-| rule under the selection | `hint` (primary), glyph `━` | 255 | 235 |
-| rule elsewhere | `divider`, glyph `─` | 240 | 250 |
-
-Why this shape and not another: the divider glyph does the underlining, so
-the no-underline rule holds; the selection is bold like fx's selected menu
-row; nothing in it takes the accent hue, which fmx keeps for focus and
-failure. In fmx the values are host-derived per "Borrowing into fmx" —
-`hostRamp().foreground`, `.dim`, and `.divider` — and the column above is
-the no-answer fallback tier. Other shapes considered and not taken: weighted
-words with `·` separators (fx's statusline idiom, but reads as status rather
-than a control), an inverse chip (fx's button idiom, too loud for a
-persistent dock), a cycler (hides the other items).
 
 ### Agent rows in the tray
 
@@ -303,69 +276,6 @@ Not taken: a green success toast (fx's `green` is gray; "started" is in the
 words), red text inside the error modal (the border already says failure;
 one red per surface), bold titles (OpenTUI box titles take a color only).
 
-### Reviewing a diff: the hunk panel
-
-fx has no diff. fmx's Tools panel runs [hunk](https://github.com/modem-dev/hunk)
-over the active agent's working tree, and hunk paints its own themes — so
-this is the one surface in the instrument that another program draws. fmx
-takes it back: it ships hunk a theme extension computed from the Ramp and
-launches the panel with `--extension`, `--theme fmx`, and `--transparent-bg`
-(`fmx/src/hunk-theme.ts`). Nothing of the human's `~/.config/hunk/` is read
-or written, and a hunk run by hand is untouched.
-
-Chrome is the Ramp, unchanged. What is new is that **inside the diff two
-more hues exist**, under the same law focus and error live by: one job
-each, and nothing else may take them.
-
-```
- added.txt                                            +1  -1
-▌1 1    a brand new file                                        ← cursor lift
-▌2   -  with two lines                                          ← removed row
-▌  2 +  with two edited lines                                   ← added row
-```
-
-| part | value | why |
-|---|---|---|
-| background, panel, context rows, line-number gutter | **transparent** — the terminal's own background, which fmx keeps pointed at the host's | the panel is flat, like fx; and these follow a live host theme change even though a running hunk cannot be restyled |
-| file names, code | `hint` (primary) | |
-| hunk headers, line numbers, menu bar | `dim` | |
-| rules and separators | `divider` | |
-| selected hunk fill, note body | the surface fill (12%) | fx's one raised step, kept for the thing that is actually raised |
-| note border, selection accent | **focus** | a surface that takes keys, as everywhere else |
-| `+`/`-` sign, the rail marker | **added** `#30a46c` / **removed** `#e5484d` — fx's own `diff_markers`, identical on either canvas | fx spends these two and no others on a diff |
-| added / removed row | its sign mixed **14%** toward the host background | |
-| word-diff span inside a row | its sign mixed **28%** — one step louder | the span is the emphasis; the row is the context for it |
-| `+n`/`-n` line counts, new / deleted file | the sign colors at full strength | a count of added and removed lines *is* the sign's semantic |
-| everything else — neutral badges, modified, renamed, untracked | `dim` / `system_notice_text` | not add-or-remove, so not a hue |
-| syntax highlighting | inherited from `github-dark-default` / `github-light-default` | fx's four code grays are a possible later refinement; unreadable code is worse than borrowed color |
-
-The tints are computed from the host's background rather than shipped as
-constants, which is what makes one set of numbers work on either canvas:
-14%/28% of `#30a46c` into `#0d1117` gives `#122623`/`#173a2f`, and into
-`#ffffff` gives `#e2f2ea`/`#c5e6d6`. Captures in `style/captures/`:
-`hunk-dark`, `hunk-light`, `hunk-fallback` — real hunk driven in a PTY with
-the ramp in `FMX_RAMP` and the host background set by OSC 11, not regenerated
-by `style-capture.sh` (which deliberately needs only fx). `carve-outs-dark`
-and `carve-outs-light` are the viewer's own section.
-
-Why color at all, when the rest of the guide spends almost none: a diff is
-the one place where the *reader* is scanning for two opposed states at
-speed, and fx already concedes the point — `diff_markers` is the only pair
-of hues in `tokens.json` outside the code highlighter. Carrying the sign's
-hue faintly into its row is what lets a hunk be read at a glance instead of
-character by character. Not taken: hunk's stock GitHub row tints (a theme
-fmx did not choose), colored neutral badges and file-status colors (state
-by hue, which fx forbids), and hunk's own accent (fmx's focus is the host's
-blue and means "this takes keys").
-
-Two things on this surface are hunk's, not fmx's, because they are derived
-rather than configured. The **cursor-line lift** blends `text` 20% from the
-appearance's own extreme, so it tracks the Ramp but not the host's exact
-background. The **inactive hunk rail** blends toward `panel`, which
-`--transparent-bg` has made a sentinel — so it darkens instead of quieting,
-which reads heavy on a light host. Both are upstream fixes, not fmx's to
-paint around.
-
 ## Borrowing into fmx
 
 fmx's own surfaces derive from the host terminal's palette
@@ -404,7 +314,8 @@ shared principle than fx's fixed grays. So the rule is not "copy the hex":
    reports a failure. Nothing else in fmx is chromatic. A new state gets a
    glyph and a weight, never a hue.
 4. **Match the glyph vocabulary** where fmx shows the same concepts:
-   agent/tool state glyphs, `·` separators, prompt rails.
+   Agent state glyphs borrowed from fx's tool vocabulary, `·` separators,
+   prompt rails.
 5. **State by shape and weight first**, color second — a colorblind-safe
    habit fx enforces by having almost no color at all.
 
