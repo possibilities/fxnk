@@ -1,0 +1,7 @@
+bun test v1.4.0
+
+error: Timed out waiting for tmux session fx-test-39122-1 to exit after 5000ms
+(fail) tui: Agents & processes > Ctrl-X isolates an idle child from active parent streaming and restores the current parent immediately
+
+ 44 pass
+ 1 fail

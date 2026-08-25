@@ -233,6 +233,25 @@ later cycle reconciles only what this section names.
   development gate, Integration workflow, and downstream-only contribution
   stance.
 
+### Terminal probe determinism
+
+- Recognize a Ctrl-X input frame in both encodings a terminal may send: the C0
+  control byte `0x18`, and the CSI-u disambiguated form `ESC [ 120 ; 5 u` that
+  a negotiated keyboard protocol produces. Matching only the C0 byte makes a
+  correctly recorded handoff read as a missing one, constantly rather than
+  intermittently, wherever the richer protocol is active.
+- Assert on a settled recording. A tape is complete once fx exits, so a probe
+  quits fx and waits for the writing process to leave the process table before
+  reading it once. Position markers may come from the live tape through
+  `readLiveTapeFrames`, whose name carries that distinction; assertions may
+  not. Wait on the process that wrote the file rather than on tmux tearing the
+  session down, because the pane shell and server can outlive fx.
+- Keep the macOS-arm64 quarantine free of assertion-shaped signatures. Only
+  runtime timeouts from tmux teardown and pane predicates may be excused; an
+  assertion that fails on that surface blocks and is read as a defect. A
+  retry loop that spends its whole budget re-reading evidence it already has
+  is a disguised constant failure, not tolerance for flakiness.
+
 ### Hosted Full CI
 
 - Start the fork's hosted Full CI only for the Integration branch and manual

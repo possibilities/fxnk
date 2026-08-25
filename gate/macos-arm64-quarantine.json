@@ -5,7 +5,11 @@
     "arch": "arm64"
   },
   "evidence": {
-    "characterization": "Chronic terminal and tmux fragility on macOS arm64, amplified under CI load; not introduced by upstream PR #165 and not attributable to an fxnk carry.",
+    "characterization": "Residual tmux teardown and pane-predicate timeouts on macOS arm64 under load. No assertion-shaped signature remains: an assertion that fails here blocks.",
+    "ctrl_x_assertion_resolved": {
+      "sha": "a316c6f",
+      "result": "The Ctrl-X isolation probe was not flaky. It searched recorded input frames for the C0 byte 0x18 while the terminal sent the CSI-u form ESC[120;5u, so it failed constantly wherever that keyboard protocol is active, and a thirty second retry loop disguised a constant failure as a slow one. Matching either encoding and asserting against a settled tape produced 5 of 5 clean runs of the three declared probes, each in about three seconds rather than thirty."
+    },
     "pre_pr_165": {
       "sha": "78a183545905c70b3aa8b28465bcb008af82e447",
       "result": "43 pass, 2 fail in tui-subagent-manager.test.ts"
@@ -14,13 +18,13 @@
       "sha": "88cb3da8d5559a960fc3d08fbaed45e0ba6df863",
       "result": "44 pass, 1 fail in tui-subagent-manager.test.ts"
     },
-    "fork_candidate": {
-      "sha": "5e81d90193adc3dc145a2e80fbd8642998b37253",
-      "result": "44 pass, 1 fail in tui-subagent-manager.test.ts"
-    },
     "upstream_bounded_terminal": {
       "sha": "c8b6cf65484d1ac15f89ba573ac9b2be795817f0",
-      "result": "The three declared subagent probes produced 2 pass and the same Ctrl-X assertion failure; all six render/replay probes passed after the upstream test added explicit terminal deadlines"
+      "result": "The three declared subagent probes produced 2 pass and the same Ctrl-X assertion failure, which is now understood as the encoding defect above rather than as fragility; all six render/replay probes passed after the upstream test added explicit terminal deadlines"
+    },
+    "upstream_hosted_ci": {
+      "runs": "last 40 vercel-labs/fx Full CI runs: 23 success, 11 cancelled, 4 failure",
+      "result": "Two of the four failures were single-shard macOS TTY flakes, one of them 'persistent child pointer drag replaces the selected composer range' in this same file on an unrelated upstream branch. The other two were deterministic cross-platform breakage in native unit tests. Real breakage and tmux fragility have visibly different shapes."
     },
     "ci_job": {
       "id": 97485268413,
@@ -35,11 +39,11 @@
       "required_blobs": [
         {
           "path": "tests/e2e/tui-subagent-manager.test.ts",
-          "oid": "86db02dfb2f985b911dfd13edbeb41019e108342"
+          "oid": "de1a0efe1a6022d81a3e391be027c225ac2f1c26"
         },
         {
           "path": "tests/e2e/tmux-helpers.ts",
-          "oid": "b6429696da4f7196df190d3212013fd855dc0e77"
+          "oid": "b3cf55fc0d3a34186e99bb71d99ce8c220e92edd"
         }
       ],
       "allowed_signatures": [
@@ -52,11 +56,6 @@
           "id": "pane-predicate-timeout",
           "kind": "runtime",
           "regex": "Timed out waiting for pane predicate"
-        },
-        {
-          "id": "ctrl-x-child-row-race",
-          "kind": "assertion",
-          "regex": "Expected:\\s*>=\\s*0\\s+Received:\\s*-1"
         }
       ]
     },
@@ -70,7 +69,7 @@
         },
         {
           "path": "tests/e2e/tmux-helpers.ts",
-          "oid": "b6429696da4f7196df190d3212013fd855dc0e77"
+          "oid": "b3cf55fc0d3a34186e99bb71d99ce8c220e92edd"
         }
       ],
       "allowed_signatures": [

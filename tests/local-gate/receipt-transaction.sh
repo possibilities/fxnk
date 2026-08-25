@@ -13,13 +13,30 @@ known=$(
     python3 "$root/scripts/classify-quarantine.py" \
         --manifest "$root/gate/macos-arm64-quarantine.json" \
         --file tests/e2e/tui-subagent-manager.test.ts \
-        --output "$root/tests/local-gate/fixtures/known-assertion.log" \
+        --output "$root/tests/local-gate/fixtures/known-timeout.log" \
         --exit-code 1
 )
 printf '%s\n' "$known" | jq -e \
     '.status == "quarantined" and .failure_count == 1 and
-     .signatures == ["ctrl-x-child-row-race"]' >/dev/null \
-    || fail "known assertion was not classified"
+     .signatures == ["tmux-session-exit-timeout"]' >/dev/null \
+    || fail "known runtime timeout was not classified"
+
+# The quarantine carries no assertion-shaped signature. An assertion that
+# fails on this surface is read as a defect and blocks, which is what let the
+# Ctrl-X encoding bug hide behind a tolerated signature until it was fixed.
+set +e
+assertion_output=$(
+    python3 "$root/scripts/classify-quarantine.py" \
+        --manifest "$root/gate/macos-arm64-quarantine.json" \
+        --file tests/e2e/tui-subagent-manager.test.ts \
+        --output "$root/tests/local-gate/fixtures/known-assertion.log" \
+        --exit-code 1 2>&1
+)
+assertion_status=$?
+set -e
+[ "$assertion_status" -ne 0 ] || fail "assertion failure was quarantined"
+printf '%s\n' "$assertion_output" | grep -F 'undeclared failure signature' \
+    >/dev/null || fail "assertion refusal was not explained"
 
 set +e
 unknown_output=$(
