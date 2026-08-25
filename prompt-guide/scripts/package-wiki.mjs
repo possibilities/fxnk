@@ -1,5 +1,7 @@
 import { cp, mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
+import { execFile } from "node:child_process";
 import path from "node:path";
+import { promisify } from "node:util";
 import { pathToFileURL } from "node:url";
 
 const root = process.cwd();
@@ -7,6 +9,7 @@ const output = path.join(root, "wiki-dist");
 const outputAssets = path.join(output, "assets");
 const workerUrl = pathToFileURL(path.join(root, "dist/server/index.js"));
 workerUrl.searchParams.set("bundle", Date.now().toString());
+const run = promisify(execFile);
 
 const { default: worker } = await import(workerUrl.href);
 const response = await worker.fetch(
@@ -27,7 +30,16 @@ if (!response.ok) {
 }
 
 const rendered = await response.text();
-const portable = rendered.replaceAll("/assets/", "./assets/");
+const { stdout: revisionOutput } = await run("git", ["rev-parse", "HEAD"], {
+  cwd: path.resolve(root, ".."),
+});
+const workshopRevision = revisionOutput.trim();
+const portable = rendered
+  .replaceAll("/assets/", "./assets/")
+  .replace(
+    "</head>",
+    `<meta name="artifact-source-revision" content="${workshopRevision}" /></head>`,
+  );
 
 if (portable.includes('="/assets/')) {
   throw new Error("The rendered page still contains root-relative asset paths.");
