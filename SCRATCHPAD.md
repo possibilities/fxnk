@@ -5,58 +5,57 @@ entries on every maintenance cycle and appends one compact history entry.
 
 ## Baseline
 
-- Last completed maintenance: 2026-08-24
+- Last completed maintenance: 2026-08-25
 - Upstream base and Main mirror:
-  `c864c677722679c4d5fb9473f1e8c41e4156df94`
+  `fff3f63e348dec846bb235332974226bd2feae26`
 - Published and installed Integration:
-  `0deb9806b7c968bd97ae1c068720778306b5a9c3`
+  `1b81973907d00c52db6f65da53403096df26dbb1`
 - Local development gate: exact-SHA receipt
-  `~/.local/state/fxnk/local-gates/0deb9806b7c968bd97ae1c068720778306b5a9c3.json`;
+  `~/.local/state/fxnk/local-gates/1b81973907d00c52db6f65da53403096df26dbb1.json`;
   contract `184de1412edea30a68fd1811e66afe7388b338eb30cba3d247103aa4de087370`;
-  final replay completed in 32 seconds with 22 of 22 canaries. `ship-gate.sh`
-  printed `SHIP 0deb9806b7c968bd97ae1c068720778306b5a9c3`.
+  final replay completed in 213 seconds with 22 of 22 canaries. `ship-gate.sh`
+  printed `SHIP 1b81973907d00c52db6f65da53403096df26dbb1`.
 - Installed SHA-256:
-  `3717cc07fd70f7d9fdc5e8e6fa1d0da6b2ce68a002ae72c03e346a012d6b52b6`.
+  `8195cb462da0f699b79238a52fac3e708154dec42b9dbe5dc4c8db27bc0f7d8c`.
   The receipt, clean bound checkout, published ref, and installed binary all
   match; `--fxnk-version` reports `fxnk 0.4.0 (fx 0.0.6)` on one exact stdout
-  line with empty stderr, `auto_upgrade` is `false`, and a real `fx ask` turn
-  through the installed binary returned its exact expected answer and exited
-  zero.
+  line with empty stderr, the installed hash matches its receipt, and
+  `auto_upgrade` is `false`.
 - Both quarantine files recorded `pass` with zero failures and no signatures.
   The quarantine was declared and not invoked.
 
 ## Carried state
 
-Integration is one linear eight-commit downstream stack on the upstream base:
+Integration composes fourteen durable published carry heads. Every head below
+is an ancestor of published Integration:
 
-- `2d9a43555cd6815738d44c084bebfe60710ca063` applies the carried product
-  behaviors: fork identity, system-prompt files, effort override and catalog,
-  ADE event feed and edited-root recovery, native session naming,
-  invocation-scoped skill roots, external-editor support, and transcript
-  resume bounds.
-- `43a246cd6bd742c4e250d2bd93300ffdf35bed00` adds the terminal replay coverage
-  to the narrow downstream canary target.
-- `cadb9f593cb10846ff9fe4a0cee614cd1a82e0f3` keeps the narrow canary target on
-  Zig's ordinary incremental cache path.
-- `558f840f474e80914610d52a0dea12f7cc38bbcb` adds explicit Gateway and Codex
-  provider authorization to native libfx.
-- `0570690ef94da9f2dfb601e81c33a3dbf219142a` keeps the narrow canary runner at
-  `tests/fxnk/runner.zig`, outside the `src/` tree upstream's direct-write
-  audit scans.
-- `309a0e5ae420a625cb4ec6f77250f9f234284edf` starts hosted Full CI only for
-  Integration and manual dispatch, under one constant concurrency group.
-- `472b016928a2e09cd07d2fced74696cf2868d3ca` freezes a captured session title
-  and reads the naming stream to completion instead of aborting it. Not this
-  cycle's work; it arrived on Integration from a sibling worktree mid-cycle
-  and took the canary inventory from 20 to 22.
-- `0deb9806b7c968bd97ae1c068720778306b5a9c3` matches both Ctrl-X input
-  encodings in the subagent handoff probe and asserts on a settled tape.
+- `carry/ade-event-feed` `529861d`; `carry/edited-git-roots` `176b991`
+- `carry/effort` `07c9d14`; `carry/effort-catalog` `8b35122`
+- `carry/external-editor` `dac0f95`; `carry/fxnk-version` `ec0394f`
+- `carry/invocation-skill-roots` `4bbbb89`; `carry/resume-bounds` `896ef36`
+- `carry/session-naming` `a4a8e69`; `carry/system-prompt-files` `4ff6936`
+- `carry/local-gate-support` `036fbe2`
+- `carry/libfx-provider-authorization` `94aabc5`
+- `carry/hosted-full-ci` `73958ad`
+- `carry/terminal-probe-determinism` `16a6544`
+
+The first ten feature carries were reconstructed from their feature-specific
+commits on current Main; session naming and edited-root recovery declare the ADE
+feed as their base dependency. Local gate support contains the complete product
+composition, libfx authorization depends on that gate support, and the hosted
+CI and terminal-probe carries remain independent Main-based heads.
 - Direct Codex usage beyond 64 sequential provider calls remains satisfied by
   upstream commit `dd409c27a7719e4dccaa30152c4e9087ec30edea`; no downstream
   carry exists for it.
 
 ## Current notes
 
+- Branch repair completed on 2026-08-25. The fork has 158 heads: 14 current
+  `carry/*` heads and 144 ordinary heads including Main and Integration. All
+  152 accidental `DELETEME/*` renames were atomically restored to their
+  original names and SHAs; no `DELETEME/*` ref remains. Reconciliation owns
+  only Main, Integration, and declared carries. A future deletion marker
+  requires an explicit human decision naming the branch.
 - The Ctrl-X isolation probe was never flaky. It searched recorded input
   frames for the C0 byte `0x18` while the terminal sent the CSI-u form
   `ESC[120;5u`, so it failed on every run wherever that keyboard protocol is
@@ -70,18 +69,6 @@ Integration is one linear eight-commit downstream stack on the upstream base:
   evidence it already holds is a disguised constant failure. The gate contract
   test now proves both halves — a declared timeout still quarantines, and the
   old assertion log is refused.
-- Publication of `0deb980` to the fork was performed outside this cycle, by
-  another agent on the operator's direct instruction, without this cycle's
-  ship gate. The content is the exact tree this cycle rebased and verified, and
-  the remote ended 0 ahead of local, so the cycle was finished rather than
-  re-run: there was nothing left to publish and a re-run would have rebuilt an
-  identical commit to push a ref already pointing at it. What was lost cannot
-  be recovered by an after-the-fact receipt — for a window the fork carried a
-  commit nothing had certified. The receipt and ship gate recorded here prove
-  the installed state, not the push.
-- That publication consumed this cycle's lease. The captured value was
-  `309a0e5` and the remote is now `0deb980`, so the lease is spent. Any further
-  publication needs a fresh cycle capturing a fresh lease. Nothing was forced.
 - The gate reads its contract from the path it is invoked through:
   `local-gate.sh` sets `root` from its own location, so
   `~/code/fxnk/scripts/local-gate.sh` uses whatever that working tree has
@@ -108,8 +95,8 @@ Integration is one linear eight-commit downstream stack on the upstream base:
   It passes locally in 626 ms and drives a fake gateway through racing promises
   and a 100 ms timer. Watch whether it recurs; do not quarantine on one hosted
   observation.
-- Full CI for `0deb980` was not awaited. It gates nothing.
-- `scripts/style-extract.sh --check` reported no drift at `0deb980`.
+- Full CI for `1b81973` is nonblocking and was still running when the exact-SHA
+  Local gate, publication, ship gate, and install completed.
 
 ## History
 
@@ -135,3 +122,8 @@ Integration is one linear eight-commit downstream stack on the upstream base:
   signature that called it flaky, retired the last assertion-shaped signature,
   and finished the cycle on `0deb980` after it was published outside the cycle
   and the lease was spent.
+- 2026-08-25: Removed automatic deletion inference from shared maintenance,
+  restored 152 fork heads from accidental `DELETEME/*` names, reconstructed
+  fourteen current feature carries on upstream `fff3f63`, proved their exact
+  composition with the Local gate, atomically published Main, the carries, and
+  Integration, and installed `1b81973`.
