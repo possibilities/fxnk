@@ -46,6 +46,13 @@ shipping it.
   back into Integration. Do not publish feature or `carry/*` branches. During
   upstream maintenance, replay the downstream stack on the current Main mirror
   and publish the proved exact commit under the captured Integration lease.
+- Publication: standing authorization. Pushing Integration to `fork` needs no
+  per-cycle approval and is not a question to bring to the operator. A green
+  Local development gate on the exact commit is the authority that permits it,
+  so an ungated commit is never published no matter who asks. This authorizes
+  the `fork` remote's `integration` ref alone: `main`, `origin`, and every
+  upstream ref stay untouched by maintenance, and publishing never implies
+  installing.
 - Quarantine prefix: `DELETEME/`. Any fork head other than `main`,
   `integration`, or an existing quarantine head is moved at the same commit to
   `DELETEME/<original-name>`. Existing `DELETEME/*` heads are permanent:
