@@ -151,10 +151,13 @@ later cycle reconciles only what this section names.
   publishing `SessionMetadataChanged`; manual rename and session changes
   invalidate stale work.
 - Keep the request itself a bounded one-shot: its own instruction and that
-  excerpt, no tools, no agent system prompt, and no session identity. Stop the
-  stream as soon as it holds enough for a slug, because the Codex endpoint
-  refuses the Responses API output bound and stopping it is the only thing
-  that keeps a naming answer short.
+  excerpt, no tools, no agent system prompt, and no session identity. Freeze
+  the captured title once a completed first line or the capture bound settles
+  it, then read the stream to its own completion and drop everything after.
+  The Codex endpoint rejects a non-streaming request and rejects the Responses
+  API output bound, so the capture bound is the only bound available; it
+  bounds memory rather than generation, because cancelling the read stops
+  neither the tokens already produced nor their billing.
 - Keep automatic naming disabled for `fx ask`, `fx acp`, browser and
   WebAssembly hosts, subagents, and disabled or unconfigured providers. Naming
   must not block agent lifecycle.
