@@ -49,8 +49,9 @@ shipping it.
 - Publication: standing authorization. Pushing the declared carry heads and
   Integration to `fork` needs no
   per-cycle approval and is not a question to bring to the operator. A green
-  Local development gate on the exact commit is the authority that permits it,
-  so an ungated commit is never published no matter who asks. This authorizes
+  Local development gate on the exact Integration composition containing every
+  changed carry is the authority that permits it, so an unproved composition is
+  never published no matter who asks. This authorizes
   only `fork/integration` and the current declared `fork/carry/*` refs: `origin`
   and all other fork heads stay untouched, and publishing never implies
   installing.
@@ -275,11 +276,13 @@ later cycle reconciles only what this section names.
 
 ## Gate
 
-The Local development gate is the only blocking test authority. Run it from
-each changed feature worktree before merge:
+The Local development gate is the only blocking test authority. Run focused
+checks from each changed carry worktree, compose all current carry heads into a
+clean candidate, then run the gate from that exact composition worktree before
+publishing any affected carry:
 
 ```sh
-~/code/fxnk/scripts/local-gate.sh --worktree "$feature_worktree"
+~/code/fxnk/scripts/local-gate.sh --worktree "$composition_worktree"
 ```
 
 The gate runs formatting, the public-surface audit, and upstream's direct-write
