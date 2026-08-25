@@ -45,16 +45,22 @@ test("server-renders the Fx Prompt Field Guide", async () => {
   assert.doesNotMatch(html, /Your site is taking shape|react-loading-skeleton/);
 });
 
-test("removes starter-only code and metadata", async () => {
-  const [page, layout, packageJson] = await Promise.all([
+test("removes starter-only code and follows the system color scheme", async () => {
+  const [page, layout, styles, packageJson] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
     readFile(new URL("../package.json", import.meta.url), "utf8"),
   ]);
 
   assert.doesNotMatch(page, /_sites-preview|SkeletonPreview|codex-preview/);
   assert.match(page, /scrollToSection\("reader"\)/);
   assert.doesNotMatch(layout, /Starter Project|codex-preview|_sites-preview/);
+  assert.match(styles, /color-scheme:\s*light dark/);
+  assert.match(styles, /@media \(prefers-color-scheme:\s*dark\)/);
+  assert.match(styles, /--paper:\s*#0b1820/);
+  assert.match(styles, /--placeholder:\s*#91a7b0/);
+  assert.match(styles, /input::placeholder\s*{[^}]*var\(--placeholder\)/s);
   assert.doesNotMatch(packageJson, /react-loading-skeleton/);
   assert.match(packageJson, /"name": "fx-prompt-field-guide"/);
 });

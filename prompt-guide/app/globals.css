@@ -1,25 +1,83 @@
 @import "tailwindcss";
 
 :root {
+  color-scheme: light dark;
   --paper: #edf1f3;
   --paper-blue: #e3edf1;
   --panel: #f9fbfc;
-  --white: #ffffff;
+  --surface: #ffffff;
   --ink: #10252f;
   --ink-soft: #28414c;
-  --muted: #667982;
+  --muted: #5b6e77;
+  --placeholder: #5b6e77;
   --line: #c7d1d6;
   --line-dark: #7d929c;
   --blue: #00698d;
+  --blue-solid: #00698d;
+  --on-blue: #ffffff;
   --blue-deep: #004b66;
   --blue-soft: #d8edf3;
   --amber: #f0b54b;
+  --on-amber: #27200f;
+  --on-amber-muted: #584614;
+  --amber-ink: #7a5819;
   --amber-soft: #f9edcf;
   --rust: #9e4b31;
   --rust-soft: #f5e4de;
   --green: #2d735c;
   --green-soft: #dfefe9;
+  --inverse: #10252f;
+  --stage: #004b66;
+  --on-inverse: #ffffff;
+  --on-inverse-muted: #bed1d9;
+  --grid-line: rgba(0, 105, 141, 0.035);
+  --topbar-bg: rgba(237, 241, 243, 0.88);
+  --topbar-line: rgba(125, 146, 156, 0.62);
+  --control-bg: rgba(249, 251, 252, 0.78);
+  --tension-bg: rgba(249, 251, 252, 0.56);
+  --inverse-line: rgba(255, 255, 255, 0.24);
   --shadow: 0 24px 80px rgba(16, 37, 47, 0.12);
+  --shadow-soft: 0 15px 45px rgba(16, 37, 47, 0.07);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #0b1820;
+    --paper-blue: #102832;
+    --panel: #0f222a;
+    --surface: #142a34;
+    --ink: #e7f0f3;
+    --ink-soft: #c2d2d8;
+    --muted: #91a7b0;
+    --placeholder: #91a7b0;
+    --line: #2c4651;
+    --line-dark: #58737e;
+    --blue: #68c6e3;
+    --blue-solid: #4db1d0;
+    --on-blue: #07171d;
+    --blue-deep: #0a3544;
+    --blue-soft: #173b49;
+    --amber: #f2bd5a;
+    --on-amber-muted: #584614;
+    --amber-ink: #f1c56f;
+    --amber-soft: #3b301c;
+    --rust: #e99173;
+    --rust-soft: #39241f;
+    --green: #69bea0;
+    --green-soft: #17382e;
+    --inverse: #07151b;
+    --stage: #062d3b;
+    --on-inverse: #eef7fa;
+    --on-inverse-muted: #a8c0c9;
+    --grid-line: rgba(104, 198, 227, 0.04);
+    --topbar-bg: rgba(11, 24, 32, 0.88);
+    --topbar-line: rgba(88, 115, 126, 0.72);
+    --control-bg: rgba(15, 34, 42, 0.82);
+    --tension-bg: rgba(16, 36, 45, 0.72);
+    --inverse-line: rgba(238, 247, 250, 0.2);
+    --shadow: 0 24px 80px rgba(0, 0, 0, 0.34);
+    --shadow-soft: 0 15px 45px rgba(0, 0, 0, 0.24);
+  }
 }
 
 @theme inline {
@@ -40,8 +98,8 @@ html {
 body {
   margin: 0;
   background:
-    linear-gradient(rgba(0, 105, 141, 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 105, 141, 0.035) 1px, transparent 1px),
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px),
     var(--paper);
   background-size: 28px 28px;
   color: var(--ink);
@@ -52,8 +110,8 @@ body {
 }
 
 ::selection {
-  color: var(--white);
-  background: var(--blue);
+  color: var(--on-blue);
+  background: var(--blue-solid);
 }
 
 button,
@@ -91,8 +149,8 @@ main {
   justify-content: space-between;
   min-height: 68px;
   padding: 12px clamp(22px, 5vw, 76px);
-  border-bottom: 1px solid rgba(125, 146, 156, 0.62);
-  background: rgba(237, 241, 243, 0.88);
+  border-bottom: 1px solid var(--topbar-line);
+  background: var(--topbar-bg);
   backdrop-filter: blur(16px);
 }
 
@@ -221,8 +279,8 @@ main {
   grid-template-columns: 72px 1fr;
   min-height: 460px;
   padding: 42px 38px 40px 22px;
-  color: var(--white);
-  background: var(--ink);
+  color: var(--on-inverse);
+  background: var(--inverse);
   box-shadow: var(--shadow);
   transform: rotate(1.4deg);
 }
@@ -293,8 +351,8 @@ main {
 
 .layer-strip {
   padding: 88px clamp(22px, 5vw, 76px) 96px;
-  color: var(--white);
-  background: var(--blue-deep);
+  color: var(--on-inverse);
+  background: var(--stage);
 }
 
 .layer-heading,
@@ -314,7 +372,7 @@ footer {
   grid-template-columns: 0.7fr 1.3fr;
   align-items: end;
   padding-bottom: 48px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.25);
+  border-bottom: 1px solid var(--inverse-line);
 }
 
 .layer-heading .eyebrow {
@@ -343,11 +401,11 @@ footer {
 .layer {
   min-height: 190px;
   padding: 22px;
-  border: 1px solid rgba(255, 255, 255, 0.22);
+  border: 1px solid var(--inverse-line);
 }
 
 .layer-active {
-  color: var(--ink);
+  color: var(--on-amber);
   border-color: var(--amber);
   background: var(--amber);
 }
@@ -363,7 +421,7 @@ footer {
 }
 
 .layer-active > span {
-  color: #645022;
+  color: var(--on-amber-muted);
 }
 
 .layer strong {
@@ -414,7 +472,7 @@ footer {
   justify-content: space-between;
   padding: 18px;
   border: 1px solid var(--line-dark);
-  background: rgba(249, 251, 252, 0.78);
+  background: var(--control-bg);
 }
 
 .lens-group {
@@ -444,9 +502,9 @@ footer {
 
 .lens-button:hover,
 .lens-button-active {
-  color: var(--white);
-  border-color: var(--blue);
-  background: var(--blue);
+  color: var(--on-blue);
+  border-color: var(--blue-solid);
+  background: var(--blue-solid);
 }
 
 .search-field {
@@ -475,7 +533,7 @@ footer {
 }
 
 .search-field input::placeholder {
-  color: #89999f;
+  color: var(--placeholder);
 }
 
 .reader-shell {
@@ -567,7 +625,7 @@ footer {
   overflow: hidden;
   border: 1px solid var(--line-dark);
   background: var(--panel);
-  box-shadow: 0 15px 45px rgba(16, 37, 47, 0.07);
+  box-shadow: var(--shadow-soft);
 }
 
 .source-filebar {
@@ -576,8 +634,8 @@ footer {
   justify-content: space-between;
   min-height: 48px;
   padding: 12px 18px;
-  color: #bed1d9;
-  background: var(--ink);
+  color: var(--on-inverse-muted);
+  background: var(--inverse);
   font-family: var(--font-utility), monospace;
   font-size: 0.61rem;
   letter-spacing: 0.03em;
@@ -683,7 +741,7 @@ footer {
   max-height: calc(100vh - 126px);
   overflow-y: auto;
   border-top: 5px solid var(--blue);
-  background: var(--white);
+  background: var(--surface);
   box-shadow: var(--shadow);
   scrollbar-color: var(--line-dark) transparent;
   scrollbar-width: thin;
@@ -720,9 +778,9 @@ footer {
 }
 
 .copy-button:hover {
-  color: var(--white);
-  border-color: var(--blue);
-  background: var(--blue);
+  color: var(--on-blue);
+  border-color: var(--blue-solid);
+  background: var(--blue-solid);
 }
 
 .note-list {
@@ -771,7 +829,7 @@ footer {
 
 .note-risk .note-label,
 .note-critique .note-label {
-  color: #7a5819;
+  color: var(--amber-ink);
 }
 
 .note-example {
@@ -797,14 +855,14 @@ footer {
   grid-template-columns: 44px 1fr 44px;
   align-items: center;
   min-height: 50px;
-  background: var(--ink);
+  background: var(--inverse);
 }
 
 .annotation-nav button {
   align-self: stretch;
   cursor: pointer;
   border: 0;
-  color: var(--white);
+  color: var(--on-inverse);
   background: transparent;
   font-size: 1rem;
 }
@@ -869,7 +927,7 @@ footer {
   padding: 26px;
   border-right: 1px solid var(--line-dark);
   border-bottom: 1px solid var(--line-dark);
-  background: rgba(249, 251, 252, 0.56);
+  background: var(--tension-bg);
 }
 
 .tension-grid article > span {
@@ -1000,7 +1058,7 @@ footer code {
     display: block;
     border-top: 1px solid var(--line);
     border-left: 4px solid var(--blue);
-    background: var(--white);
+    background: var(--surface);
   }
 
   .mobile-annotation > .annotation-kicker,
