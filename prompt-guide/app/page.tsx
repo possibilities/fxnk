@@ -572,6 +572,13 @@ function NoteList({ rule, lens }: { rule: Rule; lens: Lens }) {
   );
 }
 
+function scrollToSection(id: string) {
+  const target = document.getElementById(id);
+  if (!target) return;
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  target.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "start" });
+}
+
 export default function Home() {
   const [lens, setLens] = useState<Lens>("all");
   const [query, setQuery] = useState("");
@@ -618,10 +625,15 @@ export default function Home() {
   return (
     <main>
       <header className="topbar">
-        <a className="brand" href="#top" aria-label="Prompt Field Guide home">
+        <button
+          className="brand"
+          type="button"
+          onClick={() => scrollToSection("top")}
+          aria-label="Prompt Field Guide home"
+        >
           <span className="brand-mark" aria-hidden="true">fx</span>
           <span>Prompt Field Guide</span>
-        </a>
+        </button>
         <div className="source-stamp">
           <span className="status-dot" aria-hidden="true" />
           Integration 309a0e5
@@ -637,9 +649,9 @@ export default function Home() {
             keeps the source intact, then opens each rule to inspection: what it tries to do, where it
             can fail, and how it might improve.
           </p>
-          <a className="primary-link" href="#reader">
+          <button className="primary-link" type="button" onClick={() => scrollToSection("reader")}>
             Open the prompt <span aria-hidden="true">↓</span>
-          </a>
+          </button>
         </div>
 
         <div className="hero-specimen" aria-label="How to read this guide">
@@ -725,11 +737,16 @@ export default function Home() {
         <nav className="section-index" aria-label="Prompt sections">
           <p className="index-label">Sections</p>
           {visibleSections.map((section) => (
-            <a key={section.id} href={`#${section.id}`}>
+            <button
+              className="section-jump"
+              key={section.id}
+              type="button"
+              onClick={() => scrollToSection(section.id)}
+            >
               <span>{section.number}</span>
               <span>{section.title}</span>
               <small>{section.rules.length}</small>
-            </a>
+            </button>
           ))}
           <div className="index-key">
             <span><i className="key-source" /> Exact source</span>
