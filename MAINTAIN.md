@@ -53,8 +53,17 @@ shipping it.
   changed carry is the authority that permits it, so an unproved composition is
   never published no matter who asks. This authorizes
   only `fork/integration` and the current declared `fork/carry/*` refs: `origin`
-  and all other fork heads stay untouched, and publishing never implies
-  installing.
+  and all other fork heads stay untouched.
+- Installation: immediate, and not a second decision. Work merged to
+  Integration is installed as part of landing it — run
+  `scripts/install.sh --install --sha <published sha>` without asking, because
+  the gate that permitted publication is the whole quality bar and a second
+  approval adds a step without adding assurance. A published Integration this
+  machine is not running is the drift this repository exists to prevent. In the
+  operator's vocabulary "build" and "install" both name that one command, which
+  aligns the checkout, builds ReleaseSafe, and installs atomically. A consumer's
+  own pin — fmx's `companion.json`, for instance — is a separate release act and
+  moves only when that consumer's release says so.
 - Deletion marker prefix: `DELETEME/`. Creating, moving, or removing
   `DELETEME/<original-name>` requires an explicit human decision naming the
   branch. Maintenance never infers deletion from branch age, ownership,
