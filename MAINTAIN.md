@@ -127,10 +127,12 @@ later cycle reconciles only what this section names.
 - Keep the ADE feed and existing Herdr integration as transport-independent
   projections of the shared lifecycle observations. Enabling either must not
   enable, disable, filter, or otherwise change the other. Admit the ADE record
-  before any synchronous Herdr report and never hold a reducer or projection
-  lock across Herdr socket I/O or its reply wait. When an interactively
-  presented permission, question, or route-recovery decision resolves, Herdr
-  returns to working while ADE publishes the attributed `AttentionResolved`.
+  before any synchronous Herdr report. For a successfully queued prompt, let
+  the queue-admission observer return before performing the Herdr report, so
+  neither its worker queue mutex nor any reducer or projection lock covers
+  Herdr socket I/O or its reply wait. When an interactively presented
+  permission, question, or route-recovery decision resolves, Herdr returns to
+  working while ADE publishes the attributed `AttentionResolved`.
 - Support optional `FX_ADE_CHECKPOINT_PATH` as an ADE-owned recovery path. Fx
   atomically replaces it at mode 0600 with output-only schema 1 containing
   `schema: 1`, the ADE `instance_id`, a monotonic `revision`, and ordered,
