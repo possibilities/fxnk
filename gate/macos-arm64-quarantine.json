@@ -43,7 +43,7 @@
         },
         {
           "path": "tests/e2e/tmux-helpers.ts",
-          "oid": "b3cf55fc0d3a34186e99bb71d99ce8c220e92edd"
+          "oid": "a7ace9b57f359a8f845dad045edef6c5a3cc5626"
         }
       ],
       "allowed_signatures": [
@@ -69,7 +69,7 @@
         },
         {
           "path": "tests/e2e/tmux-helpers.ts",
-          "oid": "b3cf55fc0d3a34186e99bb71d99ce8c220e92edd"
+          "oid": "a7ace9b57f359a8f845dad045edef6c5a3cc5626"
         }
       ],
       "allowed_signatures": [
