@@ -104,6 +104,7 @@ already satisfied by upstream needs none.
 | `carry/libfx-provider-authorization` | Libfx provider authorization |
 | `carry/invocation-skill-roots` | Invocation skill roots |
 | `carry/external-editor` | External editor support |
+| `carry/notification-sound-single-flight` | Notification sound availability |
 | `carry/resume-bounds` | Reliability |
 | `carry/local-gate-support` | Local gate support |
 | `carry/terminal-probe-determinism` | Terminal probe determinism |
@@ -302,6 +303,19 @@ already satisfied by upstream needs none.
 
 - Support the common `Ctrl+G` binding to open the composer in `$EDITOR`, moving
   Fx's existing update behavior to `Ctrl+T`.
+
+### Notification sound availability
+
+- On macOS, keep at most one `afplay` notification process in flight per Fx
+  process. Drop overlapping sound cues rather than queueing them, then allow a
+  later cue after the active player has been reaped. Keep the terminal BEL
+  unconditional and emit it once for every attention cue, including cues whose
+  sound is dropped.
+- Carry this bound even though the unbounded player is upstream behavior. An
+  ordinary retry loop while a permission is pending can otherwise create enough
+  concurrent players to exhaust the per-user process table and make the whole
+  machine unable to start processes; any upstream report remains historical
+  evidence rather than a dependency.
 
 ### Reliability
 
