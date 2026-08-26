@@ -108,18 +108,29 @@ later cycle reconciles only what this section names.
   `FX_ADE_INSTANCE_ID`; Fx returns that identity unchanged on every record.
 - Publish `FxStarted`, `SessionChanged`, `SessionMetadataChanged`,
   `PromptQueued`, `TurnStarted`, `PreToolUse`, `Stop`, `PostTurnEnd`,
-  `AttentionRequired`, `GitRootDiscovered`, and `FxStopped` as
+  `AttentionRequired`, `AttentionResolved`, `GitRootDiscovered`, and `FxStopped` as
   newline-delimited JSON. Delivery remains passive, asynchronous, bounded,
   ordered per process, and best-effort, so an absent or slow ADE cannot block
   agent work or shutdown.
+- Carry Fx's current semantic snapshot for the record's agent in every schema
+  1 context as `agent_state` (`idle`, `working`, or `blocked`) and
+  `attention_kind` (`permission`, `question`, `route_recovery`, or null). Derive
+  both from one thread-safe reducer keyed independently by the main agent and
+  each subagent, so any later record repairs consumer state after an event drop
+  or sequence gap. Emit `AttentionResolved` with the owning agent working after
+  an active user decision is accepted and work can continue.
 - Install the feed only in the interactive TUI. `fx ask` and `fx acp` publish
   nothing. Do not filter in-process subagents: every main-agent and subagent
   lifecycle record carries its own session identity, child records also carry
   the parent main-session identity, and all records retain the ADE instance
   identity.
-- Keep the ADE feed independent of the existing Herdr integration. Enabling one
-  must not enable, disable, filter, or otherwise change the behavior of the
-  other.
+- Keep the ADE feed and existing Herdr integration as transport-independent
+  projections of the shared lifecycle observations. Enabling either must not
+  enable, disable, filter, or otherwise change the other. Admit the ADE record
+  before any synchronous Herdr report and never hold a reducer or projection
+  lock across Herdr socket I/O or its reply wait. When an interactively
+  presented permission, question, or route-recovery decision resolves, Herdr
+  returns to working while ADE publishes the attributed `AttentionResolved`.
 - Support optional `FX_ADE_CHECKPOINT_PATH` as an ADE-owned recovery path. Fx
   atomically replaces it at mode 0600 with output-only schema 1 containing
   `schema: 1`, the ADE `instance_id`, a monotonic `revision`, and ordered,
