@@ -145,6 +145,17 @@ already satisfied by upstream needs none.
   registry is the authority for the whole set. The reducer suppresses a child
   already recorded as blocked, so this stays one record per child. Emit `AttentionResolved` with the owning agent working after
   an active user decision is accepted and work can continue.
+- The emitter owns its own NDJSON framing invariant and does not trust the
+  bytes it is handed. Before splicing caller-supplied tool arguments into a
+  record it requires that no raw byte below `0x20` appears inside a string,
+  because a raw newline there splits one record across two physical lines, and
+  that the whole value parses as JSON, because a malformed value corrupts the
+  enclosing record just as surely. Arguments failing either check are replaced
+  with `{}` and traced; the record still publishes with everything else intact,
+  so one bad tool argument costs its own `arguments` rather than the record or
+  the line after it. Do not move this check to the producers and call the
+  emitter safe: the integrity flag fx relies on elsewhere defaults to valid and
+  is not set on every path that builds tool arguments.
 - Install the feed only in the interactive TUI. `fx ask` and `fx acp` publish
   nothing. Do not filter in-process subagents: every main-agent and subagent
   lifecycle record carries its own session identity, child records also carry
