@@ -103,6 +103,33 @@ for section in Purpose Upstream 'Branch model' Features Gate Consumer Notify; do
     grep -Fx "## $section" MAINTAIN.md >/dev/null \
         || fail "MAINTAIN.md is missing the section: ## $section"
 done
+grep -F 'paired commits' AGENTS.md >/dev/null \
+    || fail "agent guidance does not require paired Fx and inventory commits"
+grep -F 'The user does not need to mention maintenance' AGENTS.md >/dev/null \
+    || fail "agent guidance does not classify ordinary Fx feature requests"
+fx_checkout="${FXNK_FX_CHECKOUT:-$HOME/src/fx}"
+if git -C "$fx_checkout" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    features_section=$(awk '
+        /^## Features$/ { inside = 1; next }
+        /^## / && inside { exit }
+        inside { print }
+    ' MAINTAIN.md)
+    mapped_carries=$(printf '%s\n' "$features_section" \
+        | sed -n 's/^| `\(carry\/[^`]*\)` |.*$/\1/p')
+    [ -z "$(printf '%s\n' "$mapped_carries" | sort | uniq -d)" ] \
+        || fail "MAINTAIN.md Features maps a carry more than once"
+    while IFS= read -r carry; do
+        [ -n "$carry" ] || continue
+        printf '%s\n' "$mapped_carries" | grep -Fx "$carry" >/dev/null \
+            || fail "MAINTAIN.md Features does not map local branch: $carry"
+    done < <(git -C "$fx_checkout" for-each-ref \
+        --format='%(refname:short)' refs/heads/carry/)
+    while IFS= read -r carry; do
+        [ -n "$carry" ] || continue
+        git -C "$fx_checkout" show-ref --verify --quiet "refs/heads/$carry" \
+            || fail "MAINTAIN.md Features maps a missing local branch: $carry"
+    done <<<"$mapped_carries"
+fi
 grep -F 'scripts/ship-gate.sh' MAINTAIN.md >/dev/null \
     || fail "the gate does not name the ship gate"
 grep -F 'scripts/local-gate.sh' MAINTAIN.md >/dev/null \

@@ -15,9 +15,11 @@ or its installer.
   operating procedure for every fork workshop on this machine. Fx-specific
   procedure belongs in `MAINTAIN.md`, never in a copy of the skill here.
 - Every behavior the fork carries is reversed into `MAINTAIN.md` § Features by
-  the same change that builds it, in the same commit. The entry is part of the
-  work, never a follow-up: a carried feature the inventory does not name is
-  unfinished, because the next cycle reconciles only what that section states.
+  the same requested unit of work that builds it. Fx and this Workshop are
+  separate repositories, so this means paired commits rather than one Git
+  commit. The inventory commit is part of the feature, never a follow-up: a
+  carried feature the inventory does not name is unfinished, because the next
+  cycle reconciles only what that section states.
 - `SCRATCHPAD.md` is current maintenance state, not a second specification or
   an unbounded transcript.
 - `style/` is the fx style guide for fmx: `style/STYLE.md` (prose for fmx
@@ -47,6 +49,29 @@ The checkout being maintained is `~/src/fx`, with `fork` pointing to
 `possibilities/fx` and `origin` pointing to `vercel-labs/fx`. Its
 `integration` branch is the only install source. Read that checkout's
 `AGENTS.md` completely before modifying or validating Fx.
+
+## Adding or changing Fx behavior
+
+A request made from this Workshop to add or change Fx behavior is carried
+feature work unless current upstream already satisfies the requested contract.
+The user does not need to mention maintenance, `MAINTAIN.md`, or a carry branch.
+
+Before implementation:
+
+1. Read `MAINTAIN.md` § Features and decide whether the request extends an
+   existing inventory entry or needs a new one.
+2. Add or revise the behavioral contract there and name the corresponding
+   `carry/<feature>` head in the carry map. Describe observable behavior, scope,
+   and important boundaries rather than implementation or temporary status.
+3. Develop the Fx implementation on that named carry head. A genuinely new
+   carry and its inventory entry are one deliverable.
+
+Do not gate, publish, compose into Integration, or call the feature finished
+until both the Fx implementation commit and the paired Workshop inventory
+commit exist. If the request extends an existing behavior, update its entry
+when the old wording does not fully require the new behavior. Run
+`tests/validate.sh` after creating or renaming a carry; when the Fx checkout is
+available, it rejects local `carry/*` heads absent from § Features.
 
 ## Working topology
 

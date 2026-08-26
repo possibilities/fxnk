@@ -76,8 +76,29 @@ shipping it.
 ## Features
 
 Every entry is a behavior the fork must keep. Work that adds one writes its
-entry in the same change; an unrecorded feature is unfinished work, because a
-later cycle reconciles only what this section names.
+entry in the same requested unit of work; because the Workshop and Fx are
+separate repositories, the specification and implementation land as paired
+commits. An unrecorded feature is unfinished work, because a later cycle
+reconciles only what this section names. The carry map makes that pairing
+explicit; one behavioral entry may need multiple carries, while a requirement
+already satisfied by upstream needs none.
+
+| Carry | Feature entry |
+| --- | --- |
+| `carry/fxnk-version` | Fork identity |
+| `carry/system-prompt-files` | System prompts |
+| `carry/effort` | Effort |
+| `carry/effort-catalog` | Effort |
+| `carry/ade-event-feed` | ADE event feed |
+| `carry/edited-git-roots` | ADE event feed |
+| `carry/session-naming` | Native session naming |
+| `carry/libfx-provider-authorization` | Libfx provider authorization |
+| `carry/invocation-skill-roots` | Invocation skill roots |
+| `carry/external-editor` | External editor support |
+| `carry/resume-bounds` | Reliability |
+| `carry/local-gate-support` | Local gate support |
+| `carry/terminal-probe-determinism` | Terminal probe determinism |
+| `carry/hosted-full-ci` | Hosted Full CI |
 
 ### Fork identity
 
