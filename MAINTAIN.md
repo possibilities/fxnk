@@ -160,7 +160,12 @@ already satisfied by upstream needs none.
   nothing. Do not filter in-process subagents: every main-agent and subagent
   lifecycle record carries its own session identity, child records also carry
   the parent main-session identity, and all records retain the ADE instance
-  identity.
+  identity. That parent identity is captured when the child's work is
+  admitted rather than read live at emission, for every child record and not
+  only discovery: a `/new` or resume landing while a child still runs must not
+  reattribute that child's later records to a session which never owned it. A
+  caller with no captured identity to offer falls back to the current main
+  session.
 - Keep the ADE feed and existing Herdr integration as transport-independent
   projections of the shared lifecycle observations. Enabling either must not
   enable, disable, filter, or otherwise change the other. Admit the ADE record
