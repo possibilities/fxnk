@@ -7,37 +7,38 @@ entries on every maintenance cycle and appends one compact history entry.
 
 - Last completed maintenance: 2026-08-25
 - Upstream base and Main mirror:
-  `fff3f63e348dec846bb235332974226bd2feae26`
+  `cca8be575bf1f860ed138cfabbd85f5363b24d42`
 - Published and installed Integration:
-  `1b81973907d00c52db6f65da53403096df26dbb1`
+  `409055c824e499d84d5003a80375c69bfe248bfe`
 - Local development gate: exact-SHA receipt
-  `~/.local/state/fxnk/local-gates/1b81973907d00c52db6f65da53403096df26dbb1.json`;
-  contract `184de1412edea30a68fd1811e66afe7388b338eb30cba3d247103aa4de087370`;
-  final replay completed in 213 seconds with 22 of 22 canaries. `ship-gate.sh`
-  printed `SHIP 1b81973907d00c52db6f65da53403096df26dbb1`.
+  `~/.local/state/fxnk/local-gates/409055c824e499d84d5003a80375c69bfe248bfe.json`;
+  contract `19127643fe218212ab1c8315562f5e432bfb0c45097a70b7b5b2b300be3251e6`;
+  final replay completed in 36 seconds with 22 of 22 canaries. `ship-gate.sh`
+  printed `SHIP 409055c824e499d84d5003a80375c69bfe248bfe`.
 - Installed SHA-256:
-  `8195cb462da0f699b79238a52fac3e708154dec42b9dbe5dc4c8db27bc0f7d8c`.
+  `6ac65ecd53fb2361677b7143db5a99586f0c1c18a1f5a2763a76a58bb0aa6f80`.
   The receipt, clean bound checkout, published ref, and installed binary all
   match; `--fxnk-version` reports `fxnk 0.4.0 (fx 0.0.6)` on one exact stdout
   line with empty stderr, the installed hash matches its receipt, and
   `auto_upgrade` is `false`.
 - Both quarantine files recorded `pass` with zero failures and no signatures.
-  The quarantine was declared and not invoked.
+  The quarantine was declared and not invoked; its shared tmux-helper pin is
+  `a7ace9b57f359a8f845dad045edef6c5a3cc5626`.
 
 ## Carried state
 
 Integration composes fourteen durable published carry heads. Every head below
 is an ancestor of published Integration:
 
-- `carry/ade-event-feed` `529861d`; `carry/edited-git-roots` `176b991`
-- `carry/effort` `07c9d14`; `carry/effort-catalog` `8b35122`
-- `carry/external-editor` `dac0f95`; `carry/fxnk-version` `ec0394f`
-- `carry/invocation-skill-roots` `4bbbb89`; `carry/resume-bounds` `896ef36`
-- `carry/session-naming` `a4a8e69`; `carry/system-prompt-files` `4ff6936`
-- `carry/local-gate-support` `036fbe2`
-- `carry/libfx-provider-authorization` `94aabc5`
-- `carry/hosted-full-ci` `73958ad`
-- `carry/terminal-probe-determinism` `16a6544`
+- `carry/ade-event-feed` `c6cf236`; `carry/edited-git-roots` `e54725b`
+- `carry/effort` `9967a73`; `carry/effort-catalog` `2f6f435`
+- `carry/external-editor` `3ee07ab`; `carry/fxnk-version` `fd38a63`
+- `carry/invocation-skill-roots` `bae3f43`; `carry/resume-bounds` `f71e393`
+- `carry/session-naming` `271d80c`; `carry/system-prompt-files` `be84107`
+- `carry/local-gate-support` `66536e4`
+- `carry/libfx-provider-authorization` `f81f360`
+- `carry/hosted-full-ci` `2f3a512`
+- `carry/terminal-probe-determinism` `6971744`
 
 The first ten feature carries were reconstructed from their feature-specific
 commits on current Main; session naming and edited-root recovery declare the ADE
@@ -56,6 +57,12 @@ CI and terminal-probe carries remain independent Main-based heads.
   original names and SHAs; no `DELETEME/*` ref remains. Reconciliation owns
   only Main, Integration, and declared carries. A future deletion marker
   requires an explicit human decision naming the branch.
+- Upstream advanced twice while the gate was running, so the fourteen carries
+  were replayed three times. The final prompt-lifecycle resolution preserves
+  upstream's assigned turn identity and presentation state while ADE and
+  native session naming observe only successful queue admission. The combined
+  terminal helper preserves upstream's stable-scrollback wait and the carried
+  process-exit wait.
 - The Ctrl-X isolation probe was never flaky. It searched recorded input
   frames for the C0 byte `0x18` while the terminal sent the CSI-u form
   `ESC[120;5u`, so it failed on every run wherever that keyboard protocol is
@@ -81,7 +88,7 @@ CI and terminal-probe carries remain independent Main-based heads.
 - The macOS-arm64 quarantine is now two runtime timeout signatures only, for
   tmux teardown and pane predicates, pinned to blobs
   `de1a0efe1a6022d81a3e391be027c225ac2f1c26` (subagent manager),
-  `b3cf55fc0d3a34186e99bb71d99ce8c220e92edd` (tmux helpers), and
+  `a7ace9b57f359a8f845dad045edef6c5a3cc5626` (tmux helpers), and
   `0ed09c27daa896ecd05e8458670b694b8326c005` (render replay).
 - Upstream's own hosted CI shows the same tmux fragility on its own branches:
   of the last 40 Full CI runs, 23 succeeded, 11 were cancelled, and 4 failed —
@@ -95,8 +102,10 @@ CI and terminal-probe carries remain independent Main-based heads.
   It passes locally in 626 ms and drives a fake gateway through racing promises
   and a 100 ms timer. Watch whether it recurs; do not quarantine on one hosted
   observation.
-- Full CI for `1b81973` is nonblocking and was still running when the exact-SHA
-  Local gate, publication, ship gate, and install completed.
+- Full CI for `409055c` is nonblocking and remains the watcher's deferred
+  observability obligation. AgentStart commit `b28cc9c` pins this exact
+  Integration consumer SHA; its validation, full convergence install, and
+  rendered `collab` comparison passed.
 
 ## History
 
@@ -127,3 +136,7 @@ CI and terminal-probe carries remain independent Main-based heads.
   fourteen current feature carries on upstream `fff3f63`, proved their exact
   composition with the Local gate, atomically published Main, the carries, and
   Integration, and installed `1b81973`.
+- 2026-08-25: Replayed all fourteen carries through two further upstream
+  advances onto `cca8be5`, refreshed the terminal quarantine helper pin,
+  atomically published and installed `409055c`, advanced AgentStart's exact
+  consumer pin, and verified 158 fork heads with zero `DELETEME/*` refs.
