@@ -5,20 +5,20 @@ entries on every maintenance cycle and appends one compact history entry.
 
 ## Baseline
 
-- Last completed maintenance: 2026-08-25
+- Last completed maintenance: 2026-08-26
 - Upstream base and Main mirror:
-  `cca8be575bf1f860ed138cfabbd85f5363b24d42`
+  `fed5aa24333b4efc7190b453f94e69a425c31716`
 - Published and installed Integration:
-  `409055c824e499d84d5003a80375c69bfe248bfe`
+  `ca376a67ff2c4e256dff14051fcdc711ad941444`
 - Local development gate: exact-SHA receipt
-  `~/.local/state/fxnk/local-gates/409055c824e499d84d5003a80375c69bfe248bfe.json`;
-  contract `19127643fe218212ab1c8315562f5e432bfb0c45097a70b7b5b2b300be3251e6`;
-  final replay completed in 36 seconds with 22 of 22 canaries. `ship-gate.sh`
-  printed `SHIP 409055c824e499d84d5003a80375c69bfe248bfe`.
+  `~/.local/state/fxnk/local-gates/ca376a67ff2c4e256dff14051fcdc711ad941444.json`;
+  contract `c0d1fca65f9d17cb1c992b9a0b5de3520759e8caa8d41d20242b710a7f0a75f8`;
+  final replay completed in 35 seconds with 23 of 23 canaries. `ship-gate.sh`
+  printed `SHIP ca376a67ff2c4e256dff14051fcdc711ad941444`.
 - Installed SHA-256:
-  `6ac65ecd53fb2361677b7143db5a99586f0c1c18a1f5a2763a76a58bb0aa6f80`.
+  `8c5bb56937345fd425f7db6849d7b49fbdb74549f0b3e1cb34016255b0b71b05`.
   The receipt, clean bound checkout, published ref, and installed binary all
-  match; `--fxnk-version` reports `fxnk 0.4.0 (fx 0.0.6)` on one exact stdout
+  match; `--fxnk-version` reports `fxnk 0.5.0 (fx 0.0.6)` on one exact stdout
   line with empty stderr, the installed hash matches its receipt, and
   `auto_upgrade` is `false`.
 - Both quarantine files recorded `pass` with zero failures and no signatures.
@@ -30,15 +30,15 @@ entries on every maintenance cycle and appends one compact history entry.
 Integration composes fourteen durable published carry heads. Every head below
 is an ancestor of published Integration:
 
-- `carry/ade-event-feed` `c6cf236`; `carry/edited-git-roots` `e54725b`
-- `carry/effort` `9967a73`; `carry/effort-catalog` `2f6f435`
-- `carry/external-editor` `3ee07ab`; `carry/fxnk-version` `fd38a63`
-- `carry/invocation-skill-roots` `bae3f43`; `carry/resume-bounds` `f71e393`
-- `carry/session-naming` `271d80c`; `carry/system-prompt-files` `be84107`
-- `carry/local-gate-support` `66536e4`
-- `carry/libfx-provider-authorization` `f81f360`
-- `carry/hosted-full-ci` `2f3a512`
-- `carry/terminal-probe-determinism` `6971744`
+- `carry/ade-event-feed` `4520949`; `carry/edited-git-roots` `38a328a`
+- `carry/effort` `28f71d1`; `carry/effort-catalog` `0f6f467`
+- `carry/external-editor` `0d47162`; `carry/fxnk-version` `c19952d`
+- `carry/invocation-skill-roots` `d3538cd`; `carry/resume-bounds` `b623fef`
+- `carry/session-naming` `03be66f`; `carry/system-prompt-files` `5064267`
+- `carry/local-gate-support` `db7dadc`
+- `carry/libfx-provider-authorization` `3a06964`
+- `carry/hosted-full-ci` `18b870b`
+- `carry/terminal-probe-determinism` `ec6c7e7`
 
 The first ten feature carries were reconstructed from their feature-specific
 commits on current Main; session naming and edited-root recovery declare the ADE
@@ -51,31 +51,22 @@ CI and terminal-probe carries remain independent Main-based heads.
 
 ## Current notes
 
-- Branch repair completed on 2026-08-25. The fork has 158 heads: 14 current
-  `carry/*` heads and 144 ordinary heads including Main and Integration. All
-  152 accidental `DELETEME/*` renames were atomically restored to their
-  original names and SHAs; no `DELETEME/*` ref remains. Reconciliation owns
-  only Main, Integration, and declared carries. A future deletion marker
-  requires an explicit human decision naming the branch.
-- Upstream advanced twice while the gate was running, so the fourteen carries
-  were replayed three times. The final prompt-lifecycle resolution preserves
-  upstream's assigned turn identity and presentation state while ADE and
-  native session naming observe only successful queue admission. The combined
-  terminal helper preserves upstream's stable-scrollback wait and the carried
-  process-exit wait.
-- The Ctrl-X isolation probe was never flaky. It searched recorded input
-  frames for the C0 byte `0x18` while the terminal sent the CSI-u form
-  `ESC[120;5u`, so it failed on every run wherever that keyboard protocol is
-  negotiated, and a thirty second retry loop made a constant failure look like
-  a slow one. The tape held the frame at the right position the whole time.
-  Matching either encoding produced 5 of 5 clean runs at about three seconds
-  each. The `ctrl-x-child-row-race` signature is retired and the quarantine now
-  carries no assertion-shaped signature at all.
-- That is the general lesson worth keeping: a tolerated signature is how a real
-  defect hides, and a retry loop that spends its whole budget re-reading
-  evidence it already holds is a disguised constant failure. The gate contract
-  test now proves both halves — a declared timeout still quarantines, and the
-  old assertion log is refused.
+- The ADE feed and upstream Herdr integration are now transport-independent
+  projections of one lifecycle reducer. Enabling either leaves the other
+  unchanged. An accepted interactive attention decision publishes the
+  attributed `AttentionResolved` before releasing its worker; stale or
+  unmatched decisions stay silent, and terminal closure clears abandoned
+  attention without a synthetic resolution.
+- Focused proof covered 140 question-related ReleaseSafe tests, 34
+  attention-related tests, the accepted-decision ordering test, three ADE
+  real-process E2E cases, capability discovery, direct Codex
+  authorization/catalog/401 replay, the native libfx suite, and the declared
+  non-JSPI loader fallback. A fresh adversarial review of the exact candidate
+  found no issues.
+- Post-install reconciliation check/apply/check preserved all 142 unrelated
+  fork heads exactly, left the fourteen published carry heads as ancestors of
+  Integration, and found zero `DELETEME/*` refs. The bound checkout is clean on
+  Integration. Style extraction reports no drift.
 - The gate reads its contract from the path it is invoked through:
   `local-gate.sh` sets `root` from its own location, so
   `~/code/fxnk/scripts/local-gate.sh` uses whatever that working tree has
@@ -85,27 +76,15 @@ CI and terminal-probe carries remain independent Main-based heads.
   `refs/heads/main` now lives permanently at `~/code/fxnk-main`; gate from
   there or from a worktree proved byte-identical to `main`, and compare the
   four contract files rather than trusting the branch name.
-- The macOS-arm64 quarantine is now two runtime timeout signatures only, for
-  tmux teardown and pane predicates, pinned to blobs
-  `de1a0efe1a6022d81a3e391be027c225ac2f1c26` (subagent manager),
-  `a7ace9b57f359a8f845dad045edef6c5a3cc5626` (tmux helpers), and
-  `0ed09c27daa896ecd05e8458670b694b8326c005` (render replay).
-- Upstream's own hosted CI shows the same tmux fragility on its own branches:
-  of the last 40 Full CI runs, 23 succeeded, 11 were cancelled, and 4 failed —
-  two single-shard macOS TTY flakes, one of them `persistent child pointer drag
-  replaces the selected composer range` in this same file, and two deterministic
-  cross-platform breakages in native unit tests. Real breakage and tmux
-  fragility have visibly different shapes, which is what the signature-and-blob
-  binding relies on.
-- `tui-command-permissions.test.ts` "fx ask permits a child to create a nested
-  canonical child" failed the hosted run for `ec1cbc3` and is not quarantined.
-  It passes locally in 626 ms and drives a fake gateway through racing promises
-  and a 100 ms timer. Watch whether it recurs; do not quarantine on one hosted
-  observation.
-- Full CI for `409055c` is nonblocking and remains the watcher's deferred
-  observability obligation. AgentStart commit `b28cc9c` pins this exact
-  Integration consumer SHA; its validation, full convergence install, and
-  rendered `collab` comparison passed.
+- Full CI run `32939098183` for `ca376a67` is running and remains nonblocking
+  observability; its receipt is
+  `~/.local/state/fxnk/full-ci/ca376a67ff2c4e256dff14051fcdc711ad941444.json`.
+- AgentStart commit `a47ade2` pins this exact Integration consumer SHA and is
+  published on `main`. Its validation passed, the full installer proved the Fx
+  pin and all repository-owned content with Herdr isolated from the older live
+  server, and the installed `collab` manifest differs from its source only by
+  the renderer-owned invocation policy. The final unrelated AgentDesk capture
+  probe could not run because macOS reported no displays available.
 
 ## History
 
@@ -140,3 +119,7 @@ CI and terminal-probe carries remain independent Main-based heads.
   advances onto `cca8be5`, refreshed the terminal quarantine helper pin,
   atomically published and installed `409055c`, advanced AgentStart's exact
   consumer pin, and verified 158 fork heads with zero `DELETEME/*` refs.
+- 2026-08-26: Reworked ADE and upstream Herdr as independent projections of one
+  lifecycle reducer, ordered accepted attention resolution before worker
+  release, replayed all carries onto `fed5aa2`, atomically published and
+  installed `ca376a67`, and advanced AgentStart's exact consumer pin.
