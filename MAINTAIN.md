@@ -153,7 +153,12 @@ already satisfied by upstream needs none.
   neither its worker queue mutex nor any reducer or projection lock covers
   Herdr socket I/O or its reply wait. When an interactively presented
   permission, question, or route-recovery decision resolves, Herdr returns to
-  working while ADE publishes the attributed `AttentionResolved`. Reserve an
+  working while ADE publishes the attributed `AttentionResolved`. Every surface that
+  answers a decision on another agent's behalf publishes that agent's
+  resolution: the subagent panel and the mirrored main prompt both route
+  through the one observed resolve path, so a child cannot be released without
+  its `AttentionResolved`. A denial is an accepted decision and resolves; only
+  a stale or rejected submission publishes nothing. Reserve an
   accepted decision with its assigned turn identity and release the waiting
   agent only after that resolution projection returns, so `Stop` and
   `PostTurnEnd` cannot overtake it; stale and rejected decisions publish no
