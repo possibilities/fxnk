@@ -132,7 +132,13 @@ later cycle reconciles only what this section names.
   neither its worker queue mutex nor any reducer or projection lock covers
   Herdr socket I/O or its reply wait. When an interactively presented
   permission, question, or route-recovery decision resolves, Herdr returns to
-  working while ADE publishes the attributed `AttentionResolved`.
+  working while ADE publishes the attributed `AttentionResolved`. Reserve an
+  accepted decision with its assigned turn identity and release the waiting
+  agent only after that resolution projection returns, so `Stop` and
+  `PostTurnEnd` cannot overtake it; stale and rejected decisions publish no
+  resolution. When orderly turn or process shutdown abandons active attention
+  without accepting a decision, publish no synthetic resolution:
+  `PostTurnEnd` or `FxStopped` is the terminal closure and clears the snapshot.
 - Support optional `FX_ADE_CHECKPOINT_PATH` as an ADE-owned recovery path. Fx
   atomically replaces it at mode 0600 with output-only schema 1 containing
   `schema: 1`, the ADE `instance_id`, a monotonic `revision`, and ordered,
