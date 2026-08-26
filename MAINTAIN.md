@@ -183,7 +183,12 @@ already satisfied by upstream needs none.
   accepted decision with its assigned turn identity and release the waiting
   agent only after that resolution projection returns, so `Stop` and
   `PostTurnEnd` cannot overtake it; stale and rejected decisions publish no
-  resolution. When orderly turn or process shutdown abandons active attention
+  resolution. That ordering covers an approved relationship too: applying
+  the relationship can start the child, so the resolution publishes before the
+  continuation runs rather than after it. A continuation that then fails needs
+  no compensating record: a retryable failure leaves the approval pending and
+  the next sync raises that child's attention again, and a terminal failure
+  removes it because the child is genuinely no longer waiting. When orderly turn or process shutdown abandons active attention
   without accepting a decision, publish no synthetic resolution:
   `PostTurnEnd` or `FxStopped` is the terminal closure and clears the snapshot.
 - Support optional `FX_ADE_CHECKPOINT_PATH` as an ADE-owned recovery path. Fx
