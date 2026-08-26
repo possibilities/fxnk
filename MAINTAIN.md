@@ -289,6 +289,21 @@ already satisfied by upstream needs none.
 - Keep the fork's agent guidance aligned with the Workshop-owned Local
   development gate, Integration workflow, and downstream-only contribution
   stance.
+- The canary inventory is declared twice and the two must stay identical:
+  `build.zig`'s `filters` list decides which tests compile into the narrow
+  root, and `tests/fxnk/runner.zig` holds the exact expected names. A name in
+  one and not the other fails the gate loudly, which is the point: an upstream
+  rebase that drops or renames a carry's test cannot pass in silence.
+- Gate the ADE lifecycle reducer itself, not only the serialized wire shape.
+  The narrow root imports `src/builtins/hooks/lifecycle_state.zig` so the
+  reducer's own canaries run: a non-null `attention_kind` pairs only with
+  `blocked`, each agent's snapshot stays independent, and a resolution applies
+  only against a matching kind. A consumer rejects a whole record whose
+  snapshot breaks that pairing, so it is a wire invariant rather than internal
+  tidiness. Gate alongside it that a subagent record carries the child's own
+  snapshot rather than the main agent's, and that `sequence` advances through
+  both the oversized-record and full-queue drop paths, because "a gap means a
+  drop" is what makes the feed's recovery story true.
 
 ### Terminal probe determinism
 
