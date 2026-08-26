@@ -138,7 +138,12 @@ already satisfied by upstream needs none.
   `attention_kind` (`permission`, `question`, `route_recovery`, or null). Derive
   both from one thread-safe reducer keyed independently by the main agent and
   each subagent, so any later record repairs consumer state after an event drop
-  or sequence gap. Emit `AttentionResolved` with the owning agent working after
+  or sequence gap. Raise a subagent's `AttentionRequired` for every child
+  holding an unresolved approval, not only the one the main approval prompt
+  happens to mirror: that prompt shows one child at a time, so an edge on it
+  cannot describe a second child blocked at the same instant, and the approval
+  registry is the authority for the whole set. The reducer suppresses a child
+  already recorded as blocked, so this stays one record per child. Emit `AttentionResolved` with the owning agent working after
   an active user decision is accepted and work can continue.
 - Install the feed only in the interactive TUI. `fx ask` and `fx acp` publish
   nothing. Do not filter in-process subagents: every main-agent and subagent
