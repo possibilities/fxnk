@@ -22,8 +22,7 @@ import {
   type TextChunk,
 } from "@opentui/core"
 import tokens from "../tokens.json"
-
-type Theme = "dark" | "light"
+import { CANVAS, FMX_ERROR, FMX_FOCUS, surface, type Theme, unused } from "./fmx-theme.ts"
 
 type StyleValue = {
   seq: string
@@ -32,26 +31,10 @@ type StyleValue = {
   bg: { hex: string; index?: number } | null
 }
 
-// Simulated terminal backgrounds: the one pair of values not extracted from
-// fx, which inherits the real terminal's background. They exist so the light
-// theme is inspectable on a dark terminal and vice versa.
-const CANVAS: Record<Theme, string> = { dark: "#121212", light: "#fafafa" }
-
 const SECTIONS = ["roles", "transcript", "code", "glyphs", "carve-outs", "about"] as const
 
 const role = (name: string, theme: Theme): StyleValue =>
   (tokens.roles as Record<string, Record<Theme, StyleValue>>)[name][theme]
-
-// fmx's fixed indexed carve-outs, not extracted from fx (see STYLE.md
-// "Borrowing into fmx"). Focus/error are direct ANSI slots 4/1; these two
-// simulated values let the viewer show those terminal-owned intents.
-const FMX_FOCUS = "#000080"
-const FMX_ERROR = "#800000"
-const SURFACE: Record<Theme, string> = { dark: "#303030", light: "#e4e4e4" } // 236 / 254
-const UNUSED: Record<Theme, string> = { dark: "#262626", light: "#eeeeee" } // 235 / 255
-
-const surface = (theme: Theme): string => SURFACE[theme]
-const unused = (theme: Theme): string => UNUSED[theme]
 
 /** Paint text with an extracted style value, substituting the simulated
  * default foreground when the value carries no color of its own. */

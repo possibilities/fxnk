@@ -2,8 +2,8 @@
 // A full-screen OpenTUI lab for comparing ways fmx could express its
 // momentary prefix-key state. This is a prototype, not the fmx implementation:
 // the actions are real enough to exercise but deliberately have no side
-// effects. It renders only from fxnk's extracted grayscale ramp plus the two
-// documented fmx carve-out values: focus blue and the 20% black scrim.
+// effects. It renders from fxnk's extracted grayscale ramp plus the shared
+// fixed fmx carve-outs for focus, lifted surfaces, and the 20% black scrim.
 
 import {
   BoxRenderable,
@@ -14,13 +14,15 @@ import {
   bg,
   bold,
   fg,
+  type ColorInput,
   type KeyEvent,
   type MouseEvent,
   type TextChunk,
 } from "@opentui/core"
 import tokens from "../tokens.json"
+import { CANVAS, FMX_FOCUS, FMX_SCRIM, surface, type Theme } from "./fmx-theme.ts"
 
-export type Theme = "dark" | "light"
+export type { Theme } from "./fmx-theme.ts"
 
 type StyleValue = {
   seq: string
@@ -45,10 +47,6 @@ export type PrefixModeLabOptions = {
   showIntro?: boolean
 }
 
-const CANVAS: Record<Theme, string> = { dark: "#121212", light: "#fafafa" }
-const FMX_FOCUS = "#7dd3fc"
-const FMX_SCRIM = "#00000033"
-const SURFACE_BLEND = 0.12
 const OPAQUE_SPACE = "\u00a0"
 
 export const TREATMENTS: readonly Treatment[] = [
@@ -83,21 +81,6 @@ const BIG_FONT: Readonly<Record<string, readonly string[]>> = {
 
 const role = (name: string, theme: Theme): StyleValue =>
   (tokens.roles as Record<string, Record<Theme, StyleValue>>)[name]![theme]!
-
-function mix(base: string, tint: string, amount: number): string {
-  const channel = (offset: number) => {
-    const from = Number.parseInt(base.slice(offset, offset + 2), 16)
-    const to = Number.parseInt(tint.slice(offset, offset + 2), 16)
-    return Math.round(from + (to - from) * amount)
-      .toString(16)
-      .padStart(2, "0")
-  }
-  return `#${channel(1)}${channel(3)}${channel(5)}`
-}
-
-function surface(theme: Theme): string {
-  return mix(CANVAS[theme], role("hint", theme).fg!.hex, SURFACE_BLEND)
-}
 
 function paint(value: StyleValue, text: string, theme: Theme): TextChunk {
   let chunk: TextChunk = fg(value.fg?.hex ?? role("hint", theme).fg!.hex)(text)
@@ -155,7 +138,7 @@ function textSize(content: string): { width: number; height: number } {
   }
 }
 
-function solidFill(width: number, height: number, color: string, theme: Theme): StyledText {
+function solidFill(width: number, height: number, color: ColorInput, theme: Theme): StyledText {
   const chunks: TextChunk[] = []
   for (let row = 0; row < height; row++) {
     if (row > 0) chunks.push(primary("\n", theme))
@@ -200,7 +183,7 @@ function secondStroke(key: KeyEvent): string | null {
 }
 
 function normalizeTreatment(value: number | undefined): number {
-  if (!Number.isFinite(value)) return 1
+  if (!Number.isFinite(value)) return 0
   return Math.max(0, Math.min(TREATMENTS.length - 1, Math.floor(value!)))
 }
 
@@ -839,11 +822,11 @@ export class PrefixModeLab {
     width: number,
     height: number,
     options: {
-      backgroundColor?: string
+      backgroundColor?: ColorInput
       border?: boolean | Array<"top" | "right" | "bottom" | "left">
-      borderColor?: string
+      borderColor?: ColorInput
       title?: string
-      titleColor?: string
+      titleColor?: ColorInput
       onMouseDown?: (event: MouseEvent) => void
     } = {},
     parent: BoxRenderable = this.overlay,
@@ -900,7 +883,7 @@ export class PrefixModeLab {
 
 function parseOptions(argv: string[]): PrefixModeLabOptions {
   let theme: Theme = "dark"
-  let treatment = 1
+  let treatment = 0
   let reducedMotion = false
   for (let index = 0; index < argv.length; index++) {
     const argument = argv[index]

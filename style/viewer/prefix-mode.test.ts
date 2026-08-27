@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, test } from "bun:test"
 import { createTestRenderer, type TestRendererSetup } from "@opentui/core/testing"
+import { FMX_ERROR, FMX_FOCUS, FMX_SCRIM, surface, unused } from "./fmx-theme.ts"
 import { PrefixModeLab, TREATMENTS } from "./prefix-mode.ts"
 
 const open: Array<{ setup: TestRendererSetup; lab: PrefixModeLab }> = []
@@ -25,6 +26,27 @@ async function press(setup: TestRendererSetup, key: string, modifiers: { ctrl?: 
 }
 
 describe("prefix mode treatments", () => {
+  test("uses the current fixed indexed fmx carve-outs", () => {
+    expect(FMX_FOCUS.intent).toBe("indexed")
+    expect(FMX_FOCUS.slot).toBe(4)
+    expect(FMX_ERROR.intent).toBe("indexed")
+    expect(FMX_ERROR.slot).toBe(1)
+    expect(surface("dark").intent).toBe("indexed")
+    expect(surface("dark").slot).toBe(236)
+    expect(surface("dark").toInts().slice(0, 3)).toEqual([48, 48, 48])
+    expect(surface("light").intent).toBe("indexed")
+    expect(surface("light").slot).toBe(254)
+    expect(surface("light").toInts().slice(0, 3)).toEqual([228, 228, 228])
+    expect(unused("dark").slot).toBe(235)
+    expect(unused("light").slot).toBe(255)
+    expect(FMX_SCRIM).toBe("#00000033")
+  })
+
+  test("starts on the first treatment", async () => {
+    const { lab } = await create()
+    expect(lab.activeTreatment).toBe(0)
+  })
+
   test("all six treatments render the real fmx action vocabulary", async () => {
     const { setup, lab } = await create()
     for (let index = 0; index < TREATMENTS.length; index++) {
