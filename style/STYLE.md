@@ -259,6 +259,13 @@ dimmed stage.
 └──────────────────────────────────────┘
 ```
 
+Modal, dialog, and picker bodies own exactly one terminal cell of horizontal
+padding on both the left and right. Content rows must not add leading or
+trailing spaces merely to simulate that outer padding. Carets such as `▎` and
+`> `, and gutters used to align row fields, are semantic content inside the
+body's padding. Size a content-driven surface as its widest content row plus
+two border cells and two padding cells.
+
 | part | role | dark | light |
 |---|---|---|---|
 | scrim behind a modal or dialog | `#00000033` — a 20% black darkening, fmx's one opacity; not a hue, and reads as a dimmed stage on either theme | — | — |
