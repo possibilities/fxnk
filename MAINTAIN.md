@@ -92,6 +92,12 @@ reconciles only what this section names. The carry map makes that pairing
 explicit; one behavioral entry may need multiple carries, while a requirement
 already satisfied by upstream needs none.
 
+Launch controls are global and apply to both the interactive TUI and ACP
+whenever the controlled capability exists on both surfaces. An ACP-only
+control must name its protocol-specific boundary; `--no-acp-mcp` is one because
+only an ACP client supplies ACP MCP servers. Controlled TUI relaunches preserve
+the selected launch controls.
+
 | Carry | Feature entry |
 | --- | --- |
 | `carry/fxnk-version` | Fork identity |
@@ -110,12 +116,12 @@ already satisfied by upstream needs none.
 | `carry/terminal-probe-determinism` | Terminal probe determinism |
 | `carry/hosted-full-ci` | Hosted Full CI |
 | `carry/fmx-distribution` | fmx distribution |
-| `carry/acp-capability-gates` | ACP capability gates |
-| `carry/acp-tool-selection` | ACP native-tool selection |
+| `carry/acp-capability-gates` | Launch capability gates |
+| `carry/acp-tool-selection` | Native-tool selection |
 | `carry/exclusive-skill-roots` | Exclusive skill roots |
-| `carry/acp-project-instructions` | ACP project instructions |
-| `carry/acp-permission-policy` | ACP launch permission policy |
-| `carry/acp-state-isolation` | ACP state isolation |
+| `carry/acp-project-instructions` | Project instructions |
+| `carry/acp-permission-policy` | Launch permission policy |
+| `carry/acp-state-isolation` | State isolation |
 
 ### Fork identity
 
@@ -152,23 +158,25 @@ already satisfied by upstream needs none.
 - Support `--append-system-prompt-file` and `--system-prompt-file` for appending
   to and replacing the system prompt.
 
-### ACP capability gates
+### Launch capability gates
 
-- Let `fx acp --no-native-tools` launch an ACP server with no Fx-native tools.
-  The empty set is authoritative for both model advertisement and dispatch;
+- Support global `--no-native-tools` on interactive TUI and ACP launches. The
+  empty set is authoritative for both model advertisement and dispatch;
   neither the main session nor an in-process child may recover the built-in
   default set.
 - Let `fx acp --no-acp-mcp` refuse client-supplied `mcpServers` before any MCP
-  process starts. Keep native-tool and ACP-MCP admission independent.
+  process starts. This control is ACP-only because an interactive TUI has no
+  client-supplied ACP MCP configuration. Keep native-tool and ACP-MCP admission
+  independent.
 
-### ACP native-tool selection
+### Native-tool selection
 
-- Support repeatable `fx acp --tool NAME`. Supplying no `--tool` preserves the
-  complete current native set; the first occurrence switches the process to an
-  allowlist. Reject unknown selections at startup and apply the resolved set to
-  both tool advertisement and dispatch for the main session and every
-  in-process child. Reject combining any `--tool` selection with
-  `--no-native-tools`.
+- Support repeatable global `--tool NAME` on interactive TUI and ACP launches.
+  Supplying no `--tool` preserves the complete current native set; the first
+  occurrence switches the process to an allowlist. Reject unknown selections
+  at startup and apply the resolved set to both tool advertisement and dispatch
+  for the main session and every in-process child. Reject combining any
+  `--tool` selection with `--no-native-tools`.
 - Treat `terminal:exec` as the existing one-shot terminal specification rather
   than the interactive terminal surface. A role that selects it may execute
   permission-admitted one-shot commands but cannot start, observe, write to,
@@ -177,41 +185,44 @@ already satisfied by upstream needs none.
 ### Exclusive skill roots
 
 - Support global `--no-default-skills` alongside repeatable `--skills-dir`.
-  When selected, discover skills only from the invocation roots in flag order;
-  do not scan workspace, managed-profile, or compatibility roots. An empty
-  invocation list intentionally produces no skill catalog.
+  Apply the policy to interactive TUI and ACP launches. When selected, discover
+  skills only from the invocation roots in flag order; do not scan workspace,
+  managed-profile, or compatibility roots. An empty invocation list
+  intentionally produces no skill catalog.
 - Keep the option invocation-only. It does not mutate managed skill storage,
   and controlled relaunches preserve the same exclusive-root policy.
 
-### ACP project instructions
+### Project instructions
 
-- Let `fx acp --no-project-instructions` suppress repository instruction-file
-  discovery and model-visible project prose for that server process while
-  retaining current runtime facts such as working directory, date, Git state,
-  tool guidance, and permission guidance.
+- Support global `--no-project-instructions` on interactive TUI and ACP
+  launches. It suppresses repository instruction-file discovery and
+  model-visible project prose for that process while retaining current runtime
+  facts such as working directory, date, Git state, tool guidance, and
+  permission guidance.
 - Keep the launch option distinct from stored project `context` configuration:
   it does not rewrite workspace settings and cannot be reopened by an
   `AGENTS.md`, `CLAUDE.md`, or compatible instruction file below the launch
   directory.
 
-### ACP launch permission policy
+### Launch permission policy
 
-- Let `fx acp --permissions-file FILE` load the existing permission-rule JSON
-  shape before server startup. Canonicalize the file path, reject unreadable or
-  malformed policy, and use its rules as the process's configured permission
-  policy instead of ambient profile, workspace, or project permission rules.
+- Support global `--permissions-file FILE` on interactive TUI and ACP launches.
+  Load the existing permission-rule JSON shape before agent startup.
+  Canonicalize the file path, reject unreadable or malformed policy, and use
+  its rules as the process's configured permission policy instead of ambient
+  profile, workspace, or project permission rules.
 - Preserve Fx's ordinary per-session exact-grant semantics without allowing a
   saved grant to override a launch-policy deny. Command rules retain the
   existing static parse requirement, so compound shell syntax does not inherit
   a simple-command allow.
 
-### ACP state isolation
+### State isolation
 
-- Let `fx acp --state-dir DIR` select the Fx profile/state root for that server
-  process, covering settings, authorization, managed skills, memories, and
-  durable sessions. Canonicalize and validate the root before serving; session
-  discovery and resume may not cross into the default or another selected
-  state root.
+- Support global `--state-dir DIR` on interactive TUI and ACP launches. It
+  selects the Fx profile/state root for that process, covering settings,
+  authorization, managed skills, memories, and durable sessions. Canonicalize
+  and validate the root before agent startup; session discovery and resume may
+  not cross into the default or another selected state root.
 - Do not implement state isolation by changing the process or subprocess
   `HOME`. Shell commands and MCP processes retain the operator's normal home
   environment while Fx-owned paths use the selected root.
