@@ -23,6 +23,7 @@ bash -n scripts/style-extract.sh
 bash -n scripts/style-swatch.sh
 bash -n scripts/style-capture.sh
 bash -n scripts/style-view.sh
+bash -n scripts/prefix-mode-demo.sh
 [ -x scripts/install.sh ] || fail "scripts/install.sh is not executable"
 [ -x scripts/local-gate.sh ] || fail "scripts/local-gate.sh is not executable"
 [ -x scripts/classify-quarantine.py ] \
@@ -39,7 +40,7 @@ bash -n scripts/style-view.sh
     || fail "tests/supervision-transaction.sh is not executable"
 [ -x tests/local-gate/receipt-transaction.sh ] \
     || fail "tests/local-gate/receipt-transaction.sh is not executable"
-for style_script in style-extract.sh style-swatch.sh style-capture.sh style-view.sh; do
+for style_script in style-extract.sh style-swatch.sh style-capture.sh style-view.sh prefix-mode-demo.sh; do
     [ -x "scripts/$style_script" ] \
         || fail "scripts/$style_script is not executable"
 done
@@ -52,7 +53,9 @@ grep -Fx '## Style guide' MAINTAIN.md >/dev/null \
 if command -v bun >/dev/null; then
     (cd style/viewer \
         && { [ -d node_modules ] || bun install --frozen-lockfile >/dev/null; } \
-        && bun build index.ts --target=bun --external '@opentui/*' --outfile=/dev/null >/dev/null) \
+        && bun build index.ts --target=bun --external '@opentui/*' --outfile=/dev/null >/dev/null \
+        && bun build prefix-mode.ts --target=bun --external '@opentui/*' --outfile=/dev/null >/dev/null \
+        && bun test prefix-mode.test.ts >/dev/null) \
         || fail "style/viewer does not build"
 fi
 [ "$(readlink CLAUDE.md)" = AGENTS.md ] || fail "CLAUDE.md must link to AGENTS.md"
