@@ -164,6 +164,8 @@ grep -F -- '--allow-overwrite=true' scripts/fmx-release-local.sh >/dev/null \
     || fail "the local fmx Fx release fallback does not gate mutable overwrite"
 grep -F 'prune_historical_fx_releases' scripts/fmx-release-local.sh >/dev/null \
     || fail "the local fmx Fx release fallback does not prune prior releases"
+grep -F 'for _ in $(seq 1 30); do' scripts/fmx-release-local.sh >/dev/null \
+    || fail "the local fmx Fx release fallback does not wait for public visibility"
 for local_release_contract in \
     'scripts/fmx-release-local.sh' \
     'stop the exact still-active hosted run before' \

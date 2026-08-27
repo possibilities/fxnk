@@ -422,8 +422,19 @@ publish_release_set() {
     printf '%s' "$sha" > "$work_dir/latest.txt"
     blob_put "$work_dir/latest.txt" fx/latest.txt text/plain true 60
 
+    public_get() {
+        local url="$1" destination="$2"
+        for _ in $(seq 1 30); do
+            if curl_get "$url" -o "$destination" 2>/dev/null; then
+                return 0
+            fi
+            sleep 2
+        done
+        curl_get "$url" -o "$destination"
+    }
     for path in setup.sh latest.txt; do
-        curl_get "$release_base_url/fx/$path?verify=$sha" -o "$work_dir/public-$path"
+        public_get "$release_base_url/fx/$path?verify=$sha" \
+            "$work_dir/public-$path"
     done
     cmp -s "$setup" "$work_dir/public-setup.sh" \
         || fail 'public Fx setup.sh differs after publication'
@@ -431,7 +442,8 @@ publish_release_set() {
         || fail 'public Fx latest.txt differs after publication'
     for local_path in "$output"/*; do
         name=$(basename "$local_path")
-        curl_get "$release_base_url/fx/releases/$sha/$name" -o "$work_dir/public-$name"
+        public_get "$release_base_url/fx/releases/$sha/$name" \
+            "$work_dir/public-$name"
         cmp -s "$local_path" "$work_dir/public-$name" \
             || fail "public artifact differs after publication: $name"
     done
