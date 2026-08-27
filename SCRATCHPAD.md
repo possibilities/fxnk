@@ -5,18 +5,19 @@ entries on every maintenance cycle and appends one compact history entry.
 
 ## Baseline
 
-- Last completed maintenance: 2026-08-26
+- Last completed maintenance: 2026-08-27
 - Upstream base and Main mirror:
-  `56a1166d388952717dec4d31eec01eb68f72c1c0`
+  `139a77a1f4ace3b319be5397692c542d05535283`
 - Published and installed Integration:
-  `c0f3ec0efd79ff8c4ff897fdc072a9f0ce3d508a`
+  `c8c928a6bd795f583745b79d31db60e55d445f7f`
 - Local development gate: exact-SHA receipt
-  `~/.local/state/fxnk/local-gates/c0f3ec0efd79ff8c4ff897fdc072a9f0ce3d508a.json`;
-  contract `dda3b1585f37009a4b76dd453fa5c0c79c456f926a4ec5825df3840be15e5f01`;
-  final replay completed in 30 seconds with 36 of 36 canaries. `ship-gate.sh`
-  printed `SHIP c0f3ec0efd79ff8c4ff897fdc072a9f0ce3d508a`.
+  `~/.local/state/fxnk/local-gates/c8c928a6bd795f583745b79d31db60e55d445f7f.json`;
+  contract `f2f7d6d78ec7d640794dbe4abfe47ea26b657f565cbbcdcef41693c37f03d281`;
+  final replay completed in 217 seconds with 36 of 36 canaries.
+  `ship-gate.sh` printed
+  `SHIP c8c928a6bd795f583745b79d31db60e55d445f7f`.
 - Installed SHA-256:
-  `4e973593860bfbefb7997fa251141af9f36eaf36a74039877ee63ce33e9b0fad`.
+  `3dc04784ab3088b9cd6946a5284cc6ed9ef64aa75519138d62db01adbe1d8b01`.
   The receipt, clean bound checkout, published ref, and installed binary all
   match; `--fxnk-version` reports `fxnk 0.5.0 (fx 0.0.6)` on one exact stdout
   line with empty stderr, the installed hash matches its receipt, and
@@ -29,21 +30,22 @@ entries on every maintenance cycle and appends one compact history entry.
 
 ## Carried state
 
-Integration composes fifteen durable published carry heads. Every head below
+Integration composes sixteen durable published carry heads. Every head below
 is an ancestor of published Integration:
 
-- `carry/ade-event-feed` `a25f826`; `carry/edited-git-roots` `f3839e3`
-- `carry/effort` `a63c4b2`; `carry/effort-catalog` `486ed38`
-- `carry/external-editor` `ae7f258`; `carry/fxnk-version` `c2367f9`
-- `carry/invocation-skill-roots` `f448756`; `carry/resume-bounds` `e828a5d`
-- `carry/session-naming` `a639bc0`; `carry/system-prompt-files` `e30152d`
-- `carry/local-gate-support` `b985554`
-- `carry/libfx-provider-authorization` `7590e90`
-- `carry/hosted-full-ci` `905e62f`
-- `carry/terminal-probe-determinism` `1faba71`
-- `carry/notification-sound-single-flight` `c0f3ec0`
+- `carry/ade-event-feed` `9bb0e08`; `carry/edited-git-roots` `4425933`
+- `carry/effort` `120ed3f`; `carry/effort-catalog` `307eaff`
+- `carry/external-editor` `71754c3`; `carry/fxnk-version` `bd7102a`
+- `carry/invocation-skill-roots` `0993488`; `carry/resume-bounds` `6bf6b65`
+- `carry/session-naming` `377a934`; `carry/system-prompt-files` `c217164`
+- `carry/local-gate-support` `b081e35`
+- `carry/libfx-provider-authorization` `6d024e3`
+- `carry/hosted-full-ci` `6e5c81a`
+- `carry/terminal-probe-determinism` `066c243`
+- `carry/notification-sound-single-flight` `05c0f2f`
+- `carry/fmx-distribution` `e49f16b`
 
-All fifteen carry heads were rewritten onto current Main or their declared
+All sixteen carry heads were rewritten onto current Main or their declared
 dependency. Session naming and edited-root recovery declare the ADE feed as
 their base dependency. Local gate support contains the complete product
 composition, libfx authorization depends on that gate support, and the hosted
@@ -64,24 +66,28 @@ Main-based heads.
   Three subagent-manager probes and six render/replay probes passed with zero
   quarantine failures or signatures.
 - Post-install reconciliation check/apply/check preserved every unrelated fork
-  head, left all fifteen published carry heads as ancestors of Integration,
+  head, left all sixteen published carry heads as ancestors of Integration,
   and found zero `DELETEME/*` refs. The bound checkout is clean on Integration.
   Style extraction reports no drift.
+- The fmx distribution landing itself completed correctly: the gate,
+  publication, install, AgentStart pin, native `fx`/`fmx-fx` hashes, and smoke
+  probes all agree on `c8c928a6`. Its cross-repository session then declared
+  the work safe to close before the Workshop's post-handover reconciliation,
+  scratchpad update, and cycle-worktree cleanup. The 2026-08-27 recovery found
+  every worktree clean and every commit named, rebound the sixteen stale local
+  carry refs to the published graph under exact comparisons, and atomically
+  advanced fork/local Main to `139a77a1`; no product rollback or reinstall was
+  needed.
 - The gate reads its contract from the path it is invoked through:
-  `local-gate.sh` sets `root` from its own location, so
-  `~/code/fxnk/scripts/local-gate.sh` uses whatever that working tree has
-  checked out, not `main`. While `~/code/fxnk` sat on an unrelated branch, that
-  path served a stale 20-canary contract. A receipt bound to a digest that is
-  not `main`'s would look valid forever, which is worse than an honest failure.
-  `refs/heads/main` now lives permanently at `~/code/fxnk-main`; gate from
-  there or from a worktree proved byte-identical to `main`, and compare the
-  four contract files rather than trusting the branch name.
-- Full CI run `33026184061` for `c0f3ec0` is running and remains nonblocking
+  `local-gate.sh` sets `root` from its own location. Invoke the canonical
+  `~/code/fxnk/scripts/local-gate.sh` while that checkout is clean on `main`,
+  or prove a different Workshop worktree's four contract files byte-identical
+  to `main`; a branch label alone does not establish the receipt contract.
+- Full CI run `33040094733` for `c8c928a6` is queued and remains nonblocking
   observability; its receipt is
-  `~/.local/state/fxnk/full-ci/c0f3ec0efd79ff8c4ff897fdc072a9f0ce3d508a.json`.
-- The feature landing installed Integration immediately but did not move fmx,
-  AgentStart, or another consumer pin; the requested consumer release remains
-  a separate act.
+  `~/.local/state/fxnk/full-ci/c8c928a6bd795f583745b79d31db60e55d445f7f.json`.
+- AgentStart pins `c8c928a6` and its installer provides byte-identical native
+  `fx` and `fmx-fx` binaries while keeping fmx editable through its Bun link.
 
 ## History
 
@@ -124,3 +130,7 @@ Main-based heads.
   carries onto `56a1166`, semantically refreshed the terminal quarantine pin,
   passed the 36-canary gate, atomically published and installed `c0f3ec0`, and
   preserved unrelated fork refs and the extracted style guide.
+- 2026-08-27: Added fmx distribution, replayed sixteen carries onto `139a77a`,
+  published and installed `c8c928a6`, advanced fmx and AgentStart, then
+  recovered the omitted Workshop closure by reconciling stale local carry/Main
+  refs and recording the delivered state without losing any commit.

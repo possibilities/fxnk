@@ -75,6 +75,12 @@ the first entry selects the initial provider and later switching remains inside
 that set.
 _Avoid_: provider option, ambient credential fallback.
 
+**ACP launch controls** — Orthogonal Fx CLI options that define one ACP
+server process's model-visible context, native tools, skill roots, permission
+policy, MCP admission, and state root. Role-specific launch commands compose
+these primitives outside Fx; Fx does not encode orchestrator or player roles.
+_Avoid_: agent profile, ACP mode, prompt preset.
+
 **ADE event feed** — Fx's opt-in, versioned, best-effort NDJSON lifecycle
 stream from an interactive TUI and its in-process agents to an ADE-owned Unix
 socket. The ADE supplies the socket and an opaque instance identity; Fx
