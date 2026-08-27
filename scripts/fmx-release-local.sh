@@ -377,14 +377,19 @@ publish_release_set() {
     blob_put() {
         local local_path="$1" relative_path="$2" content_type="$3"
         local overwrite="$4" max_age="$5"
-        local -a overwrite_args=()
-        [ "$overwrite" = true ] && overwrite_args=(--allow-overwrite=true)
         (
             cd "$credentials"
-            npx --yes "vercel@$vercel_version" blob put "$local_path" \
-                --access public --pathname "$(blob_path "$relative_path")" \
-                --content-type "$content_type" "${overwrite_args[@]}" \
-                --cache-control-max-age="$max_age"
+            if [ "$overwrite" = true ]; then
+                npx --yes "vercel@$vercel_version" blob put "$local_path" \
+                    --access public --pathname "$(blob_path "$relative_path")" \
+                    --content-type "$content_type" --allow-overwrite=true \
+                    --cache-control-max-age="$max_age"
+            else
+                npx --yes "vercel@$vercel_version" blob put "$local_path" \
+                    --access public --pathname "$(blob_path "$relative_path")" \
+                    --content-type "$content_type" \
+                    --cache-control-max-age="$max_age"
+            fi
         )
     }
     upload_immutable() {
