@@ -5,19 +5,22 @@ entries on every maintenance cycle and appends one compact history entry.
 
 ## Baseline
 
-- Last completed maintenance: 2026-08-27
+- Current maintenance: 2026-08-27. Fork publication, direct installation, and
+  the exact fmx and AgentStart pin handoff are complete. One unrelated
+  AgentStart full-convergence gate remains: Peekaboo has both required TCC
+  grants but reports no active display from either capture path.
 - Upstream base and Main mirror:
-  `139a77a1f4ace3b319be5397692c542d05535283`
+  `c011b118f41ca6950e1f5e3deb38950ab0771a74`
 - Published and installed Integration:
-  `c8c928a6bd795f583745b79d31db60e55d445f7f`
+  `c1ef62613bf26b4a604eae8d0674c42d59906b04`
 - Local development gate: exact-SHA receipt
-  `~/.local/state/fxnk/local-gates/c8c928a6bd795f583745b79d31db60e55d445f7f.json`;
-  contract `f2f7d6d78ec7d640794dbe4abfe47ea26b657f565cbbcdcef41693c37f03d281`;
-  final replay completed in 217 seconds with 36 of 36 canaries.
+  `~/.local/state/fxnk/local-gates/c1ef62613bf26b4a604eae8d0674c42d59906b04.json`;
+  contract `7ca3c441014fd9d612e2b3772bdcc4cca0da913fe85650b397d75950268626f8`;
+  final replay completed in 30 seconds with 41 of 41 canaries.
   `ship-gate.sh` printed
-  `SHIP c8c928a6bd795f583745b79d31db60e55d445f7f`.
+  `SHIP c1ef62613bf26b4a604eae8d0674c42d59906b04`.
 - Installed SHA-256:
-  `3dc04784ab3088b9cd6946a5284cc6ed9ef64aa75519138d62db01adbe1d8b01`.
+  `f2fb421242c126348545922e234e87de4bb31559f47abaea528e6ac5ddec0013`.
   The receipt, clean bound checkout, published ref, and installed binary all
   match; `--fxnk-version` reports `fxnk 0.5.0 (fx 0.0.6)` on one exact stdout
   line with empty stderr, the installed hash matches its receipt, and
@@ -30,64 +33,78 @@ entries on every maintenance cycle and appends one compact history entry.
 
 ## Carried state
 
-Integration composes sixteen durable published carry heads. Every head below
+Integration composes twenty-three durable published carry heads. Every head below
 is an ancestor of published Integration:
 
-- `carry/ade-event-feed` `9bb0e08`; `carry/edited-git-roots` `4425933`
-- `carry/effort` `120ed3f`; `carry/effort-catalog` `307eaff`
-- `carry/external-editor` `71754c3`; `carry/fxnk-version` `bd7102a`
-- `carry/invocation-skill-roots` `0993488`; `carry/resume-bounds` `6bf6b65`
-- `carry/session-naming` `377a934`; `carry/system-prompt-files` `c217164`
-- `carry/local-gate-support` `b081e35`
-- `carry/libfx-provider-authorization` `6d024e3`
-- `carry/hosted-full-ci` `6e5c81a`
-- `carry/terminal-probe-determinism` `066c243`
-- `carry/notification-sound-single-flight` `05c0f2f`
-- `carry/fmx-distribution` `e49f16b`
+- `carry/ade-event-feed` `a5ce060`; `carry/edited-git-roots` `f3d1f80`
+- `carry/effort` `3d797cf`; `carry/effort-catalog` `06c00ab`
+- `carry/external-editor` `4a87b72`; `carry/fxnk-version` `7e685e6`
+- `carry/invocation-skill-roots` `e782e09`; `carry/resume-bounds` `d8c3e91`
+- `carry/session-naming` `98baae4`; `carry/system-prompt-files` `cfac41e`
+- `carry/local-gate-support` `b603d98`
+- `carry/libfx-provider-authorization` `f5f4535`
+- `carry/hosted-full-ci` `a29e1b8`
+- `carry/terminal-probe-determinism` `8f93cb0`
+- `carry/notification-sound-single-flight` `34bf08a`
+- `carry/fmx-distribution` `d0012fb`
+- `carry/acp-capability-gates` `e5339ec`
+- `carry/acp-tool-selection` `378e956`
+- `carry/exclusive-skill-roots` `bbe1a06`
+- `carry/acp-project-instructions` `5021efd`
+- `carry/acp-state-isolation` `4899ecc`
+- `carry/acp-permission-policy` `950e23a`
+- `carry/launch-control-continuity` `c1ef626`
 
-All sixteen carry heads were rewritten onto current Main or their declared
+All twenty-three carry heads were rewritten onto current Main or their declared
 dependency. Session naming and edited-root recovery declare the ADE feed as
 their base dependency. Local gate support contains the complete product
 composition, libfx authorization depends on that gate support, and the hosted
 CI, terminal-probe, and notification-sound carries remain independent
-Main-based heads.
+Main-based heads. Native-tool selection depends on the shared capability gate;
+launch-control continuity depends on every prompt, skill, context, permission,
+tool, and state launch-control carry.
 - Direct Codex usage beyond 64 sequential provider calls remains satisfied by
   upstream commit `dd409c27a7719e4dccaa30152c4e9087ec30edea`; no downstream
   carry exists for it.
 
 ## Current notes
 
-- On macOS, notification sound playback is single-flight per Fx process:
-  overlapping `afplay` cues are dropped, playback rearms after waiter reap,
-  and every attention cue still emits one unconditional terminal BEL. The
-  injected-spawner canary proves one spawn while held, BEL delivery for every
-  cue, and rearming after reap.
-- Focused and recorded proof both completed with 36 of 36 downstream canaries.
+- Global launch controls now cover fresh TUI, TUI resume and upgrade relaunch,
+  and ACP wherever the capability exists. `--no-native-tools`, `--tool`,
+  `--no-default-skills`, `--skills-dir`, `--no-project-instructions`,
+  `--permissions-file`, and `--state-dir` are shared; `--no-acp-mcp` remains
+  ACP-only because only an ACP client supplies ACP MCP servers.
+- Manual managed-PTY proof launched a TUI with the shared controls, observed
+  only the launch permission policy, confirmed selected-state writes never
+  entered ambient Home, and resumed the selected-state session with the same
+  controls. An ACP initialize/session-new exchange exercised the shared
+  controls plus `--tool read_file` and `--no-acp-mcp`.
+- Focused and recorded proof completed with 41 of 41 downstream canaries.
   Three subagent-manager probes and six render/replay probes passed with zero
   quarantine failures or signatures.
-- Post-install reconciliation check/apply/check preserved every unrelated fork
-  head, left all sixteen published carry heads as ancestors of Integration,
-  and found zero `DELETEME/*` refs. The bound checkout is clean on Integration.
-  Style extraction reports no drift.
-- The fmx distribution landing itself completed correctly: the gate,
-  publication, install, AgentStart pin, native `fx`/`fmx-fx` hashes, and smoke
-  probes all agree on `c8c928a6`. Its cross-repository session then declared
-  the work safe to close before the Workshop's post-handover reconciliation,
-  scratchpad update, and cycle-worktree cleanup. The 2026-08-27 recovery found
-  every worktree clean and every commit named, rebound the sixteen stale local
-  carry refs to the published graph under exact comparisons, and atomically
-  advanced fork/local Main to `139a77a1`; no product rollback or reinstall was
-  needed.
+- Post-install reconciliation check/apply/check preserved 142 unrelated fork
+  heads, left all twenty-three published carry heads as ancestors of
+  Integration, and found zero `DELETEME/*` refs. The bound checkout is clean on
+  Integration. Style extraction reports no drift.
+- fmx main `2e69cec` and AgentStart main `857dec8` pin the published SHA.
+  AgentStart validation and fmx's focused pin/setup tests passed; installed
+  `fx` and `fmx-fx` are byte-identical and report the expected fork identity.
+  AgentStart content convergence completed and its installed `collab` manifest
+  matches a fresh render byte-for-byte.
+- Full AgentStart convergence completed the Fx/fmx handoff, then stopped at
+  Agentdesk's unrelated served-screen-capture gate. Peekaboo reports Screen
+  Recording and Accessibility granted, but both local and daemon capture paths
+  answer `No displays available for capture`. Rerun
+  `~/code/agentstart/scripts/install.sh --install` with an active display,
+  then close this maintenance cycle.
 - The gate reads its contract from the path it is invoked through:
   `local-gate.sh` sets `root` from its own location. Invoke the canonical
   `~/code/fxnk/scripts/local-gate.sh` while that checkout is clean on `main`,
   or prove a different Workshop worktree's four contract files byte-identical
   to `main`; a branch label alone does not establish the receipt contract.
-- Full CI run `33040094733` for `c8c928a6` is queued and remains nonblocking
+- Full CI run `33069447046` for `c1ef6261` is running and remains nonblocking
   observability; its receipt is
-  `~/.local/state/fxnk/full-ci/c8c928a6bd795f583745b79d31db60e55d445f7f.json`.
-- AgentStart pins `c8c928a6` and its installer provides byte-identical native
-  `fx` and `fmx-fx` binaries while keeping fmx editable through its Bun link.
+  `~/.local/state/fxnk/full-ci/c1ef62613bf26b4a604eae8d0674c42d59906b04.json`.
 
 ## History
 
