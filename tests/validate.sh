@@ -24,6 +24,7 @@ bash -n scripts/style-swatch.sh
 bash -n scripts/style-capture.sh
 bash -n scripts/style-view.sh
 bash -n scripts/prefix-mode-demo.sh
+bash -n scripts/fmx-release-local.sh
 [ -x scripts/install.sh ] || fail "scripts/install.sh is not executable"
 [ -x scripts/local-gate.sh ] || fail "scripts/local-gate.sh is not executable"
 [ -x scripts/classify-quarantine.py ] \
@@ -34,6 +35,8 @@ bash -n scripts/prefix-mode-demo.sh
     || fail "scripts/reconcile-branches.sh is not executable"
 [ -x scripts/configure-supervision.sh ] \
     || fail "scripts/configure-supervision.sh is not executable"
+[ -x scripts/fmx-release-local.sh ] \
+    || fail "scripts/fmx-release-local.sh is not executable"
 [ -x tests/install-transaction.sh ] \
     || fail "tests/install-transaction.sh is not executable"
 [ -x tests/supervision-transaction.sh ] \
@@ -148,6 +151,16 @@ grep -Fx '### Hosted Full CI' MAINTAIN.md >/dev/null \
     || fail "the inventory does not carry the hosted Full CI trigger and serialization"
 grep -Fx '### fmx distribution' MAINTAIN.md >/dev/null \
     || fail "the inventory does not carry fmx's private Fx distribution"
+scripts/fmx-release-local.sh --help | grep -F 'build --worktree PATH' >/dev/null \
+    || fail "the local fmx Fx release fallback has no usable help"
+for local_release_contract in \
+    'scripts/fmx-release-local.sh' \
+    'stop the exact still-active hosted run before' \
+    'strategy.max-parallel: 1' \
+    'Linux Docker host is not a macOS runner'; do
+    grep -F "$local_release_contract" MAINTAIN.md >/dev/null \
+        || fail "the local fmx Fx release contract omits: $local_release_contract"
+done
 for distribution_contract in \
     '`FMX_FX_VERSION`' \
     'atomically installs the real native executable as' \

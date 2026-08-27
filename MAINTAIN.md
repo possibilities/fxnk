@@ -150,6 +150,24 @@ servers.
   pretending a release was published. Publication does not replace the Local
   development gate: only a proved Integration commit is eligible to reach the
   branch that triggers it.
+- Treat hosted release runners as replaceable capacity rather than a second
+  gate. When their queue cannot produce the installer payload promptly,
+  `scripts/fmx-release-local.sh` may assemble the exact published Integration
+  SHA: it builds Apple-silicon and Rosetta Intel archives serially on a trusted
+  Mac, accepts only checksum-verified Linux artifacts from the same Actions run
+  or a named trusted native build directory, verifies the complete sixteen-file
+  set, and uses the same immutable Blob paths and mutable installer pointers as
+  the hosted publisher. It must stop the exact still-active hosted run before
+  publishing, so two publishers never race an immutable path, and records a
+  mode-0600 exact-SHA receipt under `~/.local/state/fxnk/fmx-releases/`.
+- Never attach a persistent self-hosted runner to a generic GitHub-hosted label
+  in this public repository. Pull-request workflows also use labels such as
+  `macos-15`; matching one would let unrelated public jobs reach the machine.
+  A future self-hosted design needs a release-only label and workflow boundary,
+  ephemeral registration, and one runner process per host. A matrix that must
+  protect a shared host sets `strategy.max-parallel: 1`; the local publisher is
+  already serial. Linux may run on trusted bare metal or a Linux container, but
+  a Linux Docker host is not a macOS runner.
 - Authenticate the external publisher with a team-scoped Vercel access token,
   discover the exact public store and its connected release project from the
   configured base URL, and pull a short-lived production OIDC credential for
