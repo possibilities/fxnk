@@ -101,11 +101,11 @@ CI verdict yet, because the suite is still running, was cancelled by a newer
 publication, or never started. Deferred is normal; overdue is escalated.
 _Avoid_: pending gate, blocked ship.
 
-**Carve-out** — a surface fmx needs that fx never draws (a tray row, a modal,
-or unused Client space), designed from fx's principles and recorded in
+**Carve-out** — a surface an fxnk-based host needs that fx never draws (a tray
+row, a modal, or unused Client space), designed from fx's principles and recorded in
 `style/STYLE.md`
 § "Carve-outs", with the viewer rendering it from ramp tokens. It is not
 extracted, invisible to `style-extract.sh --check`, and never reconciled
 toward fx; a maintenance cycle revisits one only if upstream grows the
 surface.
-_Avoid_: exception, override, fmx theme.
+_Avoid_: exception, override, host theme.

@@ -42,26 +42,16 @@ const SECTIONS = ["roles", "transcript", "code", "glyphs", "carve-outs", "about"
 const role = (name: string, theme: Theme): StyleValue =>
   (tokens.roles as Record<string, Record<Theme, StyleValue>>)[name][theme]
 
-// fmx's own additions to the ramp, not extracted from fx (see STYLE.md
-// "Borrowing into fmx"): the focus hue is the host's blue in fmx and this
-// fallback here; the unused and surface fills sit 6% and 12% from the canvas
-// toward primary.
-const FMX_FOCUS = "#7dd3fc"
-const FMX_ERROR = (tokens.diff_markers.removed.truecolor as StyleValue).fg!.hex
-const UNUSED_SPACE_BLEND = 0.06
-const SURFACE_BLEND = 0.12
+// fmx's fixed indexed carve-outs, not extracted from fx (see STYLE.md
+// "Borrowing into fmx"). Focus/error are direct ANSI slots 4/1; these two
+// simulated values let the viewer show those terminal-owned intents.
+const FMX_FOCUS = "#000080"
+const FMX_ERROR = "#800000"
+const SURFACE: Record<Theme, string> = { dark: "#303030", light: "#e4e4e4" } // 236 / 254
+const UNUSED: Record<Theme, string> = { dark: "#262626", light: "#eeeeee" } // 235 / 255
 
-function mix(base: string, tint: string, amount: number): string {
-  const channel = (offset: number) => {
-    const from = parseInt(base.slice(offset, offset + 2), 16)
-    const to = parseInt(tint.slice(offset, offset + 2), 16)
-    return Math.round(from + (to - from) * amount).toString(16).padStart(2, "0")
-  }
-  return `#${channel(1)}${channel(3)}${channel(5)}`
-}
-
-const surface = (theme: Theme): string => mix(CANVAS[theme], role("hint", theme).fg!.hex, SURFACE_BLEND)
-const unused = (theme: Theme): string => mix(CANVAS[theme], role("hint", theme).fg!.hex, UNUSED_SPACE_BLEND)
+const surface = (theme: Theme): string => SURFACE[theme]
+const unused = (theme: Theme): string => UNUSED[theme]
 
 /** Paint text with an extracted style value, substituting the simulated
  * default foreground when the value carries no color of its own. */
@@ -185,18 +175,17 @@ function glyphsSection(theme: Theme): Line[] {
   return lines
 }
 
-/** The carve-outs: surfaces fx never draws, built from its principles and
- * painted here from the fallback tier — the ramp tokens, plus fmx's focus
- * hue and surface fill. Not extracted — see STYLE.md "Carve-outs". */
+/** The carve-outs: surfaces fx never draws, built from its fixed tokens plus
+ * fmx's indexed additions. Not extracted — see STYLE.md "Carve-outs". */
 function carveOutsSection(theme: Theme): Line[] {
   const t = theme
   const lines: Line[] = []
   const heading = (title: string, why: string): Line => [paint(role("system_notice_label", t), title, t), note("  " + why, t)]
-  lines.push([paint(role("tag", t), "carve-outs", t), note("  surfaces fx never draws, built from its principles — fallback tier shown", t)])
+  lines.push([paint(role("tag", t), "carve-outs", t), note("  surfaces fx never draws, using the same fixed dark/light sets", t)])
   lines.push([])
 
   // 1. A larger observing Client around a smaller sizing-owner frame.
-  lines.push(heading("unused space around a smaller sizing owner", "one flat host-relative field — no boundary or texture"))
+  lines.push(heading("unused space around a smaller sizing owner", "one flat theme step — no boundary or texture"))
   const ownerWidth = 46
   const unusedWidth = 14
   const unusedFill = (width: number): TextChunk => bg(unused(t))(note(" ".repeat(width), t))
@@ -267,12 +256,12 @@ function carveOutsSection(theme: Theme): Line[] {
   lines.push([D(" ┌" + "─".repeat(toastText.length) + "┐"), note("   toast: primary text on the surface fill", t)])
   lines.push([D(" │"), bg(surface(t))(value(toastText)), D("│")])
   lines.push([D(" └" + "─".repeat(toastText.length) + "┘")])
-  lines.push([E(" ┌─ "), value("error"), E(" ────────────┐"), note("   a failure: the host red on the border, heading bold accent", t)])
+  lines.push([E(" ┌─ "), value("error"), E(" ────────────┐"), note("   a failure: ANSI 1 on the border, heading bold accent", t)])
   lines.push([E(" │ "), bold(paint(role("red", t), "fx did not start", t)), value("   "), E("│")])
   lines.push([E(" └" + "─".repeat(20) + "┘")])
   lines.push([])
 
-  lines.push([note("no hue for a state, no underline; fmx paints all of this host-derived — these are the fallback values", t)])
+  lines.push([note("no hue for a state, no underline; every role is fixed for the selected fxnk theme", t)])
   return lines
 }
 

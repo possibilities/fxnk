@@ -1,9 +1,10 @@
-# The fx style guide, for fmx
+# The fxnk style guide
 
-fx is the living style guide for fmx: whenever fmx draws its own chrome —
-modals, toasts, tray rows, status rows — it should look like it belongs in the
-same instrument as the fx it embeds. This document extracts fx's visual
-language into rules and values fmx developers can borrow directly.
+fx is the living style guide for fxnk-based surfaces. Whenever fmx draws its
+own chrome — or an OpenTUI host such as agentbrowse frames a native surface —
+it should look like it belongs in the same instrument as fx. This document
+extracts fx's visual language into rules and values those developers can
+borrow directly.
 
 Ground truth is `style/tokens.json`, extracted from the fx source by
 `scripts/style-extract.sh`; the tables here mirror it, and on any conflict
@@ -23,6 +24,12 @@ text, never by hue. Exactly one thing in the product is chromatic: the diff
 marker (the `+`/`-` sign and line number), green `#30a46c` and red `#e5484d`.
 That restraint is the look. Principles:
 
+fxnk and Signal Room are complete, mutually exclusive design languages.
+Never combine their tokens, components, borders, or layout vocabulary in one
+application. An explicit user or project choice wins. Without one, infer from
+the application's established repository precedent; if that evidence is not
+reliable, ask the human before designing.
+
 - **One ramp, few steps.** Dark theme uses five grays: primary `255`,
   accent `252`, secondary `250`, dim `245`, divider `240` (xterm-256
   indices). Light theme mirrors them: `235`, `238`, `241`, `247`, `250`.
@@ -30,10 +37,10 @@ That restraint is the look. Principles:
   titles; dimness marks chrome; the brightest gray marks what matters now.
 - **One chromatic accent, spent on diffs.** Nothing else gets a hue. If
   everything is quiet, the one colored thing reads loudly.
-- **Never paint a theme the terminal did not choose.** fx inherits light or
-  dark from the terminal and restyles live when it changes. fmx already
-  holds the same principle (its surfaces derive from the host palette);
-  keep holding it.
+- **The terminal chooses the set, not the colors in it.** fx inherits light or
+  dark from the terminal and restyles live when it changes, but each set is
+  the fixed indexed palette above. Never sample the host palette or derive a
+  third grayscale ramp from its foreground and background.
 
 ## How fx themes itself
 
@@ -41,9 +48,12 @@ Two palettes — dark and light — and three ways to pick one:
 
 1. **Explicit:** `FX_THEME=light|dark` (env var; the only explicit knob fx
    has — there is no config key, no custom colors).
-2. **Implicit at startup:** OSC 11 query (`ESC ] 11 ; ? ST`) of the
-   terminal's background; light when relative luminance > 50%. Fallback:
-   `COLORFGBG`. Default: dark.
+2. **Implicit at startup:** one app-owned OSC 11 query (`ESC ] 11 ; ? ST`) of the
+   terminal's background; light when relative luminance > 50%. The response
+   deadline is 200 ms. Fallback: `COLORFGBG`. Default: dark. This is only a
+   mode query: the fxnk theme layer does not query OSC 10, OSC 4, or the full
+   host palette. A UI toolkit may own an independent capability handshake;
+   its color results never select or alter fxnk tokens.
 3. **Implicit live:** fx enables mode 2031 (`CSI ? 2031 h`) and listens for
    color-scheme notifications (`CSI ? 997 ; 1 n` dark, `CSI ? 997 ; 2 n`
    light), then re-queries OSC 11 (fenced by a DA1 `CSI c` round trip) and
@@ -56,14 +66,17 @@ only for the diff markers, which fall back to indexed `71`/`167`.
 ### fmx is fx's terminal
 
 fmx embeds fx in a PTY, so fmx is the "terminal" in everything above. The
-edge obligations, all already implemented in `fmx/src/host-palette.ts` and
+edge obligations, implemented in `fmx/src/host-palette.ts` and
 `fx-terminal.ts`, are:
 
-- forward the host palette to the embedded terminal (OSC 4/10/11/…
-  sequences from `buildHostPaletteSequence`) so fx's OSC 11 probe sees the
-  real background;
-- emit `themeModeReport` (the 997 notification) into fx when the host
-  theme changes, since fx enabled mode 2031;
+- resolve the outer mode with the same precedence and the same single app-owned
+  OSC 11 query before the first frame; a timed-out initial response is ignored
+  and never applied late;
+- set only the embedded terminal's OSC 11 default background, so fx's own
+  probe selects the same mode; never mirror OSC 4, OSC 10, cursor, highlight,
+  or other host-palette values;
+- emit `themeModeReport` (the 997 notification) into fx after a genuine outer
+  theme change, since fx enabled mode 2031;
 - let DA1 responses (`CSI ... c`) reach fx — it uses them as query fences;
 - pass `FX_THEME` through untouched when the user sets it.
 
@@ -170,10 +183,10 @@ larger than that sizing-owner frame, its extra cells on the right and bottom
 are neither another pane nor a navigable viewport. They are one flat
 **unused field** behind the shared frame at the top left.
 
-| part | dark host | light host |
+| part | dark | light |
 |---|---|---|
-| shared frame | the host background | the host background |
-| unused field | host background mixed 6% toward its foreground — lighter than the frame, below every surface | host background mixed 6% toward its foreground — darker than the frame, above every surface |
+| shared frame | terminal default background | terminal default background |
+| unused field | indexed 235 `#262626` | indexed 255 `#eeeeee` |
 
 The color difference is the whole affordance. There is no boundary line or
 outer border, and no glyph, hatch, grid, dither, noise, or other texture. On
@@ -188,7 +201,7 @@ make that Client the sizing owner, at which point the Runtime organically
 resizes and every Client repaints.
 
 Why this shape: a border made the shared frame look nested, and any repeated
-mark made unused space compete with the work. A theme-relative flat field is
+mark made unused space compete with the work. A fixed theme-step field is
 visible without becoming content of its own.
 
 ### Agent rows in the tray
@@ -218,18 +231,17 @@ what matters now, bold marks the path, and no state is a hue.
 | blocked glyph `×` `?` `↻` | **bold `hint`** — the one bright thing, what needs the human | bold 255 | bold 235 |
 | done glyph `✓` | `permission_auto` (accent) — one step brighter than its row, fx's finished-tool idiom | 252 | 238 |
 | working `◐`, idle `○`, unknown `·` glyphs | `dim` | 245 | 247 |
-| active row | surface fill, 12% from the background toward the foreground — fmx's own step below `divider` | — | — |
+| active row | surface fill, indexed 236 `#303030` | indexed 254 `#e4e4e4` |
 
 Why this shape: fx marks a running tool call dim and a finished one accent,
 which is exactly the working/done pair; blocked takes the brightest gray and
 bold because in fx's language "what matters now" is the only thing allowed
 to be loud. The fill rather than inversion or bold for the active row: bold
 is already the path, and fx's inverse-video button is far too loud for a
-row that is on screen all day. Before the host palette answers, names are
-the terminal's own ANSI gray (slot 8, dim on any theme) so the first frame
-needs no guess; afterwards they are `dim`. Not taken: the five ANSI status
+row that is on screen all day. The mode is resolved before the first frame,
+so names use the selected set's `dim` token immediately. Not taken: the five ANSI status
 hues fmx used before this guide (red/yellow/cyan/green/gray — state by hue,
-which fx forbids), and a host-red "attention" exception for blocked (one
+which fx forbids), and a red "attention" exception for blocked (one
 more hue than fx spends, and the bold glyph already reads first).
 
 ### Surfaces over the stage
@@ -253,10 +265,10 @@ project/model pickers (`fmx/src/launch-dialog.ts`), and toast
 | part | role | dark | light |
 |---|---|---|---|
 | scrim behind a modal or dialog | `#00000033` — a 20% black darkening, fmx's one opacity; not a hue, and reads as a dimmed stage on either theme | — | — |
-| body | the host background (modal, dialog, picker); the surface fill (toast, lifted off the stage) | — | — |
-| border, surface that takes keys | **focus** — the host's blue, fmx's own; fallback `#7dd3fc` | — | — |
+| body | terminal default background (modal, dialog, picker); the fixed surface fill (toast, lifted off the stage) | — | — |
+| border, surface that takes keys | **focus** — direct ANSI index 4; terminal-defined blue | 4 | 4 |
 | border, surface that takes no keys (toast) | `dim` | 245 | 247 |
-| border, surface reporting a failure | **error** — the host's red; fallback fx's `#e5484d` | — | — |
+| border, surface reporting a failure | **error** — direct ANSI index 1; terminal-defined red | 1 | 1 |
 | title in the border | `hint` (primary) | 255 | 235 |
 | label — a dialog row's name, a help key (bold) | `system_notice_text` (secondary) | 250 | 241 |
 | value, body text | `hint` (primary) | 255 | 235 |
@@ -278,45 +290,43 @@ one red per surface), bold titles (OpenTUI box titles take a color only).
 
 ## Borrowing into fmx
 
-fmx's own surfaces derive from the host terminal's palette
-(`fmx/src/host-palette.ts`, `hostRamp`), which is *more* faithful to the
-shared principle than fx's fixed grays. So the rule is not "copy the hex":
+fmx and every fxnk-based OpenTUI app use the same fixed indexed sets as fx.
+The terminal supplies only the default background and the dark/light choice:
 
-1. **Reproduce the ramp as relationships.** fx's five steps become
-   fractions of the way from the host's background to its foreground. The
-   ratios are read off tokens.json (dark 255/252/250/245/240 on a
-   near-black canvas, light 235/238/241/247/250 on a near-white one), and
-   fmx adds two steps below the divider: a raised surface fill for the active
-   tray row and toast body, then a quieter unused-field fill between that
-   surface and the terminal background.
+| ramp step | dark | light |
+|---|---|---|
+| foreground / primary | 255 `#eeeeee` | 235 `#262626` |
+| accent | 252 `#d0d0d0` | 238 `#444444` |
+| secondary | 250 `#bcbcbc` | 241 `#626262` |
+| dim | 245 `#8a8a8a` | 247 `#9e9e9e` |
+| divider | 240 `#585858` | 250 `#bcbcbc` |
+| surface (carve-out) | 236 `#303030` | 254 `#e4e4e4` |
+| unused field (carve-out) | 235 `#262626` | 255 `#eeeeee` |
+| background | terminal default (`SGR 49`) | terminal default (`SGR 49`) |
 
-   | ramp step | fx role | fraction bg → fg | fallback |
-   |---|---|---|---|
-   | foreground | `hint`, `tag` (primary) | the host foreground | 255 `#eeeeee` |
-   | accent | `warning`/`green`/`red`, `system_notice_label`, `permission_auto` | 0.85 | 252 `#d0d0d0` |
-   | secondary | `system_notice_text` | 0.75 | 250 `#bcbcbc` |
-   | dim | `dim`, `statusline` | 0.5 | 245 `#8a8a8a` |
-   | divider | `divider` | 0.3 | 240 `#585858` |
-   | surface | — (fmx's fill) | 0.12 | `#353535` |
-   | unused | — (fmx's unused Client field) | 0.06 | `#292929` |
-   | background | the terminal's | the host background | 234 `#1c1c1c` |
-
-2. **The fallback tier preserves fx's dark column exactly.** A host that
-   answers no color query gets fx's shared ramp values verbatim; fmx's two
-   fill steps are derived from that column's background and foreground at
-   their listed ratios. On any real canvas the blends land within a step of
-   it. A host that answers only its background gets fx's light or dark primary
-   by that background's brightness.
-3. **Two hues, one job each.** `focus` is the host's blue (ANSI 4, then
-   12; fallback `#7dd3fc`): the border of a surface that takes keys, the
-   row caret `▎`, the prompt cursor. `error` is the host's red (ANSI 1,
-   then 9; fallback fx's own `#e5484d`): the border of a surface that
-   reports a failure. Nothing else in fmx is chromatic. A new state gets a
-   glyph and a weight, never a hue.
-4. **Match the glyph vocabulary** where fmx shows the same concepts:
+1. **Resolve before first paint.** Use the fx precedence exactly:
+   case-insensitive `FX_THEME=light|dark`, one OSC 11 background query,
+   `COLORFGBG`, then dark. A late initial OSC 11 answer is ignored and never
+   applied, so startup cannot flash or retint after content appears.
+2. **Never derive or query a palette for styling.** The app theme layer does
+   not query OSC 4 or OSC 10 and does not blend a grayscale ramp from terminal
+   RGB. OSC 11 answers only two things: which fixed set to use and which
+   background to expose to an embedded fx terminal. Ignore color data from any
+   independent UI-toolkit capability handshake.
+3. **Replace the complete set live.** Enable mode 2031. Treat CSI 997 as a
+   refresh trigger, fence a fresh OSC 11 sample with DA1 as fx does, then swap
+   every role in one render turn. A newer notification invalidates an in-flight
+   sample and starts a fresh fenced cycle. If `FX_THEME` is explicit, own the
+   protocol replies but never query or change themes.
+4. **Two ANSI intents, one job each.** `focus` is direct ANSI index 4: the
+   border of a surface that takes keys, the row caret `▎`, and the prompt
+   cursor. `error` is direct ANSI index 1: the border of a surface reporting
+   failure. Do not sample, brighten, or replace these slots. Nothing else in
+   fmx is chromatic; a new state gets a glyph and a weight, never a hue.
+5. **Match the glyph vocabulary** where fmx shows the same concepts:
    Agent state glyphs borrowed from fx's tool vocabulary, `·` separators,
    prompt rails.
-5. **State by shape and weight first**, color second — a colorblind-safe
+6. **State by shape and weight first**, color second — a colorblind-safe
    habit fx enforces by having almost no color at all.
 
 The scrim behind a modal (`#00000033`) is the one opacity fmx uses: a 20%

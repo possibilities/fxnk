@@ -22,8 +22,9 @@ or its installer.
   cycle reconciles only what that section states.
 - `SCRATCHPAD.md` is current maintenance state, not a second specification or
   an unbounded transcript.
-- `style/` is the fx style guide for fmx: `style/STYLE.md` (prose for fmx
-  developers), `style/tokens.json` (extracted ground truth; on conflict it
+- `style/` is the fxnk style guide for fx-derived surfaces such as fmx and the
+  agentbrowse OpenTUI frontend: `style/STYLE.md` (developer prose),
+  `style/tokens.json` (extracted ground truth; on conflict it
   wins), and `style/captures/` (swatch sheets and welcome-screen PNGs).
   `style/viewer/` is the interactive visual guide (bun + `@opentui/core`,
   pinned to fmx's version), opened with `scripts/style-view.sh`.

@@ -620,10 +620,11 @@ the next machine convergence will correctly reject that stale consumer pin.
 
 ## Style guide
 
-This repository also owns the fx style guide for fmx: `style/STYLE.md`, its
-machine-readable ground truth `style/tokens.json`, and the rendered
-references in `style/captures/`. fmx (`~/code/fmx`) treats fx as its living
-style guide; this is where that edge is documented and kept true.
+This repository also owns the fxnk style guide for fx-derived surfaces:
+`style/STYLE.md`, its machine-readable ground truth `style/tokens.json`, and
+the rendered references in `style/captures/`. fmx (`~/code/fmx`) and the
+agentbrowse OpenTUI frontend treat fx as their living style guide; this is
+where that edge is documented and kept true.
 
 Methodology, run whenever the bound checkout's `integration` moves (every
 maintenance cycle qualifies, since carried features can touch UI):
@@ -669,9 +670,9 @@ The extractor's five parsed sites (role palette `src/ui/render.zig`
 elsewhere in fx are always dark-ramp values covered by the retint map, so
 tracking the five sites plus the index census is complete coverage.
 
-Carve-outs are the one part of the guide that is not extracted. Surfaces fmx
-needs and fx never draws — today the tray's agent rows, surfaces drawn over
-the stage, and the unused field around a smaller sizing owner — are designed
+Carve-outs are the one part of the guide that is not extracted. Surfaces an
+fxnk-based host needs and fx never draws — today the tray's agent rows,
+surfaces drawn over the stage, and the unused field around a smaller sizing owner — are designed
 from fx's principles and recorded in
 `style/STYLE.md` § "Carve-outs", with the viewer's "carve-outs" section
 rendering them from ramp tokens. They are deliberately absent from
