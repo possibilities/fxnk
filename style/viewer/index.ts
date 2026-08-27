@@ -238,8 +238,8 @@ function carveOutsSection(theme: Theme): Line[] {
   lines.push([paint(role("dim", t), "     · ", t), name("starting"), annotate(15, "unknown — dim")])
   lines.push([])
 
-  // 3. Surfaces over the stage: focus border takes keys, dim hairline takes none.
-  lines.push(heading("surfaces over the stage", "focus border takes keys · dim hairline takes none · error border reports failure"))
+  // 3. Surfaces over the stage: focus marks keys and error marks failure.
+  lines.push(heading("surfaces over the stage", "focus border takes keys · error border reports failure"))
   const F = (text: string) => fg(FMX_FOCUS)(text)
   const E = (text: string) => fg(FMX_ERROR)(text)
   const D = (text: string) => paint(role("dim", t), text, t)
@@ -252,10 +252,6 @@ function carveOutsSection(theme: Theme): Line[] {
   lines.push([F(" │ "), value("  "), label("project   "), value("~/code/fmx"), value(pad(22)), F("│")])
   lines.push([F(" │ "), value("  "), label("worktree  "), value("no"), value(pad(14)), F("│")])
   lines.push([F(" └" + "─".repeat(inner + 1) + "┘")])
-  const toastText = " fmx / main / agent 3 started "
-  lines.push([D(" ┌" + "─".repeat(toastText.length) + "┐"), note("   toast: primary text on the surface fill", t)])
-  lines.push([D(" │"), bg(surface(t))(value(toastText)), D("│")])
-  lines.push([D(" └" + "─".repeat(toastText.length) + "┘")])
   lines.push([E(" ┌─ "), value("error"), E(" ────────────┐"), note("   a failure: ANSI 1 on the border, heading bold accent", t)])
   lines.push([E(" │ "), bold(paint(role("red", t), "fx did not start", t)), value("   "), E("│")])
   lines.push([E(" └" + "─".repeat(20) + "┘")])

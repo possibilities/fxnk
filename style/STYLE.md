@@ -168,7 +168,7 @@ symbols like `✓` and `→` are fine).
 
 ## Carve-outs: what fx has no surface for
 
-fx is a transcript with a prompt; it has no tray, transient stage surfaces, or
+fx is a transcript with a prompt; it has no tray, overlaid stage surfaces, or
 shared Client field. When fmx needs a surface fx never draws, the rule is to
 build it from fx's principles — one ramp, weight and glyph for state, no hue,
 no underline — and record it here as a carve-out. Nothing below is extracted from fx:
@@ -246,10 +246,10 @@ more hue than fx spends, and the bold glyph already reads first).
 
 ### Surfaces over the stage
 
-fx has no modal, dialog, picker, or toast; its prompts are inline. fmx's
-help modal and spawn error (`fmx/src/multiplexer.ts`), launch dialog and
-project/model pickers (`fmx/src/launch-dialog.ts`), and toast
-(`fmx/src/toast.ts`) are one family: a bordered body over a dimmed stage.
+fx has no modal, dialog, or picker; its prompts are inline. fmx's help modal
+and spawn error (`fmx/src/multiplexer.ts`), launch dialog, and project/model
+pickers (`fmx/src/launch-dialog.ts`) are one family: a bordered body over a
+dimmed stage.
 
 ```
 ┌─ launch ─────────────────────────────┐
@@ -257,17 +257,13 @@ project/model pickers (`fmx/src/launch-dialog.ts`), and toast
 │   project   ~/code/fmx               │
 │   worktree  no                       │
 └──────────────────────────────────────┘
-        ┌────────────────────────┐
-        │ fmx / main / agent 3 started │        dim hairline: this takes none
-        └────────────────────────┘
 ```
 
 | part | role | dark | light |
 |---|---|---|---|
 | scrim behind a modal or dialog | `#00000033` — a 20% black darkening, fmx's one opacity; not a hue, and reads as a dimmed stage on either theme | — | — |
-| body | terminal default background (modal, dialog, picker); the fixed surface fill (toast, lifted off the stage) | — | — |
+| body | terminal default background | — | — |
 | border, surface that takes keys | **focus** — direct ANSI index 4; terminal-defined blue | 4 | 4 |
-| border, surface that takes no keys (toast) | `dim` | 245 | 247 |
 | border, surface reporting a failure | **error** — direct ANSI index 1; terminal-defined red | 1 | 1 |
 | title in the border | `hint` (primary) | 255 | 235 |
 | label — a dialog row's name, a help key (bold) | `system_notice_text` (secondary) | 250 | 241 |
@@ -280,13 +276,12 @@ project/model pickers (`fmx/src/launch-dialog.ts`), and toast
 
 Why this shape: focus is the one hue fx's guide lets fmx keep, and "this
 surface has your keys" is what focus means, so every surface that takes
-keys wears it on its border and nowhere else takes it; the toast takes no
-keys and gets the hairline instead. The picker is fx's completion menu
-(selected row bold primary). The help modal's key/description pairs and
-the dialog's label/value pairs are fx's notice-label/notice-text pairing.
-Not taken: a green success toast (fx's `green` is gray; "started" is in the
-words), red text inside the error modal (the border already says failure;
-one red per surface), bold titles (OpenTUI box titles take a color only).
+keys wears it on its border and nowhere else takes it. The picker is fx's
+completion menu (selected row bold primary). The help modal's key/description
+pairs and the dialog's label/value pairs are fx's notice-label/notice-text
+pairing. Not taken: red text inside the error modal (the border already says
+failure; one red per surface), bold titles (OpenTUI box titles take a color
+only).
 
 ## Borrowing into fmx
 
