@@ -143,6 +143,16 @@ grep -F '~/.local/state/fxnk/full-ci/pending.json' MAINTAIN.md >/dev/null \
     || fail "the gate does not make an open verdict a cycle input"
 grep -Fx '### Hosted Full CI' MAINTAIN.md >/dev/null \
     || fail "the inventory does not carry the hosted Full CI trigger and serialization"
+grep -Fx '### fmx distribution' MAINTAIN.md >/dev/null \
+    || fail "the inventory does not carry fmx's private Fx distribution"
+for distribution_contract in \
+    '`FMX_FX_VERSION`' \
+    'atomically installs the real native executable as' \
+    'replace the separate `fx` installed by this Workshop for AgentStart' \
+    '`FX_AUTO_UPGRADE=0`'; do
+    grep -F "$distribution_contract" MAINTAIN.md >/dev/null \
+        || fail "the fmx distribution contract omits: $distribution_contract"
+done
 # shellcheck disable=SC2016 # Match the literal documented SHA variable.
 grep -F 'scripts/install.sh --install --sha "$integration_sha"' MAINTAIN.md >/dev/null \
     || fail "the consumer does not name the installer"

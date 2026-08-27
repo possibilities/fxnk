@@ -109,6 +109,7 @@ already satisfied by upstream needs none.
 | `carry/local-gate-support` | Local gate support |
 | `carry/terminal-probe-determinism` | Terminal probe determinism |
 | `carry/hosted-full-ci` | Hosted Full CI |
+| `carry/fmx-distribution` | fmx distribution |
 
 ### Fork identity
 
@@ -117,6 +118,28 @@ already satisfied by upstream needs none.
   `fxnk <fxnk-version> (fx <fx-version>)`. The independent fxnk version follows
   semantic versioning for downstream consumer compatibility; the Fx version
   remains the current upstream source version.
+
+### fmx distribution
+
+- Publish every approved Integration commit as native `fmx-fx` archives for
+  Linux and macOS on x86_64 and arm64, with separate SHA-256 files. Immutable
+  artifacts live under that exact full commit; only the public `setup.sh` and
+  `latest.txt` pointers may be replaced.
+- Provide a one-command installer from the same Vercel Blob store as fmx. It
+  accepts an exact full Integration commit through `FMX_FX_VERSION`, defaults
+  to `latest.txt`, verifies the archive checksum and the exact
+  `--fxnk-version` probe, and atomically installs the real native executable as
+  `fmx-fx`. It does not create or align a checkout, mutate the Fx profile, or
+  replace the separate `fx` installed by this Workshop for AgentStart.
+- Run this publication only for Integration and manual dispatch, serialized
+  across the fork. A missing Blob credential or base URL is diagnosed without
+  pretending a release was published. Publication does not replace the Local
+  development gate: only a proved Integration commit is eligible to reach the
+  branch that triggers it.
+- fmx pins the exact Integration commit it installs, resolves its sibling
+  `fmx-fx` once per Runtime, and launches every Agent with
+  `FX_AUTO_UPGRADE=0`. An Agent never spends another lookup or compatibility
+  probe, and the private binary cannot update itself into an upstream build.
 
 ### System prompts
 

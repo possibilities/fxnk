@@ -57,6 +57,12 @@ _Avoid_: CI result, approval, mutable status.
 integration branch into a ReleaseSafe binary on the system path.
 _Avoid_: maintainer, updater.
 
+**fmx Fx installer** — The public one-command installer carried by Fx for
+fmx's private `fmx-fx` binary. It downloads one exact published Integration
+commit from the shared Vercel Blob store and never replaces the separate `fx`
+binary that the Workshop Installer and AgentStart manage.
+_Avoid_: Installer, Fx updater, AgentStart installer.
+
 **Supervision policy** — fxnk's tracked `supervision/SUPERVISE.md`, installed
 locally into the upstream checkout with `supervisor.trunk=integration`. It keeps
 Fx work visible to `supervise` while routing product integration to the
