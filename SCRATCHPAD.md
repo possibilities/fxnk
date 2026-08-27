@@ -5,10 +5,9 @@ entries on every maintenance cycle and appends one compact history entry.
 
 ## Baseline
 
-- Current maintenance: 2026-08-27. Fork publication, direct installation, and
-  the exact fmx and AgentStart pin handoff are complete. One unrelated
-  AgentStart full-convergence gate remains: Peekaboo has both required TCC
-  grants but reports no active display from either capture path.
+- Current maintenance: 2026-08-27. Fork publication, direct installation, the
+  exact fmx and AgentStart pin handoff, and full AgentStart convergence are
+  complete.
 - Upstream base and Main mirror:
   `c011b118f41ca6950e1f5e3deb38950ab0771a74`
 - Published and installed Integration:
@@ -86,23 +85,22 @@ tool, and state launch-control carry.
   heads, left all twenty-three published carry heads as ancestors of
   Integration, and found zero `DELETEME/*` refs. The bound checkout is clean on
   Integration. Style extraction reports no drift.
-- fmx main `2e69cec` and AgentStart main `857dec8` pin the published SHA.
-  AgentStart validation and fmx's focused pin/setup tests passed; installed
-  `fx` and `fmx-fx` are byte-identical and report the expected fork identity.
-  AgentStart content convergence completed and its installed `collab` manifest
-  matches a fresh render byte-for-byte.
-- Full AgentStart convergence completed the Fx/fmx handoff, then stopped at
-  Agentdesk's unrelated served-screen-capture gate. Peekaboo reports Screen
-  Recording and Accessibility granted, but both local and daemon capture paths
-  answer `No displays available for capture`. Rerun
-  `~/code/agentstart/scripts/install.sh --install` with an active display,
-  then close this maintenance cycle.
+- fmx pin commit `2e69cec` and AgentStart pin commit `857dec8` carry the
+  published SHA. AgentStart validation and fmx's focused pin/setup tests
+  passed; installed `fx` and `fmx-fx` are byte-identical and report the
+  expected fork identity.
+- Full AgentStart convergence completed successfully once an active display
+  was available. The one permitted local in-process preflight used no remote
+  access or GUI input, and its generated capture files were moved to Trash
+  without being opened. The installer's served-screen-capture gate then
+  passed. The installed `collab` skill and OpenAI manifest match a fresh render
+  byte-for-byte.
 - The gate reads its contract from the path it is invoked through:
   `local-gate.sh` sets `root` from its own location. Invoke the canonical
   `~/code/fxnk/scripts/local-gate.sh` while that checkout is clean on `main`,
   or prove a different Workshop worktree's four contract files byte-identical
   to `main`; a branch label alone does not establish the receipt contract.
-- Full CI run `33069447046` for `c1ef6261` is running and remains nonblocking
+- Full CI run `33069447046` for `c1ef6261` is queued and remains nonblocking
   observability; its receipt is
   `~/.local/state/fxnk/full-ci/c1ef62613bf26b4a604eae8d0674c42d59906b04.json`.
 
@@ -151,3 +149,7 @@ tool, and state launch-control carry.
   published and installed `c8c928a6`, advanced fmx and AgentStart, then
   recovered the omitted Workshop closure by reconciling stale local carry/Main
   refs and recording the delivered state without losing any commit.
+- 2026-08-27: Added shared launch controls across fresh TUI, resumed and
+  relaunched TUI, and ACP; replayed twenty-three carries onto `c011b118`, passed
+  all 41 Local-gate canaries, published and installed `c1ef6261`, advanced the
+  fmx and AgentStart pins, and completed full AgentStart convergence.
