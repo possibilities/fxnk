@@ -347,7 +347,7 @@ publish_release_set() {
     (
         cd "$credentials"
         npx --yes "vercel@$vercel_version" env pull .env.local --yes \
-            --environment=production --project "$project_id" --scope "$release_scope"
+            --environment=development --project "$project_id" --scope "$release_scope"
     )
     pulled_store=$(sed -n 's/^BLOB_STORE_ID=//p' "$credentials/.env.local" | tail -n 1)
     pulled_store=${pulled_store#\"}
@@ -362,7 +362,7 @@ publish_release_set() {
     export VERCEL_OIDC_TOKEN="$oidc_token"
     export BLOB_STORE_ID="$pulled_store"
     export VERCEL_PROJECT_ID="$project_id"
-    export VERCEL_ENV=production
+    export VERCEL_ENV=development
 
     base_without_scheme=${release_base_url#https://}
     case "$base_without_scheme" in

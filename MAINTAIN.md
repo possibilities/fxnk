@@ -168,11 +168,14 @@ servers.
   protect a shared host sets `strategy.max-parallel: 1`; the local publisher is
   already serial. Linux may run on trusted bare metal or a Linux container, but
   a Linux Docker host is not a macOS runner.
-- Authenticate the external publisher with a team-scoped Vercel access token,
-  discover the exact public store and its connected release project from the
-  configured base URL, and pull a short-lived production OIDC credential for
-  each run. Refuse an ambiguous project or a credential for another store. Do
-  not retain or require a long-lived Blob read-write token in GitHub.
+- Authenticate the external publisher with a file-backed Vercel CLI account
+  session, discover the exact public store and its connected release project
+  from the configured base URL, and pull a short-lived local-development OIDC
+  credential for each run. The release project connects that same store to
+  development as well as its hosted environments; local CLI OIDC tokens are
+  always development-scoped even when production variables are requested.
+  Refuse an ambiguous project or a credential for another store. Do not retain
+  or require a long-lived Blob read-write token in GitHub.
 - fmx pins the exact Integration commit it installs, resolves its sibling
   `fmx-fx` once per Runtime, and launches every Agent with
   `FX_AUTO_UPGRADE=0`. An Agent never spends another lookup or compatibility
