@@ -377,12 +377,14 @@ publish_release_set() {
     blob_put() {
         local local_path="$1" relative_path="$2" content_type="$3"
         local overwrite="$4" max_age="$5"
+        local -a overwrite_args=()
+        [ "$overwrite" = true ] && overwrite_args=(--allow-overwrite=true)
         (
             cd "$credentials"
             npx --yes "vercel@$vercel_version" blob put "$local_path" \
                 --access public --pathname "$(blob_path "$relative_path")" \
-                --content-type "$content_type" --add-random-suffix=false \
-                --allow-overwrite="$overwrite" --cache-control-max-age="$max_age"
+                --content-type "$content_type" "${overwrite_args[@]}" \
+                --cache-control-max-age="$max_age"
         )
     }
     upload_immutable() {
@@ -428,6 +430,71 @@ publish_release_set() {
         cmp -s "$local_path" "$work_dir/public-$name" \
             || fail "public artifact differs after publication: $name"
     done
+
+    prune_historical_fx_releases() {
+        local release_prefix keep_prefix listing pathname all_count
+        local -a historical_paths=()
+        release_prefix=$(blob_path fx/releases/)
+        keep_prefix=$(blob_path "fx/releases/$sha/")
+        (
+            cd "$credentials"
+            npx --yes "vercel@$vercel_version" blob list --limit 1000 \
+                --mode expanded
+        ) >"$work_dir/blob-list.txt" 2>&1
+        listing=$(<"$work_dir/blob-list.txt")
+        all_count=0
+        while IFS= read -r pathname; do
+            [ -n "$pathname" ] || continue
+            all_count=$((all_count + 1))
+            case "$pathname" in
+                "$release_prefix"*)
+                    case "$pathname" in
+                        "$keep_prefix"*) ;;
+                        *) historical_paths+=("$pathname") ;;
+                    esac
+                    ;;
+            esac
+        done < <(printf '%s\n' "$listing" \
+            | awk 'NF >= 4 && $3 ~ /\// && $4 ~ /^https:\/\// { print $3 }')
+        [ "$all_count" -lt 1000 ] \
+            || fail 'Blob retention discovery reached its 1000-object bound'
+        if [ "${#historical_paths[@]}" -eq 0 ]; then
+            printf 'No historical fmx Fx releases to prune.\n'
+            return 0
+        fi
+        for pathname in "${historical_paths[@]}"; do
+            case "$pathname" in
+                "$release_prefix"*) ;;
+                *) fail "Blob retention selected an unrelated path: $pathname" ;;
+            esac
+            case "$pathname" in
+                "$keep_prefix"*) fail "Blob retention selected the current release: $pathname" ;;
+            esac
+        done
+        (
+            cd "$credentials"
+            npx --yes "vercel@$vercel_version" blob del "${historical_paths[@]}"
+        )
+        (
+            cd "$credentials"
+            npx --yes "vercel@$vercel_version" blob list --limit 1000 \
+                --mode expanded
+        ) >"$work_dir/blob-list-after-prune.txt" 2>&1
+        while IFS= read -r pathname; do
+            case "$pathname" in
+                "$release_prefix"*)
+                    case "$pathname" in
+                        "$keep_prefix"*) ;;
+                        *) fail "historical Blob path remains after pruning: $pathname" ;;
+                    esac
+                    ;;
+            esac
+        done < <(awk 'NF >= 4 && $3 ~ /\// && $4 ~ /^https:\/\// { print $3 }' \
+            "$work_dir/blob-list-after-prune.txt")
+        printf 'Pruned %s historical fmx Fx release objects.\n' \
+            "${#historical_paths[@]}"
+    }
+    prune_historical_fx_releases
 
     receipt_dir="$state_root/fmx-releases"
     mkdir -p "$receipt_dir"

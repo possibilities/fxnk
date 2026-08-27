@@ -157,9 +157,17 @@ grep -F -- '--environment=development' scripts/fmx-release-local.sh >/dev/null \
     || fail "the local fmx Fx release fallback does not request local OIDC"
 grep -F 'export VERCEL_ENV=development' scripts/fmx-release-local.sh >/dev/null \
     || fail "the local fmx Fx release fallback does not identify local OIDC"
+if grep -F -- '--add-random-suffix=' scripts/fmx-release-local.sh >/dev/null; then
+    fail "the local fmx Fx release fallback stringifies a Blob boolean flag"
+fi
+grep -F 'overwrite_args=(--allow-overwrite=true)' scripts/fmx-release-local.sh >/dev/null \
+    || fail "the local fmx Fx release fallback does not gate mutable overwrite"
+grep -F 'prune_historical_fx_releases' scripts/fmx-release-local.sh >/dev/null \
+    || fail "the local fmx Fx release fallback does not prune prior releases"
 for local_release_contract in \
     'scripts/fmx-release-local.sh' \
     'stop the exact still-active hosted run before' \
+    'delete every older exact-commit release only after' \
     'strategy.max-parallel: 1' \
     'Linux Docker host is not a macOS runner'; do
     grep -F "$local_release_contract" MAINTAIN.md >/dev/null \

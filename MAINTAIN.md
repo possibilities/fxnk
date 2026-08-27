@@ -138,7 +138,9 @@ servers.
 - Publish every approved Integration commit as native `fmx-fx` archives for
   Linux and macOS on x86_64 and arm64, with separate SHA-256 files. Immutable
   artifacts live under that exact full commit; only the public `setup.sh` and
-  `latest.txt` pointers may be replaced.
+  `latest.txt` pointers may be replaced. Keep only the current Integration
+  release in Blob: delete every older exact-commit release only after the new
+  complete set and both mutable pointers have been publicly verified.
 - Provide a one-command installer from the same Vercel Blob store as fmx. It
   accepts an exact full Integration commit through `FMX_FX_VERSION`, defaults
   to `latest.txt`, verifies the archive checksum and the exact
