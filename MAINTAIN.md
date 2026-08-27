@@ -92,6 +92,13 @@ reconciles only what this section names. The carry map makes that pairing
 explicit; one behavioral entry may need multiple carries, while a requirement
 already satisfied by upstream needs none.
 
+Launch controls are global and apply to fresh interactive TUI launches, TUI
+resume and controlled relaunch paths, and ACP whenever the controlled
+capability exists on those surfaces. A feature requested through ACP is not
+ACP-scoped by default. An ACP-only control must name its protocol-specific
+boundary; `--no-acp-mcp` is one because only an ACP client supplies ACP MCP
+servers.
+
 | Carry | Feature entry |
 | --- | --- |
 | `carry/fxnk-version` | Fork identity |
@@ -110,6 +117,13 @@ already satisfied by upstream needs none.
 | `carry/terminal-probe-determinism` | Terminal probe determinism |
 | `carry/hosted-full-ci` | Hosted Full CI |
 | `carry/fmx-distribution` | fmx distribution |
+| `carry/acp-capability-gates` | Launch capability gates |
+| `carry/acp-tool-selection` | Native-tool selection |
+| `carry/exclusive-skill-roots` | Exclusive skill roots |
+| `carry/acp-project-instructions` | Project instructions |
+| `carry/acp-permission-policy` | Launch permission policy |
+| `carry/acp-state-isolation` | State isolation |
+| `carry/launch-control-continuity` | Launch-control continuity |
 
 ### Fork identity
 
@@ -145,6 +159,93 @@ already satisfied by upstream needs none.
 
 - Support `--append-system-prompt-file` and `--system-prompt-file` for appending
   to and replacing the system prompt.
+
+### Launch capability gates
+
+- Support global `--no-native-tools` on interactive TUI and ACP launches. The
+  empty set is authoritative for both model advertisement and dispatch;
+  neither the main session nor an in-process child may recover the built-in
+  default set.
+- Let `fx acp --no-acp-mcp` refuse client-supplied `mcpServers` before any MCP
+  process starts. This control is ACP-only because an interactive TUI has no
+  client-supplied ACP MCP configuration. Keep native-tool and ACP-MCP admission
+  independent.
+
+### Native-tool selection
+
+- `carry/acp-tool-selection` depends on `carry/acp-capability-gates`, which
+  owns the shared native-tool suppression boundary and launch grammar.
+- Support repeatable global `--tool NAME` on interactive TUI and ACP launches.
+  Supplying no `--tool` preserves the complete current native set; the first
+  occurrence switches the process to an allowlist. Reject unknown selections
+  at startup and apply the resolved set to both tool advertisement and dispatch
+  for the main session and every in-process child. Reject combining any
+  `--tool` selection with `--no-native-tools`.
+- Treat `terminal:exec` as the existing one-shot terminal specification rather
+  than the interactive terminal surface. A role that selects it may execute
+  permission-admitted one-shot commands but cannot start, observe, write to,
+  stop, or otherwise acquire an interactive terminal session.
+
+### Exclusive skill roots
+
+- Support global `--no-default-skills` alongside repeatable `--skills-dir`.
+  Apply the policy to interactive TUI and ACP launches. When selected, discover
+  skills only from the invocation roots in flag order; do not scan workspace,
+  managed-profile, or compatibility roots. An empty invocation list
+  intentionally produces no skill catalog.
+- Keep the option invocation-only. It does not mutate managed skill storage,
+  and controlled relaunches preserve the same exclusive-root policy.
+
+### Project instructions
+
+- Support global `--no-project-instructions` on interactive TUI and ACP
+  launches. It suppresses repository instruction-file discovery and
+  model-visible project prose for that process while retaining current runtime
+  facts such as working directory, date, Git state, tool guidance, and
+  permission guidance.
+- Keep the launch option distinct from stored project `context` configuration:
+  it does not rewrite workspace settings and cannot be reopened by an
+  `AGENTS.md`, `CLAUDE.md`, or compatible instruction file below the launch
+  directory.
+
+### Launch permission policy
+
+- Support global `--permissions-file FILE` on interactive TUI and ACP launches.
+  Load the existing permission-rule JSON shape before agent startup.
+  Canonicalize the file path, reject unreadable or malformed policy, and use
+  its rules as the process's configured permission policy instead of ambient
+  profile, workspace, or project permission rules.
+- Preserve Fx's ordinary per-session exact-grant semantics without allowing a
+  saved grant to override a launch-policy deny. Command rules retain the
+  existing static parse requirement, so compound shell syntax does not inherit
+  a simple-command allow.
+
+### State isolation
+
+- Support global `--state-dir DIR` on interactive TUI and ACP launches. It
+  selects the Fx profile/state root for that process, covering settings,
+  authorization, profile-level instructions, managed and profile-global
+  skills, MCP configuration and credentials, memories, prompt history and
+  usage, and durable sessions. Canonicalize and validate the root before agent
+  startup; session discovery and resume may not cross into the default or
+  another selected state root.
+- Do not implement state isolation by changing the process or subprocess
+  `HOME`. Shell commands and MCP processes retain the operator's normal home
+  environment. Workspace instruction and skill discovery retains that real
+  home boundary while profile-global discovery uses the selected root.
+
+### Launch-control continuity
+
+- `carry/launch-control-continuity` depends on
+  `carry/system-prompt-files`, `carry/invocation-skill-roots`,
+  `carry/acp-capability-gates`, `carry/acp-tool-selection`,
+  `carry/exclusive-skill-roots`, `carry/acp-project-instructions`,
+  `carry/acp-permission-policy`, and `carry/acp-state-isolation`.
+- Preserve every selected global launch control when an interactive TUI
+  upgrades, replaces itself, and resumes its session. This includes prompt,
+  context, directory, native-tool, skill-root, project-instruction,
+  permission-policy, and state-root controls. If process replacement fails,
+  print a shell-safe recovery command that preserves the same selections.
 
 ### Effort
 
@@ -519,10 +620,11 @@ the next machine convergence will correctly reject that stale consumer pin.
 
 ## Style guide
 
-This repository also owns the fx style guide for fmx: `style/STYLE.md`, its
-machine-readable ground truth `style/tokens.json`, and the rendered
-references in `style/captures/`. fmx (`~/code/fmx`) treats fx as its living
-style guide; this is where that edge is documented and kept true.
+This repository also owns the fxnk style guide for fx-derived surfaces:
+`style/STYLE.md`, its machine-readable ground truth `style/tokens.json`, and
+the rendered references in `style/captures/`. fmx (`~/code/fmx`) and the
+agentbrowse OpenTUI frontend treat fx as their living style guide; this is
+where that edge is documented and kept true.
 
 Methodology, run whenever the bound checkout's `integration` moves (every
 maintenance cycle qualifies, since carried features can touch UI):
@@ -568,9 +670,9 @@ The extractor's five parsed sites (role palette `src/ui/render.zig`
 elsewhere in fx are always dark-ramp values covered by the retint map, so
 tracking the five sites plus the index census is complete coverage.
 
-Carve-outs are the one part of the guide that is not extracted. Surfaces fmx
-needs and fx never draws — today the tray's agent rows, surfaces drawn over
-the stage, and the unused field around a smaller sizing owner — are designed
+Carve-outs are the one part of the guide that is not extracted. Surfaces an
+fxnk-based host needs and fx never draws — today the tray's agent rows,
+surfaces drawn over the stage, and the unused field around a smaller sizing owner — are designed
 from fx's principles and recorded in
 `style/STYLE.md` § "Carve-outs", with the viewer's "carve-outs" section
 rendering them from ramp tokens. They are deliberately absent from
