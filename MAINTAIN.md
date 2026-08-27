@@ -150,6 +150,11 @@ servers.
   pretending a release was published. Publication does not replace the Local
   development gate: only a proved Integration commit is eligible to reach the
   branch that triggers it.
+- Authenticate the external publisher with a team-scoped Vercel access token,
+  discover the exact public store and its connected release project from the
+  configured base URL, and pull a short-lived production OIDC credential for
+  each run. Refuse an ambiguous project or a credential for another store. Do
+  not retain or require a long-lived Blob read-write token in GitHub.
 - fmx pins the exact Integration commit it installs, resolves its sibling
   `fmx-fx` once per Runtime, and launches every Agent with
   `FX_AUTO_UPGRADE=0`. An Agent never spends another lookup or compatibility
