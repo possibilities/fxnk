@@ -39,7 +39,7 @@
       "required_blobs": [
         {
           "path": "tests/e2e/tui-subagent-manager.test.ts",
-          "oid": "7cb24b3a49c45f6cdeee4abae0feeaeceeedf9e8"
+          "oid": "ef7f51d52bd97c7d8ec3c2950cc5616aa479c61c"
         },
         {
           "path": "tests/e2e/tmux-helpers.ts",
