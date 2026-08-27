@@ -220,12 +220,15 @@ the selected launch controls.
 
 - Support global `--state-dir DIR` on interactive TUI and ACP launches. It
   selects the Fx profile/state root for that process, covering settings,
-  authorization, managed skills, memories, and durable sessions. Canonicalize
-  and validate the root before agent startup; session discovery and resume may
-  not cross into the default or another selected state root.
+  authorization, profile-level instructions, managed and profile-global
+  skills, MCP configuration and credentials, memories, prompt history and
+  usage, and durable sessions. Canonicalize and validate the root before agent
+  startup; session discovery and resume may not cross into the default or
+  another selected state root.
 - Do not implement state isolation by changing the process or subprocess
   `HOME`. Shell commands and MCP processes retain the operator's normal home
-  environment while Fx-owned paths use the selected root.
+  environment. Workspace instruction and skill discovery retains that real
+  home boundary while profile-global discovery uses the selected root.
 
 ### Effort
 
