@@ -92,11 +92,12 @@ reconciles only what this section names. The carry map makes that pairing
 explicit; one behavioral entry may need multiple carries, while a requirement
 already satisfied by upstream needs none.
 
-Launch controls are global and apply to both the interactive TUI and ACP
-whenever the controlled capability exists on both surfaces. An ACP-only
-control must name its protocol-specific boundary; `--no-acp-mcp` is one because
-only an ACP client supplies ACP MCP servers. Controlled TUI relaunches preserve
-the selected launch controls.
+Launch controls are global and apply to fresh interactive TUI launches, TUI
+resume and controlled relaunch paths, and ACP whenever the controlled
+capability exists on those surfaces. A feature requested through ACP is not
+ACP-scoped by default. An ACP-only control must name its protocol-specific
+boundary; `--no-acp-mcp` is one because only an ACP client supplies ACP MCP
+servers.
 
 | Carry | Feature entry |
 | --- | --- |
@@ -122,6 +123,7 @@ the selected launch controls.
 | `carry/acp-project-instructions` | Project instructions |
 | `carry/acp-permission-policy` | Launch permission policy |
 | `carry/acp-state-isolation` | State isolation |
+| `carry/launch-control-continuity` | Launch-control continuity |
 
 ### Fork identity
 
@@ -231,6 +233,19 @@ the selected launch controls.
   `HOME`. Shell commands and MCP processes retain the operator's normal home
   environment. Workspace instruction and skill discovery retains that real
   home boundary while profile-global discovery uses the selected root.
+
+### Launch-control continuity
+
+- `carry/launch-control-continuity` depends on
+  `carry/system-prompt-files`, `carry/invocation-skill-roots`,
+  `carry/acp-capability-gates`, `carry/acp-tool-selection`,
+  `carry/exclusive-skill-roots`, `carry/acp-project-instructions`,
+  `carry/acp-permission-policy`, and `carry/acp-state-isolation`.
+- Preserve every selected global launch control when an interactive TUI
+  upgrades, replaces itself, and resumes its session. This includes prompt,
+  context, directory, native-tool, skill-root, project-instruction,
+  permission-policy, and state-root controls. If process replacement fails,
+  print a shell-safe recovery command that preserves the same selections.
 
 ### Effort
 
