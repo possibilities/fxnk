@@ -171,6 +171,8 @@ the selected launch controls.
 
 ### Native-tool selection
 
+- `carry/acp-tool-selection` depends on `carry/acp-capability-gates`, which
+  owns the shared native-tool suppression boundary and launch grammar.
 - Support repeatable global `--tool NAME` on interactive TUI and ACP launches.
   Supplying no `--tool` preserves the complete current native set; the first
   occurrence switches the process to an allowlist. Reject unknown selections
