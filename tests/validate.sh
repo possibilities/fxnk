@@ -153,6 +153,8 @@ grep -Fx '### fmx distribution' MAINTAIN.md >/dev/null \
     || fail "the inventory does not carry fmx's private Fx distribution"
 scripts/fmx-release-local.sh --help | grep -F 'build --worktree PATH' >/dev/null \
     || fail "the local fmx Fx release fallback has no usable help"
+grep -F 'export VERCEL_ENV=production' scripts/fmx-release-local.sh >/dev/null \
+    || fail "the local fmx Fx release fallback does not use production OIDC"
 for local_release_contract in \
     'scripts/fmx-release-local.sh' \
     'stop the exact still-active hosted run before' \

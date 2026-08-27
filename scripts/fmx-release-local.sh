@@ -362,6 +362,7 @@ publish_release_set() {
     export VERCEL_OIDC_TOKEN="$oidc_token"
     export BLOB_STORE_ID="$pulled_store"
     export VERCEL_PROJECT_ID="$project_id"
+    export VERCEL_ENV=production
 
     base_without_scheme=${release_base_url#https://}
     case "$base_without_scheme" in
