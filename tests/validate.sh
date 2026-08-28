@@ -24,7 +24,6 @@ bash -n scripts/style-swatch.sh
 bash -n scripts/style-capture.sh
 bash -n scripts/style-view.sh
 bash -n scripts/prefix-mode-demo.sh
-bash -n scripts/fmx-release-local.sh
 [ -x scripts/install.sh ] || fail "scripts/install.sh is not executable"
 [ -x scripts/local-gate.sh ] || fail "scripts/local-gate.sh is not executable"
 [ -x scripts/classify-quarantine.py ] \
@@ -35,8 +34,6 @@ bash -n scripts/fmx-release-local.sh
     || fail "scripts/reconcile-branches.sh is not executable"
 [ -x scripts/configure-supervision.sh ] \
     || fail "scripts/configure-supervision.sh is not executable"
-[ -x scripts/fmx-release-local.sh ] \
-    || fail "scripts/fmx-release-local.sh is not executable"
 [ -x tests/install-transaction.sh ] \
     || fail "tests/install-transaction.sh is not executable"
 [ -x tests/supervision-transaction.sh ] \
@@ -149,39 +146,15 @@ grep -F '~/.local/state/fxnk/full-ci/pending.json' MAINTAIN.md >/dev/null \
     || fail "the gate does not make an open verdict a cycle input"
 grep -Fx '### Hosted Full CI' MAINTAIN.md >/dev/null \
     || fail "the inventory does not carry the hosted Full CI trigger and serialization"
-grep -Fx '### fmx distribution' MAINTAIN.md >/dev/null \
-    || fail "the inventory does not carry fmx's private Fx distribution"
-scripts/fmx-release-local.sh --help | grep -F 'build --worktree PATH' >/dev/null \
-    || fail "the local fmx Fx release fallback has no usable help"
-grep -F -- '--environment=development' scripts/fmx-release-local.sh >/dev/null \
-    || fail "the local fmx Fx release fallback does not request local OIDC"
-grep -F 'export VERCEL_ENV=development' scripts/fmx-release-local.sh >/dev/null \
-    || fail "the local fmx Fx release fallback does not identify local OIDC"
-if grep -F -- '--add-random-suffix=' scripts/fmx-release-local.sh >/dev/null; then
-    fail "the local fmx Fx release fallback stringifies a Blob boolean flag"
-fi
-grep -F -- '--allow-overwrite=true' scripts/fmx-release-local.sh >/dev/null \
-    || fail "the local fmx Fx release fallback does not gate mutable overwrite"
-grep -F 'prune_historical_fx_releases' scripts/fmx-release-local.sh >/dev/null \
-    || fail "the local fmx Fx release fallback does not prune prior releases"
-grep -F 'for _ in $(seq 1 30); do' scripts/fmx-release-local.sh >/dev/null \
-    || fail "the local fmx Fx release fallback does not wait for public visibility"
-for local_release_contract in \
-    'scripts/fmx-release-local.sh' \
-    'stop the exact still-active hosted run before' \
-    'delete every older exact-commit release only after' \
-    'strategy.max-parallel: 1' \
-    'Linux Docker host is not a macOS runner'; do
-    grep -F "$local_release_contract" MAINTAIN.md >/dev/null \
-        || fail "the local fmx Fx release contract omits: $local_release_contract"
-done
+grep -Fx '### fmx source identity' MAINTAIN.md >/dev/null \
+    || fail "the inventory does not carry fmx's private Fx source contract"
 for distribution_contract in \
-    '`FMX_FX_VERSION`' \
-    'atomically installs the real native executable as' \
-    'replace the separate `fx` installed by this Workshop for AgentStart' \
+    '`--fxnk-version`' \
+    'builds that commit as `fmx-fx`' \
+    'publish no fmx-specific binaries' \
     '`FX_AUTO_UPGRADE=0`'; do
     grep -F "$distribution_contract" MAINTAIN.md >/dev/null \
-        || fail "the fmx distribution contract omits: $distribution_contract"
+        || fail "the fmx source contract omits: $distribution_contract"
 done
 # shellcheck disable=SC2016 # Match the literal documented SHA variable.
 grep -F 'scripts/install.sh --install --sha "$integration_sha"' MAINTAIN.md >/dev/null \

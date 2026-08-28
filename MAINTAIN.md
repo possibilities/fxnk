@@ -116,7 +116,7 @@ servers.
 | `carry/local-gate-support` | Local gate support |
 | `carry/terminal-probe-determinism` | Terminal probe determinism |
 | `carry/hosted-full-ci` | Hosted Full CI |
-| `carry/fmx-distribution` | fmx distribution |
+| `carry/fmx-distribution` | fmx source identity |
 | `carry/acp-capability-gates` | Launch capability gates |
 | `carry/acp-tool-selection` | Native-tool selection |
 | `carry/exclusive-skill-roots` | Exclusive skill roots |
@@ -133,55 +133,24 @@ servers.
   semantic versioning for downstream consumer compatibility; the Fx version
   remains the current upstream source version.
 
-### fmx distribution
+### fmx source identity
 
-- Publish every approved Integration commit as native `fmx-fx` archives for
-  Linux and macOS on x86_64 and arm64, with separate SHA-256 files. Immutable
-  artifacts live under that exact full commit; only the public `setup.sh` and
-  `latest.txt` pointers may be replaced. Keep only the current Integration
-  release in Blob: delete every older exact-commit release only after the new
-  complete set and both mutable pointers have been publicly verified.
-- Provide a one-command installer from the same Vercel Blob store as fmx. It
-  accepts an exact full Integration commit through `FMX_FX_VERSION`, defaults
-  to `latest.txt`, verifies the archive checksum and the exact
-  `--fxnk-version` probe, and atomically installs the real native executable as
-  `fmx-fx`. It does not create or align a checkout, mutate the Fx profile, or
-  replace the separate `fx` installed by this Workshop for AgentStart.
-- Run this publication only for Integration and manual dispatch, serialized
-  across the fork. A missing Blob credential or base URL is diagnosed without
-  pretending a release was published. Publication does not replace the Local
-  development gate: only a proved Integration commit is eligible to reach the
-  branch that triggers it.
-- Treat hosted release runners as replaceable capacity rather than a second
-  gate. When their queue cannot produce the installer payload promptly,
-  `scripts/fmx-release-local.sh` may assemble the exact published Integration
-  SHA: it builds Apple-silicon and Rosetta Intel archives serially on a trusted
-  Mac, accepts only checksum-verified Linux artifacts from the same Actions run
-  or a named trusted native build directory, verifies the complete sixteen-file
-  set, and uses the same immutable Blob paths and mutable installer pointers as
-  the hosted publisher. It must stop the exact still-active hosted run before
-  publishing, so two publishers never race an immutable path, and records a
-  mode-0600 exact-SHA receipt under `~/.local/state/fxnk/fmx-releases/`.
-- Never attach a persistent self-hosted runner to a generic GitHub-hosted label
-  in this public repository. Pull-request workflows also use labels such as
-  `macos-15`; matching one would let unrelated public jobs reach the machine.
-  A future self-hosted design needs a release-only label and workflow boundary,
-  ephemeral registration, and one runner process per host. A matrix that must
-  protect a shared host sets `strategy.max-parallel: 1`; the local publisher is
-  already serial. Linux may run on trusted bare metal or a Linux container, but
-  a Linux Docker host is not a macOS runner.
-- Authenticate the external publisher with a file-backed Vercel CLI account
-  session, discover the exact public store and its connected release project
-  from the configured base URL, and pull a short-lived local-development OIDC
-  credential for each run. The release project connects that same store to
-  development as well as its hosted environments; local CLI OIDC tokens are
-  always development-scoped even when production variables are requested.
-  Refuse an ambiguous project or a credential for another store. Do not retain
-  or require a long-lived Blob read-write token in GitHub.
-- fmx pins the exact Integration commit it installs, resolves its sibling
-  `fmx-fx` once per Runtime, and launches every Agent with
+- Keep the intentionally undocumented `--fxnk-version` probe stable so fmx
+  can verify its private Fx source build. Fmx pins one exact published
+  Integration commit in `fx.json`; its own `scripts/install.sh` checks out and
+  builds that commit as `fmx-fx`, or accepts AgentStart's already-gated build
+  only with the same exact commit identity.
+- Fx and fxnk publish no fmx-specific binaries, archives, checksums, mutable
+  pointers, installer payload, or release tags. The Integration Git branch is
+  source publication, not a binary release, and remains the only source this
+  Workshop's installer builds.
+- Fmx resolves its `fmx-fx` once per Runtime and launches every Agent with
   `FX_AUTO_UPGRADE=0`. An Agent never spends another lookup or compatibility
   probe, and the private binary cannot update itself into an upstream build.
+- The Local development gate on macOS arm64 remains the only blocking
+  authority for publishing Integration. Hosted Full CI remains a binary
+  pass/fail run on macOS and Linux, arm64 and x86_64, after Integration is
+  pushed; it is nonblocking observability consumed later by Agentsource.
 
 ### System prompts
 
