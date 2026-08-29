@@ -22,7 +22,10 @@ if [[ " $* " == *' tests/e2e/render-lab/audit-direct-writes.ts '* ]]; then
 fi
 
 case " $* " in
-    *' ./cli.test.ts '* | *' ./ade-event-feed.test.ts '*)
+    *' ./cli.test.ts '*)
+        printf '4 pass\n0 fail\n'
+        ;;
+    *' ./ade-event-feed.test.ts '*)
         printf '3 pass\n0 fail\n'
         ;;
     *)

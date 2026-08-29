@@ -210,8 +210,8 @@ canary_step() {
     set -e
     sed -n '1,240p' "$output"
     [ "$status" -eq 0 ] || die "fxnk-unit-canaries exited $status"
-    [ "$(grep -Fxc 'FXNK-CANARIES 41/41 passed' "$output")" -eq 1 ] \
-        || die "fxnk-unit-canaries did not prove exactly 41 declared canaries"
+    [ "$(grep -Fxc 'FXNK-CANARIES 44/44 passed' "$output")" -eq 1 ] \
+        || die "fxnk-unit-canaries did not prove exactly 44 declared canaries"
     printf ' pass\n'
 }
 
@@ -228,8 +228,8 @@ if [ ! -d "$fx_worktree/tests/e2e/node_modules" ]; then
         "$bun_bin" install --frozen-lockfile
 fi
 
-cli_pattern='system prompt files replace and append in command-line order|repeatable --skills-dir roots load in invocation order|FX_EFFORT overrides the configured effort for fx ask without saving it'
-bun_step cli-integration 3 env TMUX_TMPDIR="$scratch/tmux" \
+cli_pattern='system prompt files replace and append in command-line order|repeatable --skills-dir roots load in invocation order|--skills-dir remains usable without HOME|FX_EFFORT overrides the configured effort for fx ask without saving it'
+bun_step cli-integration 4 env TMUX_TMPDIR="$scratch/tmux" \
     "$bun_bin" test --max-concurrency 1 \
     --test-name-pattern "$cli_pattern" ./cli.test.ts
 bun_step ade-integration 3 env TMUX_TMPDIR="$scratch/tmux" FX_REQUIRE_TMUX=1 \
