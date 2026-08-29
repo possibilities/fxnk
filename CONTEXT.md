@@ -83,6 +83,12 @@ compose these primitives outside Fx; Fx does not encode orchestrator or player
 roles.
 _Avoid_: agent profile, ACP mode, prompt preset.
 
+**State system prompt** — An optional conventional prompt file in the selected
+state root: `.fx/SYSTEM.md` replaces Fx's built-in system prompt, while
+`.fx/SYSTEM_APPEND.md` appends to it. It is part of an explicit `--state-dir`
+launch and remains distinct from profile or project instructions.
+_Avoid_: profile instructions, state instructions, prompt preset.
+
 **ADE event feed** — Fx's opt-in, versioned, best-effort NDJSON lifecycle
 stream from an interactive TUI and its in-process agents to an ADE-owned Unix
 socket. The ADE supplies the socket and an opaque instance identity; Fx

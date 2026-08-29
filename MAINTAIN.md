@@ -124,6 +124,7 @@ servers.
 | `carry/acp-permission-policy` | Launch permission policy |
 | `carry/acp-state-isolation` | State isolation |
 | `carry/launch-control-continuity` | Launch-control continuity |
+| `carry/state-system-prompts` | State system prompts |
 
 ### Fork identity
 
@@ -230,6 +231,30 @@ servers.
   `HOME`. Shell commands and MCP processes retain the operator's normal home
   environment. Workspace instruction and skill discovery retains that real
   home boundary while profile-global discovery uses the selected root.
+
+### State system prompts
+
+- `carry/state-system-prompts` depends on both
+  `carry/launch-control-continuity` and `carry/local-gate-support`: the former
+  composes the shared prompt-file and state-root launch controls, while the
+  latter supplies the narrow downstream canary contract.
+- For an explicit `--state-dir DIR` launch, recognize the exact case-sensitive
+  conventional files `<DIR>/.fx/SYSTEM.md` and
+  `<DIR>/.fx/SYSTEM_APPEND.md`. `SYSTEM.md` replaces Fx's built-in system
+  prompt; `SYSTEM_APPEND.md` appends to it with the same blank-line separation
+  as `--append-system-prompt-file`. Apply the result to interactive TUI,
+  resume, and ACP main agents and their in-process children. Do not discover
+  either convention from the ambient/default home when `--state-dir` is
+  absent.
+- Keep explicit invocation controls authoritative. `--system-prompt-file`
+  bypasses state prompt discovery entirely, while each
+  `--append-system-prompt-file` appends after the state-derived prompt. When
+  discovery is active, fail before agent or MCP startup if both conventional
+  names exist rather than choosing one implicitly.
+- Apply the existing regular-file, readable UTF-8, NUL-free, and combined
+  256 KiB custom-prompt limits across every active state and invocation file.
+  `--no-project-instructions` does not suppress a state system prompt, and a
+  controlled relaunch or resume re-reads it through the preserved state root.
 
 ### Launch-control continuity
 
