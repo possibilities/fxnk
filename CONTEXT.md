@@ -95,6 +95,13 @@ socket. The ADE supplies the socket and an opaque instance identity; Fx
 supplies agent and session context without presentation policy.
 _Avoid_: Herdr feed, control socket, ask feed.
 
+**Work-control endpoint** — Fx's opt-in, authenticated Unix request/reply
+surface for one interactive main Agent's semantic queue, steering, and
+interruption operations. Fx owns scheduling and race resolution; the host
+supplies the endpoint identity and authority, while ADE remains a separate
+one-way lifecycle feed.
+_Avoid_: ADE control, terminal injection, prompt socket, public API.
+
 **Full CI verdict** — The recorded outcome of one hosted Full CI run for one
 exact published Integration SHA, written by `scripts/ci-watch.sh` under
 `~/.local/state/fxnk/full-ci/`. It is evidence that the slow suite eventually

@@ -106,6 +106,7 @@ servers.
 | `carry/effort` | Effort |
 | `carry/effort-catalog` | Effort |
 | `carry/ade-event-feed` | ADE event feed |
+| `carry/fmx-work-control` | Semantic work control |
 | `carry/edited-git-roots` | ADE event feed |
 | `carry/session-naming` | Native session naming |
 | `carry/libfx-provider-authorization` | Libfx provider authorization |
@@ -376,6 +377,38 @@ servers.
   observation queue by record count and owned bytes, drop on pressure, and
   discard queued observations at shutdown; at most one already-started native
   filesystem operation may extend orderly shutdown.
+
+### Semantic work control
+
+- Let a native interactive Fx opt into one private Unix work-control endpoint
+  through a complete host-supplied socket path, instance identity, and bearer
+  token. Bind the endpoint mode 0600, authenticate every bounded schema-1
+  request, echo the instance identity in every response, and remove only the
+  socket Fx itself bound. A partial configuration or a configured endpoint that
+  cannot bind fails startup; an unconfigured Fx has no listener.
+- Accept one request and return one correlated response per connection. Keep
+  socket reads, writes, peers, frames, and outstanding application work bounded
+  so a silent or malformed controller never delays the terminal, the model
+  worker, shutdown, or another Fx process.
+- Expose only the main Agent's semantic work operations: inspect the active
+  turn identity and admission-ordered prompt queue; queue text work; steer the
+  active turn with Fx's safe queue fallback; cooperatively interrupt the active
+  turn and pause queued work for review; update or delete one queued item by
+  stable turn identity; and resume a paused queue from its head. Return the
+  authoritative post-operation snapshot with every successful mutation.
+- Route queueing and steering through the same prompt admission path as native
+  interactive submission, with an explicit empty image and skill set rather
+  than borrowing composer state. Preserve Fx's one FIFO and steering race:
+  steering targets the active turn when possible and demotes in place to
+  ordinary queued work when that turn wins the race.
+- Do not expose permission decisions, question answers, session transitions,
+  subagent control, runtime settings, queue reordering, arbitrary-item start,
+  or a second prompt execution path. Reject mutation while the human's queue
+  editor is visible, and reject text replacement for queued work carrying
+  images, skill bindings, or an editable native review draft.
+- Keep work control independent of the ADE event feed. Command replies are
+  reliable acknowledgements of native state changes; ADE remains passive,
+  best-effort lifecycle telemetry and cannot become a command transport.
 
 ### Native session naming
 
