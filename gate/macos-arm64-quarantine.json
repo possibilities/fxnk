@@ -65,7 +65,7 @@
       "required_blobs": [
         {
           "path": "tests/e2e/tui-render-replay.test.ts",
-          "oid": "0ed09c27daa896ecd05e8458670b694b8326c005"
+          "oid": "f09bf04a887405faad341f1bdea32e1bee455892"
         },
         {
           "path": "tests/e2e/tmux-helpers.ts",
