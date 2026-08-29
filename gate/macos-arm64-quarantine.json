@@ -10,6 +10,10 @@
       "sha": "a316c6f",
       "result": "The Ctrl-X isolation probe was not flaky. It searched recorded input frames for the C0 byte 0x18 while the terminal sent the CSI-u form ESC[120;5u, so it failed constantly wherever that keyboard protocol is active, and a thirty second retry loop disguised a constant failure as a slow one. Matching either encoding and asserting against a settled tape produced 5 of 5 clean runs of the three declared probes, each in about three seconds rather than thirty."
     },
+    "bb2_replay_review": {
+      "upstream_sha": "bb2dc7d557642c7e1c2e89176ca7721281dfb08c",
+      "result": "Reviewed the complete 74ec5fa5 to 0e747981 blob delta. It carries upstream's single full-detail surface changes, bounded paging helpers, and the deterministic settled-response fixture used by the replayed terminal probe. The three quarantined tests still admit only tmux teardown or pane-predicate timeouts; no assertion signature was added."
+    },
     "pre_pr_165": {
       "sha": "78a183545905c70b3aa8b28465bcb008af82e447",
       "result": "43 pass, 2 fail in tui-subagent-manager.test.ts"
@@ -39,7 +43,7 @@
       "required_blobs": [
         {
           "path": "tests/e2e/tui-subagent-manager.test.ts",
-          "oid": "74ec5fa52301130a195632a229c7c51ddc60fe42"
+          "oid": "0e747981a4efd7c6d33296f83deed2cb59d47273"
         },
         {
           "path": "tests/e2e/tmux-helpers.ts",
