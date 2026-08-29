@@ -5,21 +5,21 @@ entries on every maintenance cycle and appends one compact history entry.
 
 ## Baseline
 
-- Current maintenance: 2026-08-29. Fork publication, direct installation,
-  branch reconciliation, and the exact fmx source pin handoff are complete.
-  AgentStart was explicitly excluded from mutation in this cycle.
+- Current maintenance: 2026-08-29. State system prompt publication, direct
+  installation, branch reconciliation, and the exact fmx and AgentStart
+  consumer handoffs are complete.
 - Upstream base and Main mirror:
   `cef08aa0f178537e552a931c7863dc4c1487e4a0`
 - Published and installed Integration:
-  `d5e5da7aad0bbfa9b0792a02f72e802e8606b20c`
+  `fdc7dc07257d535076f09ec50dbcb42ff4062bf8`
 - Local development gate: exact-SHA receipt
-  `~/.local/state/fxnk/local-gates/d5e5da7aad0bbfa9b0792a02f72e802e8606b20c.json`;
-  contract `90ae416e2515db05c479ee8440821d722f1febee461983029c7b1163298ce68b`;
-  recorded replay completed in 31 seconds with 44 of 44 canaries.
+  `~/.local/state/fxnk/local-gates/fdc7dc07257d535076f09ec50dbcb42ff4062bf8.json`;
+  contract `d9bff87e66ff717616dc16f9ee2c9c3a658d63e1687cb2fc79c989e14a53b189`;
+  recorded replay completed in 30 seconds with 45 of 45 canaries.
   `ship-gate.sh` printed
-  `SHIP d5e5da7aad0bbfa9b0792a02f72e802e8606b20c`.
+  `SHIP fdc7dc07257d535076f09ec50dbcb42ff4062bf8`.
 - Installed SHA-256:
-  `2f283cf23abd4a5976bbc420ab4b478214f9dbfc2f90d2ce82aa2db00332aa43`.
+  `6fb9df64fdac945a0dc36298b029747d5994137d5caef2be674dd3f9df48c64b`.
   The receipt, clean bound checkout, published ref, installed `fx`, and fmx's
   installed `fmx-fx` all match; both binaries report
   `fxnk 0.5.0 (fx 0.0.7)`, and Fx auto-upgrade is disabled.
@@ -31,7 +31,7 @@ entries on every maintenance cycle and appends one compact history entry.
 
 ## Carried state
 
-Integration composes twenty-three durable published carry heads. Every head below
+Integration composes twenty-four durable published carry heads. Every head below
 is an ancestor of published Integration:
 
 - `carry/ade-event-feed` `2cba771`; `carry/edited-git-roots` `972d139`
@@ -52,15 +52,17 @@ is an ancestor of published Integration:
 - `carry/acp-state-isolation` `ccfd0b3`
 - `carry/acp-permission-policy` `50e29c2`
 - `carry/launch-control-continuity` `49cdda3`
+- `carry/state-system-prompts` `b97150f`
 
-All twenty-three carry heads were rewritten onto current Main or their declared
+All twenty-four carry heads are based on current Main or their declared
 dependency. Session naming and edited-root recovery declare the ADE feed as
 their base dependency. Local gate support contains the complete product
 composition, libfx authorization depends on that gate support, and the hosted
 CI, terminal-probe, and notification-sound carries remain independent
 Main-based heads. Native-tool selection depends on the shared capability gate;
 launch-control continuity depends on every prompt, skill, context, permission,
-tool, and state launch-control carry.
+tool, and state launch-control carry. State system prompts depends on launch
+continuity and local gate support.
 - The unpublished fmx-distribution commit `01d33ad` was deliberately reconciled
   into published `8110c3b`; its safety ref remains at the original exact SHA.
 - Direct Codex usage beyond 64 sequential provider calls remains satisfied by
@@ -80,30 +82,40 @@ tool, and state launch-control carry.
   review approved `d5e5da7` with no findings.
 - The ADE resume fixture now selects the original session from either valid
   two-row catalog order rather than depending on timestamp-tied ordering.
-- Focused, unrecorded, and recorded proof completed with all 44 downstream
-  canaries, four CLI regressions, three ADE E2Es, three subagent-manager probes,
-  six render/replay probes, and fresh-binary checks passing.
+- Explicit state roots now select exact case-sensitive `.fx/SYSTEM.md` or
+  `.fx/SYSTEM_APPEND.md` conventions across TUI, resume, ACP, and in-process
+  children. Explicit replacement bypass, ordered CLI appends, conflict
+  failure, relaunch rediscovery, no ambient discovery, and no-follow profile
+  traversal are covered by the carry and its focused fresh-binary probes.
+- Focused, unrecorded, and recorded proof completed with all 45 downstream
+  canaries, the selected-state ACP and TUI E2Es, four CLI regressions, three ADE
+  E2Es, three subagent-manager probes, six render/replay probes, and
+  fresh-binary checks passing.
 - Post-install reconciliation check/apply/check left Main, Integration, and all
-  twenty-three declared carries exact, preserved every unrelated fork head,
+  twenty-four declared carries exact, preserved every unrelated fork head,
   and found no `DELETEME/*` ref. The bound checkout is clean on Integration.
   Style extraction reports no drift.
 - The original publication lease is preserved at
   `refs/maintain/cef08-20260828/published-integration-lease`; the original
   unpublished fmx-distribution work remains at
   `refs/maintain/cef08-20260828/unpublished-fmx-distribution`.
-- fmx pin commit `42d798c` carries the published SHA. Its macOS arm64 Local
+- fmx pin commit `96cd70f` carries the published SHA. Its macOS arm64 Local
   gate rebuilt and installed the pinned source, passed 364 ordinary tests and
   11 live PTY tests, and proved installed `fx` and `fmx-fx` byte-identical.
-  AgentStart was not modified, as explicitly required by this maintenance
-  task.
+- AgentStart pin commit `f089ae0` updates the plan, validation, and fleet map;
+  its validation and full convergence passed, including the fmx exact-pin
+  equality check and rendered Collab manifest comparison.
 - The gate reads its contract from the path it is invoked through:
   `local-gate.sh` sets `root` from its own location. Invoke the canonical
   `~/code/fxnk/scripts/local-gate.sh` while that checkout is clean on `main`,
   or prove a different Workshop worktree's four contract files byte-identical
   to `main`; a branch label alone does not establish the receipt contract.
-- Full CI run `33239699230` for `d5e5da7` is queued and remains nonblocking
+- The overdue Full CI ledger was revisited. Historical `c83be4d` and `ec1cbc3`
+  failures describe loader and canary-runner defects already repaired in the
+  current Integration; `0deb980` has no historical run to classify. Full CI
+  run `33246694416` for `fdc7dc0` is pending and remains nonblocking
   observability; its receipt is
-  `~/.local/state/fxnk/full-ci/d5e5da7aad0bbfa9b0792a02f72e802e8606b20c.json`.
+  `~/.local/state/fxnk/full-ci/fdc7dc07257d535076f09ec50dbcb42ff4062bf8.json`.
 
 ## History
 
@@ -158,3 +170,7 @@ tool, and state launch-control carry.
   reconciled unpublished fmx-distribution work without loss, closed the ADE
   approval-cancellation race, passed the 44-canary exact-SHA gate, atomically
   published and installed `d5e5da7`, and advanced fmx's source pin.
+- 2026-08-29: Added explicit state-root system prompt conventions as the
+  twenty-fourth carry, passed the 45-canary exact-SHA gate, atomically
+  published and installed `fdc7dc0`, and advanced both fmx and AgentStart's
+  exact consumer pins.
