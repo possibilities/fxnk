@@ -29,6 +29,37 @@ entries on every maintenance cycle and appends one compact history entry.
   `f09bf04a887405faad341f1bdea32e1bee455892`; the shared tmux-helper pin
   remains `a7ace9b57f359a8f845dad045edef6c5a3cc5626`.
 
+## Audited-upstream frontier
+
+- Complete through `bb2dc7d557642c7e1c2e89176ca7721281dfb08c` on
+  2026-08-29. The reconstructed aggregate audit from the prior completed
+  frontier `c011b118f41ca6950e1f5e3deb38950ab0771a74` covered 144 upstream
+  commits: 129 through `cef08aa0` in the formal replay and 15 more absorbed
+  by intervening feature work. It includes Fx 0.0.7, active-turn steering,
+  project MCP trust and management, unified capability discovery, the reduced
+  filesystem-tool surface, structured ask output, ACP session discovery,
+  transcript and terminal work, signed releases, runtime-overhead reduction,
+  and asynchronous Ctrl-O transcript detail.
+- Upstream disposition for the current twenty-five carries: 0 retired, 17
+  repaired, 8 unchanged. The repaired carry heads were
+  `carry/system-prompt-files`, `carry/effort-catalog`,
+  `carry/ade-event-feed`, `carry/edited-git-roots`, `carry/session-naming`,
+  `carry/libfx-provider-authorization`, `carry/invocation-skill-roots`,
+  `carry/external-editor`, `carry/notification-sound-single-flight`,
+  `carry/local-gate-support`, `carry/acp-capability-gates`,
+  `carry/acp-tool-selection`, `carry/exclusive-skill-roots`,
+  `carry/acp-project-instructions`, `carry/acp-permission-policy`,
+  `carry/acp-state-isolation`, and `carry/launch-control-continuity`.
+  The unchanged carry heads were `carry/fxnk-version`, `carry/effort`,
+  `carry/resume-bounds`, `carry/terminal-probe-determinism`,
+  `carry/hosted-full-ci`, `carry/fmx-distribution`,
+  `carry/state-system-prompts`, and `carry/fmx-work-control`.
+- No upstream replacement satisfies a remaining carry contract. Direct Codex
+  operation beyond 64 sequential provider calls remains the one upstream-owned
+  reliability behavior, at `dd409c27a7719e4dccaa30152c4e9087ec30edea`,
+  and has no downstream carry. The delivered Integration baseline remains
+  `559bbd62cc4bdc338f2a135d4b5175bf5b662416`.
+
 ## Carried state
 
 Integration composes twenty-five durable published carry heads. Every head below
@@ -210,3 +241,7 @@ prompts depends on launch continuity and local gate support.
   53-canary exact-SHA gate, atomically published and installed `559bbd62`,
   advanced fmx and AgentStart, cancelled the obsolete runs, and reconciled all
   twenty-five carries without creating another carry run.
+- 2026-08-29: Migrated audit provenance by reconstructing the complete
+  `c011b118` to `bb2dc7d` upstream interval: 144 commits including Fx 0.0.7,
+  with 0 carries retired, 17 repaired, and 8 unchanged; delivery remains at
+  `559bbd62`.
