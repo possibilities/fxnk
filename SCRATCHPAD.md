@@ -5,21 +5,21 @@ entries on every maintenance cycle and appends one compact history entry.
 
 ## Baseline
 
-- Current maintenance: 2026-08-29. Semantic work control publication, direct
-  installation, branch reconciliation, and the exact fmx and AgentStart
-  consumer handoffs are complete.
+- Current maintenance: 2026-08-29. Hosted Full CI admission repair, exact
+  atomic publication, direct installation, branch reconciliation, and the
+  exact fmx and AgentStart consumer handoffs are complete.
 - Upstream base and Main mirror:
   `bb2dc7d557642c7e1c2e89176ca7721281dfb08c`
 - Published and installed Integration:
-  `121cae8b8e0a3db57d8d7efe7c44edbcebdb3d99`
+  `559bbd62cc4bdc338f2a135d4b5175bf5b662416`
 - Local development gate: exact-SHA receipt
-  `~/.local/state/fxnk/local-gates/121cae8b8e0a3db57d8d7efe7c44edbcebdb3d99.json`;
-  contract `db2c6ad32cdc45d933eb0b909c48ffa7f06cb648a94e806b85b1c21bd7401f29`;
-  recorded replay completed in 31 seconds with 51 of 51 canaries.
+  `~/.local/state/fxnk/local-gates/559bbd62cc4bdc338f2a135d4b5175bf5b662416.json`;
+  contract `e5d4748ef3479c0b90077fc245cd50a6ad532ca84dd31b17acf2214101ea67dc`;
+  recorded replay completed in 30 seconds with 53 of 53 canaries.
   `ship-gate.sh` printed
-  `SHIP 121cae8b8e0a3db57d8d7efe7c44edbcebdb3d99`.
+  `SHIP 559bbd62cc4bdc338f2a135d4b5175bf5b662416`.
 - Installed SHA-256:
-  `fd4fdef84d56627e55055eec386ed9270a722e97fb1275186aca07ab4de99c91`.
+  `eb9d4a52dcd7614576b276a0ea317b7af1fd5e945e72d2859c44c5f8f3c1f95b`.
   The receipt, clean bound checkout, published ref, installed `fx`, and fmx's
   installed `fmx-fx` all match; both binaries report
   `fxnk 0.5.0 (fx 0.0.7)`, and Fx auto-upgrade is disabled.
@@ -35,54 +35,54 @@ Integration composes twenty-five durable published carry heads. Every head below
 is an ancestor of published Integration:
 
 - `carry/acp-capability-gates`
-  `7715ce9958c18319be94b8d823999bda4270211f`
+  `0ea733dad97905c104add58078a1d41d67c2f1c7`
 - `carry/acp-permission-policy`
-  `a14644e715d4855818c87593d8ba47596abaec95`
+  `ea84d68326116f85ff186b5bda5fb0df14acdc5b`
 - `carry/acp-project-instructions`
-  `5c1fb088c2aeb66b1cf1c80563baa1fe3fa3241d`
+  `6f9f7fab71ee4e609067d621d2b0d87c12748dde`
 - `carry/acp-state-isolation`
-  `9c65ee3cc180b7719d135aab5d82e27317ea782e`
+  `2877b87a3f0f145a114735128a643585ca952526`
 - `carry/acp-tool-selection`
-  `676c17d67bdea6ad43125b70b549972bc767d34c`
+  `7c46afc5ad14c3e4d231fa7338104d3464bcd3d3`
 - `carry/ade-event-feed`
-  `08375fa06bbfb6cfa57be6428f911b957950258e`
+  `3bee87e9fe5423118c0b11c21324d86377669860`
 - `carry/edited-git-roots`
-  `e0b7eb10a5b68cacf86e2a3b42beedf53f719078`
-- `carry/effort` `3f0e685c76cfac172866efae1c4c3dfc272d7e25`
+  `05dd093e4b52424fd09d667427e1c1fc32961db6`
+- `carry/effort` `bc68bc0a63e48669cddb6e276e7f82312625485a`
 - `carry/effort-catalog`
-  `849c13a29703eac5b34b11c78ce36b0983cb5e94`
+  `278746736536788231068d2bacccd11722ba8a6f`
 - `carry/exclusive-skill-roots`
-  `4702d8770e5958e8e83ef00210ca95de5265a3a9`
+  `dce94f4e50551a7052388b9f622d120d370c01c9`
 - `carry/external-editor`
-  `faac3d74a99f49fcfd2a72eff8e8e3a803c74cdf`
+  `a935ef1edc4a81b5ac3775bac581849dcdffc7fe`
 - `carry/fmx-distribution`
-  `f9b2223a205bc6ab988d8001f52df43ab605ba54`
+  `9b523376ff564d9806eb57c5a68502a300fe9627`
 - `carry/fmx-work-control`
-  `87c86133246dbd294fb6797cf72dacbff0bb5ac0`
+  `22c9252e258325118d90ffeb4916246a9e2fc737`
 - `carry/fxnk-version`
-  `267071423fc1e79e21061ac0fc465855b571a202`
+  `fabf45e7d39b93663133e31ea69b3af327a396e7`
 - `carry/hosted-full-ci`
-  `43aed65fcb8f1097d098a49e650bb4fff104f8f9`
+  `e635935db2a3c3506e52497e16044f8481909482`
 - `carry/invocation-skill-roots`
-  `5a54146cd750d61e4f72e920d4d71310d5729dcd`
+  `b752e5f2311e9e8e42cc247eba9410e3918fee88`
 - `carry/launch-control-continuity`
-  `a331cd93fb5fe5d0e7e4d9b1979e94f6e71df1e5`
+  `566b4331d05da782007eb324dacdb7b63f2e5f10`
 - `carry/libfx-provider-authorization`
-  `aaeb980aefcc5e1c582e1c7a6c89c4e29a816a28`
+  `d0352193110905dee7e96d4dd3d8be38da79de81`
 - `carry/local-gate-support`
-  `9eed78ac3801c91e697bff88fc566d0fc0bd9575`
+  `77a7862667d8a6d933c8f6f8112b6d8b4bf79adb`
 - `carry/notification-sound-single-flight`
-  `2db825fc50ad1ddda04248e5a1860349ff818831`
+  `b1725286442e5b7d468351e6d7b47cbb4a0e81d8`
 - `carry/resume-bounds`
-  `2aa8b631fc10533ac164467686c3b4748e640679`
+  `3d26d06936afe3db7c8ede001f93d0f184767016`
 - `carry/session-naming`
-  `ed90ce2201bf9cb6c1235d060482078efdf15a9c`
+  `cf7e6485aaf78c29f5d2e5075f51c7898cf56236`
 - `carry/state-system-prompts`
-  `6d72707d94112088d5a356bcaab7d084c7151e26`
+  `5a046c70d1ac8aaffc15081f8864c6518e15ebf9`
 - `carry/system-prompt-files`
-  `3d8aa7942e486cfb0ab084097419143fe79b0b40`
+  `6cd5c871d8ec2ec791446c8a268b380e36c8e4c4`
 - `carry/terminal-probe-determinism`
-  `5e9881712dfaf10648c7fb6cf6f3cee643455cad`
+  `381bb01ef1e568048ede68ac937501f706befa10`
 
 All twenty-five carry heads are based on current Main or their declared
 dependency. Session naming and edited-root recovery declare the ADE feed as
@@ -105,20 +105,17 @@ prompts depends on launch continuity and local gate support.
   native admission order and return authoritative post-operation state. The
   surface does not control permissions, questions, sessions, subagents,
   settings, or queue reordering, and remains independent of ADE.
-- fmx `bc612f96fc8ee1a203ff410fb7b5281971832d29` replaces automated CLI
-  control with an eleven-tool stdio MCP server. It has no `control` or `bus`
-  subcommands, launch-agent compatibility tool, prompt-paste path, wait tool,
-  Runtime event stream, or phase scaffolding. Agent work mirrors only Fx's
-  native Work API. Canonical validation passed typecheck and 326 tests with 17
-  intentional gated skips and zero failures; the merge tree exactly matches
-  the validated feature tree.
-- AgentStart `17ff8a497752d154ffa9013a7a8d84a1470ecf3b` advances the exact
-  Integration pin and records the MCP and Work-socket fleet edges. Its full
-  validation and convergence passed; `fmx` and `fmx-mcp` resolve to canonical
-  fmx source, `fmx doctor` passes, and the installed Collab manifest and skill
-  are the expected policy-qualified and fully rendered forms of agentguidance's
-  source templates.
-- Focused, unrecorded, and recorded proof completed with all 51 downstream
+- fmx `13076bc5c27c3de8dbe866549f346fcb89cad164` retains the eleven-tool
+  stdio MCP surface and advances its exact Fx source pin to Integration
+  `559bbd62`. Canonical validation passed typecheck and 326 tests with 17
+  intentional gated skips, the PTY E2E passed, and the installed `fmx-fx` is
+  byte-identical to the installed `fx`.
+- AgentStart `6f914dec2c567f074f07a3d9dbaad51c1068fc78` advances the exact
+  Integration pin, its check-plan assertion, and the fleet pin map. Full
+  validation and convergence passed; `fmx doctor` passes, both Fx binaries
+  report `fxnk 0.5.0 (fx 0.0.7)`, and the installed Collab manifest is the
+  expected policy-qualified form of agentguidance's source template.
+- Focused, unrecorded, and recorded proof completed with all 53 downstream
   canaries, four CLI regressions, three ADE E2Es, the semantic work-control
   integration probe, three subagent-manager probes, six render/replay probes,
   and fresh-binary checks passing.
@@ -131,9 +128,20 @@ prompts depends on launch continuity and local gate support.
   `~/code/fxnk/scripts/local-gate.sh` while that checkout is clean on `main`,
   or prove a different Workshop worktree's four contract files byte-identical
   to `main`; a branch label alone does not establish the receipt contract.
-- Full CI run `33277352293` for `121cae8` remains pending/running and is
-  nonblocking observability; its receipt is
-  `~/.local/state/fxnk/full-ci/121cae8b8e0a3db57d8d7efe7c44edbcebdb3d99.json`.
+- Hosted Full CI blob `a512d762b94e9b964f2983c545be1bf2cf7f8de3`
+  admits only Integration pushes and manual dispatch and uses one constant
+  cancelling concurrency group. Run `33284331921` is the sole post-repair run,
+  for `559bbd62`, and remains queued as nonblocking observability. The
+  superseded `121cae8` Integration run and all 24 carry runs created by the old
+  workflow are cancelled; post-repair reconciliation created zero carry runs.
+- The watcher refreshed
+  `~/.local/state/fxnk/full-ci/pending.json`; it remains overdue while the
+  current run waits and retains three historical obligations. The `c83be4d7`
+  split-HOME initialization defects are repaired and gated in the current
+  composition, the `ec1cbc3a` canary-runner and inventory defects were repaired
+  before green `309a0e5a`, and `0deb9806` never received a run. These receipts
+  remain historical evidence under the watcher's retention policy rather than
+  shipping authority.
 
 ## History
 
@@ -197,3 +205,8 @@ prompts depends on launch continuity and local gate support.
   gate, atomically published and installed `121cae8`, replaced fmx automation
   with its eleven-tool MCP surface, and advanced AgentStart's exact consumer
   pin and fleet map.
+- 2026-08-29: Restricted hosted Full CI to Integration and manual dispatch,
+  repaired the initialization regressions its branch flood exposed, passed the
+  53-canary exact-SHA gate, atomically published and installed `559bbd62`,
+  advanced fmx and AgentStart, cancelled the obsolete runs, and reconciled all
+  twenty-five carries without creating another carry run.
