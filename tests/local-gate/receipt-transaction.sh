@@ -96,8 +96,11 @@ upstream_repo="$test_root/upstream.git"
 fork_repo="$test_root/fork.git"
 state_dir="$test_root/state"
 manifest="$test_root/quarantine.json"
-mkdir -p "$fx_worktree/src" "$fx_worktree/scripts" "$fx_worktree/tests/e2e" \
+mkdir -p "$fx_worktree/.github/workflows" "$fx_worktree/src" \
+    "$fx_worktree/scripts" "$fx_worktree/tests/e2e" \
     "$fx_worktree/tests/e2e/render-lab" "$fx_worktree/tests/fxnk"
+printf 'name: Full CI\non:\n  push:\n    branches-ignore:\n      - main\n' \
+    >"$fx_worktree/.github/workflows/full-ci.yml"
 printf 'fixture\n' >"$fx_worktree/tests/e2e/render-lab/audit-direct-writes.ts"
 printf 'pub fn main() void {}\n' >"$fx_worktree/tests/fxnk/runner.zig"
 printf 'test {}\n' >"$fx_worktree/src/main.zig"
@@ -111,10 +114,19 @@ git -C "$fx_worktree" config user.name fxnk-test
 git -C "$fx_worktree" config user.email fxnk@example.invalid
 git -C "$fx_worktree" add .
 git -C "$fx_worktree" commit --quiet -m fixture
-sha=$(git -C "$fx_worktree" rev-parse HEAD)
 blob=$(git -C "$fx_worktree" hash-object tests/e2e/quarantined.test.ts)
 
 git clone --quiet --bare "$fx_worktree" "$upstream_repo"
+git -C "$fx_worktree" checkout --quiet -b carry/hosted-full-ci
+printf 'name: Full CI\non:\n  workflow_dispatch:\n  push:\n    branches:\n      - integration\n' \
+    >"$fx_worktree/.github/workflows/full-ci.yml"
+git -C "$fx_worktree" add .github/workflows/full-ci.yml
+git -C "$fx_worktree" commit --quiet -m 'restrict hosted full CI'
+git -C "$fx_worktree" checkout --quiet -b integration
+printf 'candidate\n' >"$fx_worktree/candidate.txt"
+git -C "$fx_worktree" add candidate.txt
+git -C "$fx_worktree" commit --quiet -m candidate
+sha=$(git -C "$fx_worktree" rev-parse HEAD)
 git clone --quiet --bare "$fx_worktree" "$fork_repo"
 git --git-dir="$fork_repo" update-ref refs/heads/integration "$sha"
 git -C "$fx_worktree" remote add origin "$upstream_repo"
@@ -147,12 +159,30 @@ receipt="$state_dir/local-gates/$sha.json"
     || fail "recorded gate receipt is not mode 0600"
 jq -e --arg sha "$sha" \
     '.authority == "test" and .fx_sha == $sha and
+     .outcomes.hosted_ci_composition == "pass" and
      .outcomes.direct_write_audit == "pass" and
      .outcomes.quarantine[0].status == "quarantined" and
      .outcomes.quarantine[0].failure_count == 1 and
      .outcomes.quarantine[0].signatures == ["fixture"] and
      (.outcomes.quarantine[0].blob | test("^[0-9a-f]{40}$"))' \
     "$receipt" >/dev/null || fail "recorded gate receipt has the wrong proof"
+
+git -C "$fx_worktree" checkout --quiet -b integration-workflow-mismatch
+printf '\n# integration-only mutation\n' \
+    >>"$fx_worktree/.github/workflows/full-ci.yml"
+git -C "$fx_worktree" add .github/workflows/full-ci.yml
+git -C "$fx_worktree" commit --quiet -m 'mutate integration workflow'
+set +e
+workflow_output=$(env "${gate_env[@]}" "$root/scripts/local-gate.sh" \
+    --worktree "$fx_worktree" 2>&1)
+workflow_status=$?
+set -e
+[ "$workflow_status" -ne 0 ] \
+    || fail "Integration-only workflow mutation did not block the gate"
+printf '%s\n' "$workflow_output" | grep -F \
+    'changes the hosted Full CI workflow' >/dev/null \
+    || fail "Integration-only workflow refusal was not explained"
+git -C "$fx_worktree" checkout --quiet integration
 
 set +e
 audit_output=$(

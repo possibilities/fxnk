@@ -559,13 +559,25 @@ servers.
 
 ### Hosted Full CI
 
-- Start the fork's hosted Full CI only for the Integration branch and manual
-  dispatch. No other fork head, quarantine included, may trigger a run.
-- Serialize the workflow into one constant concurrency group with in-progress
-  cancellation, so at most one suite runs across the whole fork and a newer
-  Integration tip cancels the run in flight. Only the current tip's verdict is
-  worth waiting for, and a suite that never completes under sustained churn is
-  an accepted cost because Full CI gates nothing.
+- Start the fork's hosted Full CI automatically only when maintenance publishes
+  Integration, and allow manual dispatch. Publishing the Main mirror or any
+  declared carry head must start no run.
+- Keep `carry/hosted-full-ci` as the common base dependency of every other
+  carry, with its exact workflow blob inherited unchanged by each published
+  carry head and the final Integration composition. GitHub evaluates a pushed
+  branch's own workflow, so a carry based directly on upstream would restore
+  upstream's broad non-Main trigger even when Integration itself is correct.
+- Leave unrelated and `DELETEME/*` heads unchanged as the branch model
+  requires; maintenance does not rewrite their historical workflow blobs.
+  Moving one of those refs is outside standing publication authority and must
+  assess that head's own workflow as part of the separately authorized action.
+- Serialize the maintained workflow into one constant concurrency group with
+  in-progress cancellation, so at most one suite from Integration or a manual
+  dispatch of that workflow runs at once and a newer Integration tip cancels
+  the maintained run in flight. Historical workflow blobs on preserved heads
+  are outside this guarantee. Only the current tip's verdict is worth waiting
+  for, and a suite that never completes under sustained churn is an accepted
+  cost because Full CI gates nothing.
 
 ## Gate
 
@@ -579,8 +591,10 @@ publishing any affected carry:
 ```
 
 The gate runs formatting, the public-surface audit, and upstream's direct-write
-audit, builds ReleaseSafe, executes the narrow `test-fxnk` native target, runs
-focused CLI and ADE integration tests, and exercises the fresh binary. It also runs bounded probes
+audit, first proves that the exact candidate HEAD contains
+`carry/hosted-full-ci` and preserves its exact workflow blob, builds
+ReleaseSafe, executes the narrow `test-fxnk` native target, runs focused CLI
+and ADE integration tests, and exercises the fresh binary. It also runs bounded probes
 from the known fragile macOS-arm64 terminal surface. A green probe passes; a
 failure is quarantined only when its file and harness blobs still match
 `gate/macos-arm64-quarantine.json` and every failure has a declared normalized

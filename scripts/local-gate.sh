@@ -114,6 +114,28 @@ upstream_sha=$(git -C "$fx_worktree" rev-parse "$upstream_ref")
 git -C "$fx_worktree" merge-base --is-ancestor "$upstream_sha" "$fx_sha" \
     || die "$fx_sha does not contain tracked origin/main at $upstream_sha"
 
+hosted_ci_ref=refs/heads/carry/hosted-full-ci
+hosted_ci_workflow=.github/workflows/full-ci.yml
+hosted_ci_sha=$(git -C "$fx_worktree" rev-parse --verify \
+    "$hosted_ci_ref^{commit}" 2>/dev/null) \
+    || die "$fx_worktree has no carry/hosted-full-ci commit"
+git -C "$fx_worktree" merge-base --is-ancestor "$upstream_sha" "$hosted_ci_sha" \
+    || die "carry/hosted-full-ci does not contain tracked origin/main at $upstream_sha"
+[ "$(git -C "$fx_worktree" diff --name-only \
+    "$upstream_sha..$hosted_ci_sha")" = "$hosted_ci_workflow" ] \
+    || die "carry/hosted-full-ci changes files outside its owned workflow"
+git -C "$fx_worktree" merge-base --is-ancestor "$hosted_ci_sha" "$fx_sha" \
+    || die "$fx_sha does not contain carry/hosted-full-ci at $hosted_ci_sha"
+hosted_ci_blob=$(git -C "$fx_worktree" rev-parse \
+    "$hosted_ci_sha:$hosted_ci_workflow") \
+    || die "carry/hosted-full-ci does not carry $hosted_ci_workflow"
+candidate_ci_blob=$(git -C "$fx_worktree" rev-parse \
+    "$fx_sha:$hosted_ci_workflow") \
+    || die "$fx_sha does not carry $hosted_ci_workflow"
+[ "$candidate_ci_blob" = "$hosted_ci_blob" ] \
+    || die "$fx_sha changes the hosted Full CI workflow"
+printf 'LOCAL-GATE %-24s pass\n' hosted-ci-composition
+
 manifest="${FXNK_LOCAL_GATE_MANIFEST:-$root/gate/macos-arm64-quarantine.json}"
 [ -f "$manifest" ] || die "quarantine manifest is missing: $manifest"
 jq -e \
@@ -210,8 +232,8 @@ canary_step() {
     set -e
     sed -n '1,240p' "$output"
     [ "$status" -eq 0 ] || die "fxnk-unit-canaries exited $status"
-    [ "$(grep -Fxc 'FXNK-CANARIES 51/51 passed' "$output")" -eq 1 ] \
-        || die "fxnk-unit-canaries did not prove exactly 51 declared canaries"
+    [ "$(grep -Fxc 'FXNK-CANARIES 53/53 passed' "$output")" -eq 1 ] \
+        || die "fxnk-unit-canaries did not prove exactly 53 declared canaries"
     printf ' pass\n'
 }
 
@@ -326,7 +348,8 @@ if [ "$record" -eq 1 ]; then
         '{schema:1,authority:$authority,fx_sha:$sha,platform:{os:$os,arch:$arch},
           contract_digest:$contract_digest,
           upstream:{ref:"origin/main",sha:$upstream_sha},
-          outcomes:{format:"pass",public_surface:"pass",direct_write_audit:"pass",
+          outcomes:{hosted_ci_composition:"pass",
+            format:"pass",public_surface:"pass",direct_write_audit:"pass",
             release_safe_build:"pass",
             fxnk_unit_canaries:"pass",cli_integration:"pass",ade_integration:"pass",
             fresh_binary:"pass",quarantine:$quarantine},

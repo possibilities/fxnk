@@ -24,11 +24,15 @@ bash -n scripts/style-swatch.sh
 bash -n scripts/style-capture.sh
 bash -n scripts/style-view.sh
 bash -n scripts/prefix-mode-demo.sh
+ruby -c scripts/validate-full-ci-workflow.rb >/dev/null
+bash -n tests/full-ci-workflow.sh
 [ -x scripts/install.sh ] || fail "scripts/install.sh is not executable"
 [ -x scripts/local-gate.sh ] || fail "scripts/local-gate.sh is not executable"
 [ -x scripts/classify-quarantine.py ] \
     || fail "scripts/classify-quarantine.py is not executable"
 [ -x scripts/gate-contract.sh ] || fail "scripts/gate-contract.sh is not executable"
+[ -x scripts/validate-full-ci-workflow.rb ] \
+    || fail "scripts/validate-full-ci-workflow.rb is not executable"
 [ -x scripts/ship-gate.sh ] || fail "scripts/ship-gate.sh is not executable"
 [ -x scripts/reconcile-branches.sh ] \
     || fail "scripts/reconcile-branches.sh is not executable"
@@ -40,6 +44,8 @@ bash -n scripts/prefix-mode-demo.sh
     || fail "tests/supervision-transaction.sh is not executable"
 [ -x tests/local-gate/receipt-transaction.sh ] \
     || fail "tests/local-gate/receipt-transaction.sh is not executable"
+[ -x tests/full-ci-workflow.sh ] \
+    || fail "tests/full-ci-workflow.sh is not executable"
 for style_script in style-extract.sh style-swatch.sh style-capture.sh style-view.sh prefix-mode-demo.sh; do
     [ -x "scripts/$style_script" ] \
         || fail "scripts/$style_script is not executable"
@@ -132,6 +138,38 @@ if git -C "$fx_checkout" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
         git -C "$fx_checkout" show-ref --verify --quiet "refs/heads/$carry" \
             || fail "MAINTAIN.md Features maps a missing local branch: $carry"
     done <<<"$mapped_carries"
+
+    hosted_ci_carry=carry/hosted-full-ci
+    hosted_ci_workflow=.github/workflows/full-ci.yml
+    hosted_ci_blob=$(git -C "$fx_checkout" rev-parse \
+        "$hosted_ci_carry:$hosted_ci_workflow") \
+        || fail "$hosted_ci_carry does not carry $hosted_ci_workflow"
+    git -C "$fx_checkout" merge-base --is-ancestor main "$hosted_ci_carry" \
+        || fail "$hosted_ci_carry is not based on current Main"
+    [ "$(git -C "$fx_checkout" diff --name-only main.."$hosted_ci_carry")" \
+        = "$hosted_ci_workflow" ] \
+        || fail "$hosted_ci_carry changes files outside its owned workflow"
+    hosted_ci_text=$(git -C "$fx_checkout" show \
+        "$hosted_ci_carry:$hosted_ci_workflow")
+    printf '%s\n' "$hosted_ci_text" \
+        | scripts/validate-full-ci-workflow.rb hosted >/dev/null \
+        || fail "$hosted_ci_carry does not carry the hosted Full CI contract"
+
+    main_ci_text=$(git -C "$fx_checkout" show \
+        "main:$hosted_ci_workflow")
+    printf '%s\n' "$main_ci_text" \
+        | scripts/validate-full-ci-workflow.rb main >/dev/null \
+        || fail "the upstream Main workflow admission is not the reviewed inert-mirror shape"
+    while IFS= read -r carry; do
+        [ -n "$carry" ] || continue
+        [ "$carry" = "$hosted_ci_carry" ] && continue
+        git -C "$fx_checkout" merge-base --is-ancestor \
+            "$hosted_ci_carry" "$carry" \
+            || fail "$carry does not inherit the hosted Full CI admission"
+        [ "$(git -C "$fx_checkout" rev-parse "$carry:$hosted_ci_workflow")" \
+            = "$hosted_ci_blob" ] \
+            || fail "$carry changes the hosted Full CI workflow"
+    done <<<"$mapped_carries"
 fi
 grep -F 'scripts/ship-gate.sh' MAINTAIN.md >/dev/null \
     || fail "the gate does not name the ship gate"
@@ -206,6 +244,11 @@ grep -F 'local-gates/$expected_sha.json' scripts/ship-gate.sh >/dev/null \
     || fail "ship gate does not require an exact-SHA local receipt"
 grep -F 'fxnk_gate_contract_digest' scripts/ship-gate.sh >/dev/null \
     || fail "ship gate does not bind the receipt to the gate contract"
+grep -F 'hosted-ci-composition' scripts/local-gate.sh >/dev/null \
+    || fail "local gate does not verify the exact hosted CI composition"
+grep -F 'changes the hosted Full CI workflow' \
+    tests/local-gate/receipt-transaction.sh >/dev/null \
+    || fail "local gate transaction does not reject an Integration workflow mutation"
 grep -F 'merge-base --is-ancestor' scripts/ship-gate.sh >/dev/null \
     || fail "ship gate does not require current upstream ancestry"
 gate_test_sha=0000000000000000000000000000000000000000
@@ -280,6 +323,7 @@ if [ -f "$root/.git" ]; then
 fi
 
 tests/install-transaction.sh
+tests/full-ci-workflow.sh
 tests/local-gate/receipt-transaction.sh
 tests/ci-watch/verdict-transaction.sh
 
