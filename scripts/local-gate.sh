@@ -163,9 +163,16 @@ contract_digest=$(fxnk_gate_contract_digest "$root" "$manifest")
 started_at=$(date +%s)
 scratch=$(mktemp -d "${TMPDIR:-/tmp}/fxnk-local-gate.XXXXXX")
 pending_receipt=
+model_catalog_server_pid=
+model_catalog_url=
+model_catalog_requests_file=
 cleanup() {
     local status=$?
     trap - EXIT
+    if [ -n "$model_catalog_server_pid" ]; then
+        kill "$model_catalog_server_pid" 2>/dev/null || true
+        wait "$model_catalog_server_pid" 2>/dev/null || true
+    fi
     if [ -n "$pending_receipt" ] && [ -e "$pending_receipt" ]; then
         rm -f -- "$pending_receipt"
     fi
@@ -235,6 +242,45 @@ canary_step() {
     [ "$(grep -Fxc 'FXNK-CANARIES 119/119 passed' "$output")" -eq 1 ] \
         || die "fxnk-unit-canaries did not prove exactly 119 declared canaries"
     printf ' pass\n'
+}
+
+start_model_catalog_fixture() {
+    local ready_file="$scratch/model-catalog.ready"
+    local requests_file="$scratch/model-catalog.requests"
+    local output="$scratch/model-catalog-server.log"
+    local port= attempt=0
+
+    "$bun_bin" "$root/tests/local-gate/fixtures/model-catalog-server.ts" \
+        --ready-file "$ready_file" --requests-file "$requests_file" \
+        >"$output" 2>&1 &
+    model_catalog_server_pid=$!
+    while [ "$attempt" -lt 50 ]; do
+        attempt=$((attempt + 1))
+        if [ -s "$ready_file" ]; then
+            port=$(<"$ready_file")
+            case "$port" in
+                ''|*[!0-9]*) die "model catalog fixture returned an invalid port" ;;
+            esac
+            [ "$port" -gt 0 ] && [ "$port" -le 65535 ] \
+                || die "model catalog fixture returned an invalid port"
+            model_catalog_url="http://127.0.0.1:$port/models"
+            model_catalog_requests_file="$requests_file"
+            return
+        fi
+        if ! kill -0 "$model_catalog_server_pid" 2>/dev/null; then
+            sed -n '1,120p' "$output" >&2
+            die "model catalog fixture exited before readiness"
+        fi
+        sleep 0.1
+    done
+    die "model catalog fixture did not become ready"
+}
+
+stop_model_catalog_fixture() {
+    [ -n "$model_catalog_server_pid" ] || return
+    kill "$model_catalog_server_pid" 2>/dev/null || true
+    wait "$model_catalog_server_pid" 2>/dev/null || true
+    model_catalog_server_pid=
 }
 
 step format "$zig_bin" fmt --check "$fx_worktree/src/" "$fx_worktree/build.zig" \
@@ -313,12 +359,31 @@ for flag in --system-prompt-file --append-system-prompt-file --skills-dir; do
     printf '%s\n' "$help_output" | grep -F -- "$flag" >/dev/null \
         || die "fresh binary help is missing $flag"
 done
-models_output=$("$fx_worktree/zig-out/bin/fx" models --json 2>"$scratch/models.stderr") \
+start_model_catalog_fixture
+models_home="$scratch/models-home"
+mkdir -m 0700 "$models_home" "$models_home/.fx"
+printf '%s\n' \
+    '{"version":1,"access_token":"header.eyJodHRwczovL2FwaS5vcGVuYWkuY29tL2F1dGgiOnsiY2hhdGdwdF9hY2NvdW50X2lkIjoiYWNjdF9sb2NhbF9nYXRlIn19.signature","refresh_token":"local-gate-refresh","expires_at_ms":4102444800000,"account_id":"acct_local_gate"}' \
+    >"$models_home/.fx/chatgpt-auth.json"
+printf '%s\n' '{"provider":"codex","codex_model":"gpt-5.6-sol"}' \
+    >"$models_home/.fx/settings.json"
+chmod 0600 "$models_home/.fx/chatgpt-auth.json" "$models_home/.fx/settings.json"
+models_output=$(HOME="$models_home" AI_GATEWAY_API_KEY= OPENAI_API_KEY= \
+    VERCEL_OIDC_TOKEN= \
+    FX_AUTO_UPGRADE=0 FX_DISABLE_KEYCHAIN=1 FX_E2E_DISABLE_DOTENV=1 \
+    FX_E2E_OPENAI_CODEX_MODELS_URL="$model_catalog_url" \
+    MODEL_CATALOG_REQUESTS_FILE="$model_catalog_requests_file" \
+    "$fx_worktree/zig-out/bin/fx" models --json 2>"$scratch/models.stderr") \
     || die "fresh binary rejected models --json"
 [ ! -s "$scratch/models.stderr" ] || die "fresh binary wrote stderr for models --json"
 printf '%s\n' "$models_output" | jq -e \
     'any(.models[]?; (.reasoning_efforts | type == "array") and (.reasoning_efforts | length > 0))' \
     >/dev/null || die "fresh binary model catalog has no reasoning-effort inventory"
+stop_model_catalog_fixture
+model_catalog_request_count=$(grep -Fxc 'GET /models' \
+    "$model_catalog_requests_file" || true)
+[ "$model_catalog_request_count" -eq 1 ] \
+    || die "fresh binary did not request the loopback model catalog fixture"
 printf 'LOCAL-GATE %-24s pass\n' fresh-binary
 
 finished_at=$(date +%s)

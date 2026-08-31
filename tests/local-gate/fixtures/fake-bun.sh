@@ -2,6 +2,25 @@
 
 set -euo pipefail
 
+if [[ " $* " == *'/model-catalog-server.ts '* ]]; then
+    ready_file=
+    while [ "$#" -gt 0 ]; do
+        case "$1" in
+            --ready-file)
+                ready_file=$2
+                shift 2
+                ;;
+            *)
+                shift
+                ;;
+        esac
+    done
+    [ -n "$ready_file" ] || exit 1
+    printf '31337\n' >"$ready_file"
+    trap 'exit 0' INT TERM
+    while :; do sleep 1; done
+fi
+
 if [ "${FXNK_TEST_FAKE_BUN_QUARANTINE:-0}" -eq 1 ] \
     && [[ " $* " == *' ./quarantined.test.ts '* ]]; then
     printf 'error: fixture\n'

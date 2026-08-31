@@ -11,6 +11,10 @@ case "${1:-}" in
         ;;
     models)
         [ "${2:-}" = --json ] || exit 1
+        [ "${FX_E2E_OPENAI_CODEX_MODELS_URL:-}" = \
+            'http://127.0.0.1:31337/models' ] || exit 1
+        [ -n "${MODEL_CATALOG_REQUESTS_FILE:-}" ] || exit 1
+        printf 'GET /models\n' >>"$MODEL_CATALOG_REQUESTS_FILE"
         printf '{"models":[{"reasoning_efforts":["low"]}]}\n'
         ;;
     *)
