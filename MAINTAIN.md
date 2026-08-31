@@ -109,6 +109,7 @@ servers.
 | `carry/fmx-work-control` | Semantic work control |
 | `carry/edited-git-roots` | ADE event feed |
 | `carry/session-naming` | Native session naming |
+| `carry/structured-inference` | Structured subscription inference |
 | `carry/libfx-provider-authorization` | Libfx provider authorization |
 | `carry/invocation-skill-roots` | Invocation skill roots |
 | `carry/external-editor` | External editor support |
@@ -409,9 +410,39 @@ servers.
 - Keep work control independent of the ADE event feed. Command replies are
   reliable acknowledgements of native state changes; ADE remains passive,
   best-effort lifecycle telemetry and cannot become a command transport.
+- Preserve the existing authenticated Work-control schema 1 unchanged. For a
+  coordinated native launch, expose the distinct role-neutral
+  `fx.launch-admission-final` schema 1 boundary over bounded length-prefixed
+  local frames. Accept a caller-owned admission key and immutable launch
+  digest, then serialize initial semantic admission and the narrow pre-start
+  cancellation against one durable decision. Exactly one outcome wins:
+  `cancelled_before_start`, or `admitted` with the positive decimal Turn id
+  and the actual `queued` or `steering` disposition.
+- Return the same admitted-or-cancelled decision permanently for a retry with
+  the same key and digest, reject conflicting key reuse, and recover the
+  winner after a crash before either caller observes it. A cancellation winner
+  permanently refuses later admission; an admission winner makes later
+  cancellation return the original Turn and disposition without interrupting
+  it. This is neither general queue cancellation nor a second prompt execution
+  path: admitted work still enters the native FIFO and steering race above.
+- Retain the launch's final active main-session identity and authoritative
+  process outcome (`exited`, `signalled`, or `exec_failed`) as a correlated
+  final receipt until its exact digest is acknowledged. Fresh launches,
+  exact-resume launches, cancellation before any session exists, and process
+  failure all use the selected state root's bounded launch authority rather
+  than treating a session transcript as the recovery ledger. Replayed
+  acknowledgement is idempotent, and no role or lifecycle policy is inferred
+  from the opaque launch and admission keys.
 
 ### Native session naming
 
+- Accept an optional explicit display name on a native interactive launch,
+  including exact resume and controlled relaunch. Validate and persist it
+  through the same native display-metadata authority as `/rename`; it is never
+  a session identity or authorization input. A supplied name suppresses
+  automatic generation for that session, while absence preserves the current
+  automatic behavior exactly. Starting `/new` does not copy the explicit name
+  to the new session.
 - For the first admitted prompt of each saved interactive main session, start
   at most one best-effort, nonblocking title request through the active
   provider. Use profile-owned per-provider model, effort, and timeout settings;
@@ -435,7 +466,36 @@ servers.
 - Keep automatic naming disabled for `fx ask`, `fx acp`, browser and
   WebAssembly hosts, subagents, and disabled or unconfigured providers. Naming
   must not block agent lifecycle.
-  This carry depends on the ADE event feed for live consumer updates.
+  This carry depends on `carry/ade-event-feed` for live consumer updates and
+  `carry/launch-control-continuity` for exact relaunch and recovery grammar.
+  Its provider conformance covers `/new` followed by exact resume, directory
+  rebinding, selected-state-root isolation, immutable launch-control
+  reapplication, and explicit-name non-leakage without inventing a second
+  resume implementation.
+
+### Structured subscription inference
+
+- `carry/structured-inference` depends on `carry/hosted-full-ci` and no product
+  carry. Use the ordinary native Fx profile's Codex subscription credentials,
+  native OAuth refresh, authenticated model catalog, strict Responses schema
+  transport, and local JSON Schema validation; do not route through libfx,
+  NAPI, an interactive App, or an Agent loop.
+- Expose one versioned local request boundary that accepts an exact catalog
+  model and supported effort, prompt, object output schema, caller key, and
+  cancellation. Admit only an exact pair from the authenticated catalog, make
+  one tool-free provider request with no session identity, locally validate
+  the result, and return the value with credential/catalog/provider provenance
+  and an idempotent terminal receipt.
+- Same-key retries replay the terminal receipt, conflicting reuse is rejected,
+  and recovery preserves completed, cancelled, refused, and provider-failed
+  outcomes across a lost response or process restart until acknowledgement.
+  Cancellation before provider admission wins durably; after admission it is
+  best effort and the authoritative provider outcome wins.
+- Never advertise or dispatch tools, start MCP or background work, create an
+  interactive Conversation or session directory, create a Worktree, or expose
+  Workplace policy. This narrow Core/native-executable primitive is not libfx,
+  generic headless Agent execution, or the later Manager-facing direct-
+  inference product mode.
 
 ### Libfx provider authorization
 
@@ -537,6 +597,12 @@ servers.
   snapshot rather than the main agent's, and that `sequence` advances through
   both the oversized-record and full-queue drop paths, because "a gap means a
   drop" is what makes the feed's recovery story true.
+- Keep narrow canaries for explicit native naming and exact resume conformance,
+  the `fx.launch-admission-final` schema-1 codec and durable race reducer, and
+  tool-free structured inference. The gate exercises the fresh native binary
+  against isolated state roots and deterministic local provider/catalog
+  fixtures, proves the structured path creates no session, and keeps any
+  opt-in real subscription smoke separate from deterministic shipping proof.
 
 ### Terminal probe determinism
 

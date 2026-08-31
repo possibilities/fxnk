@@ -102,6 +102,19 @@ supplies the endpoint identity and authority, while ADE remains a separate
 one-way lifecycle feed.
 _Avoid_: ADE control, terminal injection, prompt socket, public API.
 
+**Launch-admission boundary** — Fx's distinct versioned, role-neutral local
+contract for exact native launch metadata, caller-keyed initial semantic
+admission or pre-start cancellation, and acknowledged final process receipts.
+It reuses native Work-control admission semantics without changing the
+Work-control schema or assigning lifecycle meaning to an opaque caller key.
+_Avoid_: Work-control v2, fmx lifecycle, Worker launch protocol.
+
+**Structured subscription inference** — Fx's versioned local one-shot boundary
+for tool-free Codex-subscription inference using an exact catalog model and
+effort, caller key, and output schema. It creates no Agent or Conversation and
+contains no caller-specific product policy.
+_Avoid_: libfx, headless agent, direct inference mode.
+
 **Full CI verdict** — The recorded outcome of one hosted Full CI run for one
 exact published Integration SHA, written by `scripts/ci-watch.sh` under
 `~/.local/state/fxnk/full-ci/`. It is evidence that the slow suite eventually
