@@ -466,9 +466,11 @@ servers.
 - Keep automatic naming disabled for `fx ask`, `fx acp`, browser and
   WebAssembly hosts, subagents, and disabled or unconfigured providers. Naming
   must not block agent lifecycle.
-  This carry depends on `carry/ade-event-feed` for live consumer updates and
-  `carry/launch-control-continuity` for exact relaunch and recovery grammar.
-  Its provider conformance covers `/new` followed by exact resume, directory
+  This carry keeps `carry/ade-event-feed` as its branch dependency for live
+  consumer updates. Exact relaunch and recovery conformance is an Integration
+  composition invariant with the separate `carry/launch-control-continuity`
+  head; do not fold that carry into the session-naming head. The composed
+  provider conformance covers `/new` followed by exact resume, directory
   rebinding, selected-state-root isolation, immutable launch-control
   reapplication, and explicit-name non-leakage without inventing a second
   resume implementation.
