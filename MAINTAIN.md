@@ -438,8 +438,9 @@ servers.
 
 - Accept an optional explicit display name on a native interactive launch,
   including exact resume and controlled relaunch. Validate and persist it
-  through the same native display-metadata authority as `/rename`; it is never
-  a session identity or authorization input. A supplied name suppresses
+  through the same native display-metadata authority and 240-byte UTF-8 title
+  bound as `/rename`; do not add a stricter launch-only limit. It is never a
+  session identity or authorization input. A supplied name suppresses
   automatic generation for that session, while absence preserves the current
   automatic behavior exactly. Starting `/new` does not copy the explicit name
   to the new session.
