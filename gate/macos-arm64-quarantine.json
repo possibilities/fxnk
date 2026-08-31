@@ -14,6 +14,10 @@
       "upstream_sha": "bb2dc7d557642c7e1c2e89176ca7721281dfb08c",
       "result": "Reviewed the complete 74ec5fa5 to 0e747981 blob delta. It carries upstream's single full-detail surface changes, bounded paging helpers, and the deterministic settled-response fixture used by the replayed terminal probe. The three quarantined tests still admit only tmux teardown or pane-predicate timeouts; no assertion signature was added."
     },
+    "phase_1c_candidate_review": {
+      "sha": "561a74e442b4b551b815a9f45230c486fe0e5f38",
+      "result": "Reviewed the changed quarantined inputs against the prior pins. The subagent fixture and shared tmux helper only accommodate the revised post-tool decision prompt; the three selected probe names and their ownership remain unchanged. The replay fixture moves automatic recording behind debug controls, continues to assert its private tape, and adds a silent-banner Ctrl-O probe outside the six selected names. The test-name patterns and the two runtime-only timeout signatures are unchanged, so assertion failures and every undeclared failure still block."
+    },
     "pre_pr_165": {
       "sha": "78a183545905c70b3aa8b28465bcb008af82e447",
       "result": "43 pass, 2 fail in tui-subagent-manager.test.ts"
@@ -43,11 +47,11 @@
       "required_blobs": [
         {
           "path": "tests/e2e/tui-subagent-manager.test.ts",
-          "oid": "0e747981a4efd7c6d33296f83deed2cb59d47273"
+          "oid": "4f2a82815585e7df6fdcf1b795bdf2b8e284d40a"
         },
         {
           "path": "tests/e2e/tmux-helpers.ts",
-          "oid": "a7ace9b57f359a8f845dad045edef6c5a3cc5626"
+          "oid": "eb96ba8305391e7042a869add7248251296eda9a"
         }
       ],
       "allowed_signatures": [
@@ -69,11 +73,11 @@
       "required_blobs": [
         {
           "path": "tests/e2e/tui-render-replay.test.ts",
-          "oid": "f09bf04a887405faad341f1bdea32e1bee455892"
+          "oid": "b05e06b4e765e1126d28e9c78e1ed9bc4c491ad9"
         },
         {
           "path": "tests/e2e/tmux-helpers.ts",
-          "oid": "a7ace9b57f359a8f845dad045edef6c5a3cc5626"
+          "oid": "eb96ba8305391e7042a869add7248251296eda9a"
         }
       ],
       "allowed_signatures": [
