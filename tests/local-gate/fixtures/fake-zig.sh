@@ -10,7 +10,7 @@ if [ "${1:-}" = build ]; then
     cp "$FXNK_TEST_FAKE_FX" zig-out/bin/fx
     chmod +x zig-out/bin/fx
     if [ "${2:-}" = test-fxnk ]; then
-        printf 'FXNK-CANARIES 53/53 passed\n'
+        printf 'FXNK-CANARIES 60/60 passed\n'
     fi
     exit 0
 fi
