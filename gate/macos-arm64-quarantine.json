@@ -18,6 +18,10 @@
       "sha": "561a74e442b4b551b815a9f45230c486fe0e5f38",
       "result": "Reviewed the changed quarantined inputs against the prior pins. The subagent fixture and shared tmux helper only accommodate the revised post-tool decision prompt; the three selected probe names and their ownership remain unchanged. The replay fixture moves automatic recording behind debug controls, continues to assert its private tape, and adds a silent-banner Ctrl-O probe outside the six selected names. The test-name patterns and the two runtime-only timeout signatures are unchanged, so assertion failures and every undeclared failure still block."
     },
+    "phase_2_candidate_review": {
+      "sha": "082ade5fcac40e4af7847e0991a69d275b452360",
+      "result": "Reviewed the macOS x86_64 shard-3 durable-generation correction: configured generation now advances beyond the initial value, and the withDuration expectation binds its generation. Focused native E2E passed."
+    },
     "pre_pr_165": {
       "sha": "78a183545905c70b3aa8b28465bcb008af82e447",
       "result": "43 pass, 2 fail in tui-subagent-manager.test.ts"
@@ -47,7 +51,7 @@
       "required_blobs": [
         {
           "path": "tests/e2e/tui-subagent-manager.test.ts",
-          "oid": "4f2a82815585e7df6fdcf1b795bdf2b8e284d40a"
+          "oid": "6311f180bd497e0144f2757b638db65c77efd817"
         },
         {
           "path": "tests/e2e/tmux-helpers.ts",

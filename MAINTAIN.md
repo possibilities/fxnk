@@ -124,6 +124,7 @@ servers.
 | `carry/exclusive-skill-roots` | Exclusive skill roots |
 | `carry/acp-project-instructions` | Project instructions |
 | `carry/acp-permission-policy` | Launch permission policy |
+| `carry/launch-permission-mode` | Launch permission mode |
 | `carry/acp-state-isolation` | State isolation |
 | `carry/launch-control-continuity` | Launch-control continuity |
 | `carry/state-system-prompts` | State system prompts |
@@ -219,6 +220,26 @@ servers.
   saved grant to override a launch-policy deny. Command rules retain the
   existing static parse requirement, so compound shell syntax does not inherit
   a simple-command allow.
+
+### Launch permission mode
+
+- `carry/launch-permission-mode` depends on the recomposed
+  `carry/launch-control-continuity`. The new control traverses the private
+  provider, invocation-build, and controlled-relaunch authority that
+  continuity owns.
+- Support global `--permission-mode auto` and `--permission-mode=auto` on a
+  fresh interactive TUI launch or exact TUI resume. Accept the option once and
+  require the exact lowercase value `auto`; reject a missing value, case
+  variants, `ask`, `yolo`, duplicates, ACP, and non-launch commands before
+  agent startup.
+- Treat the option as process-only authority. An explicit `auto` overrides
+  `FX_PERMISSION_MODE` and profile or workspace permission-mode preferences
+  without rewriting any saved setting. Omitting the option preserves the
+  existing precedence and behavior.
+- Compose the mode with `--permissions-file` and preserve it through controlled
+  upgrade relaunch. The private launch provider admits only that same exact
+  `auto` control and rejects every widening value before returning an
+  invocation.
 
 ### State isolation
 
@@ -608,11 +629,12 @@ servers.
 - Keep narrow canaries for explicit native naming and exact resume conformance,
   the `fx.launch-admission-final` schema-1 codec and durable race reducer, and
   private launch-provider schema-1 preservation and schema-2 exact resume
-  availability through durable Session authority, and tool-free structured
-  inference. The gate exercises the fresh native binary against isolated state
-  roots and deterministic local provider/catalog fixtures, proves the
-  structured path creates no session, and keeps any opt-in real subscription
-  smoke separate from deterministic shipping proof.
+  availability through durable Session authority, process-only automatic
+  permission authority and its relaunch/provider rejection boundaries, and
+  tool-free structured inference. The gate exercises the fresh native binary
+  against isolated state roots and deterministic local provider/catalog
+  fixtures, proves the structured path creates no session, and keeps any
+  opt-in real subscription smoke separate from deterministic shipping proof.
 
 ### Terminal probe determinism
 
