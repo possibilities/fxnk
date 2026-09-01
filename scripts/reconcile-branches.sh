@@ -17,6 +17,7 @@ if [ ! -f "$script" ]; then
     exit 1
 fi
 
+export MAINTAIN_WORKSHOP="$(cd "$(dirname "$0")/.." && pwd)"
 export MAINTAIN_CHECKOUT="${FXNK_FX_CHECKOUT:-$HOME/src/fx}"
 export MAINTAIN_FORK_REPO=possibilities/fx
 export MAINTAIN_UPSTREAM_REPO=vercel-labs/fx

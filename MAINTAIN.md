@@ -77,7 +77,13 @@ shipping it.
 - `scripts/reconcile-branches.sh` is this repository's entrypoint to the
   shared namespace script; it declares these values and nothing else.
 - `scripts/configure-supervision.sh --install` converges the local-only
-  `SUPERVISE.md` and `supervisor.trunk=integration` setting. Supervision keeps
+  `SUPERVISE.md` policy file, and
+  `scripts/reconcile-branches.sh --configure-supervision` converges this model
+  into the checkout's own `supervisor.*` git config, which is where advisory
+  tools read it — `/tend` judges a worktree against Integration and never
+  proposes removing a carry head's worktree. That config is derived state, not
+  a second declaration: `--check-supervision` verifies it, and that this
+  section still names these branches. Supervision keeps
   Fx work visible and may reap clean landed worktrees, but it never integrates
   product branches: a one-trunk fast-forward cannot publish a durable carry and
   the exact Integration composition together.
