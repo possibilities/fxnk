@@ -299,6 +299,11 @@ servers.
   context, directory, native-tool, skill-root, project-instruction,
   permission-policy, and state-root controls. If process replacement fails,
   print a shell-safe recovery command that preserves the same selections.
+- Keep the private `fx.private-launch-provider` schema 1 contract unchanged.
+  Schema 2 adds `resume_status`, derived from the durable Session authority,
+  so an external process owner can distinguish exact resume availability
+  without inferring it from a transcript or process outcome. A schema-1
+  request and response never acquire schema-2 fields.
 
 ### Effort
 
@@ -631,10 +636,12 @@ servers.
   drop" is what makes the feed's recovery story true.
 - Keep narrow canaries for explicit native naming and exact resume conformance,
   the `fx.launch-admission-final` schema-1 codec and durable race reducer, and
-  tool-free structured inference. The gate exercises the fresh native binary
-  against isolated state roots and deterministic local provider/catalog
-  fixtures, proves the structured path creates no session, and keeps any
-  opt-in real subscription smoke separate from deterministic shipping proof.
+  private launch-provider schema-1 preservation and schema-2 exact resume
+  availability through durable Session authority, and tool-free structured
+  inference. The gate exercises the fresh native binary against isolated state
+  roots and deterministic local provider/catalog fixtures, proves the
+  structured path creates no session, and keeps any opt-in real subscription
+  smoke separate from deterministic shipping proof.
 
 ### Terminal probe determinism
 
