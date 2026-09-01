@@ -12,7 +12,7 @@ set -euo pipefail
 skill_dir="${MAINTAIN_SKILL_DIR:-$HOME/.local/share/agentstart/resources/skills/maintain}"
 script="$skill_dir/scripts/reconcile-branches.sh"
 if [ ! -f "$script" ]; then
-    printf 'fxnk branches: the maintain skill is not installed at %s (run ~/code/agentstart/scripts/install.sh --install, or set MAINTAIN_SKILL_DIR)\n' \
+    printf 'fxnk branches: the maintain skill is not installed at %s (run ~/code/agentstart/scripts/sync-skills, or set MAINTAIN_SKILL_DIR)\n' \
         "$skill_dir" >&2
     exit 1
 fi
