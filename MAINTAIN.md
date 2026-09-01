@@ -637,11 +637,12 @@ servers.
 - Keep narrow canaries for explicit native naming and exact resume conformance,
   the `fx.launch-admission-final` schema-1 codec and durable race reducer, and
   private launch-provider schema-1 preservation and schema-2 exact resume
-  availability through durable Session authority, and tool-free structured
-  inference. The gate exercises the fresh native binary against isolated state
-  roots and deterministic local provider/catalog fixtures, proves the
-  structured path creates no session, and keeps any opt-in real subscription
-  smoke separate from deterministic shipping proof.
+  availability through durable Session authority, selected-state read-only
+  credential borrowing and process provider selection, and tool-free
+  structured inference. The gate exercises the fresh native binary against
+  isolated state roots and deterministic local provider/catalog fixtures,
+  proves the structured path creates no session, and keeps any opt-in real
+  subscription smoke separate from deterministic shipping proof.
 
 ### Terminal probe determinism
 
