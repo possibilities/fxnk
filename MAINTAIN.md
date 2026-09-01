@@ -131,7 +131,9 @@ servers.
 | `carry/acp-project-instructions` | Project instructions |
 | `carry/acp-permission-policy` | Launch permission policy |
 | `carry/acp-state-isolation` | State isolation |
+| `carry/launch-permission-mode` | Launch permission policy |
 | `carry/launch-control-continuity` | Launch-control continuity |
+| `carry/state-auth-borrowing` | State isolation |
 | `carry/state-system-prompts` | State system prompts |
 
 ### Fork identity
@@ -216,6 +218,12 @@ servers.
 
 ### Launch permission policy
 
+- Support global `--permission-mode auto` on fresh and exactly resumed native
+  interactive launches. It is process-only, outranks `FX_PERMISSION_MODE` and
+  saved profile/workspace preferences, accepts only the exact lowercase
+  `auto` value, and is preserved by controlled relaunch without rewriting
+  saved configuration. ACP and noninteractive commands do not acquire this
+  interactive-only authority.
 - Support global `--permissions-file FILE` on interactive TUI and ACP launches.
   Load the existing permission-rule JSON shape before agent startup.
   Canonicalize the file path, reject unreadable or malformed policy, and use
@@ -239,6 +247,21 @@ servers.
   `HOME`. Shell commands and MCP processes retain the operator's normal home
   environment. Workspace instruction and skill discovery retains that real
   home boundary while profile-global discovery uses the selected root.
+- Let an explicit selected-state launch set `FX_AUTH_READ_ONLY_HOME` to one
+  canonical existing Fx profile home. Fx borrows only an already-valid saved
+  provider credential from that profile at startup; it never copies, refreshes,
+  deletes, or replaces credential bytes there. Settings, provider/model choice,
+  instructions, skills, MCP state, memories, history, usage, and sessions stay
+  rooted beneath `--state-dir`, and authentication actions continue to target
+  that selected state root. Reject the override without `--state-dir`, reject
+  noncanonical or unusable paths, and leave the ordinary isolated behavior
+  unchanged when the variable is absent.
+- Support `FX_PROVIDER=gateway|codex|grok` as a process-only provider selection
+  override paired with existing `FX_MODEL` and `FX_EFFORT` overrides. The
+  Codex and Grok providers must have an explicit process model or a model in
+  the selected state profile; Gateway retains its compiled default. Invalid or
+  empty provider values fail before Agent startup. This does not import
+  provider or model preferences from a borrowed authorization profile.
 
 ### State system prompts
 
