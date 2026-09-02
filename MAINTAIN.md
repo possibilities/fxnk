@@ -130,8 +130,8 @@ servers.
 | `carry/exclusive-skill-roots` | Exclusive skill roots |
 | `carry/acp-project-instructions` | Project instructions |
 | `carry/acp-permission-policy` | Launch permission policy |
+| `carry/launch-permission-mode` | Launch permission mode |
 | `carry/acp-state-isolation` | State isolation |
-| `carry/launch-permission-mode` | Launch permission policy |
 | `carry/launch-control-continuity` | Launch-control continuity |
 | `carry/state-auth-borrowing` | State isolation |
 | `carry/state-system-prompts` | State system prompts |
@@ -190,9 +190,13 @@ servers.
   for the main session and every in-process child. Reject combining any
   `--tool` selection with `--no-native-tools`.
 - Treat `terminal:exec` as the existing one-shot terminal specification rather
-  than the interactive terminal surface. A role that selects it may execute
-  permission-admitted one-shot commands but cannot start, observe, write to,
-  stop, or otherwise acquire an interactive terminal session.
+  than the interactive terminal surface. Advertise it to the model as `shell`
+  with only the bounded `request.action = "run"` shape, and preserve that exact
+  command authority whether the model-facing request is still wrapped or has
+  already been normalized for internal dispatch. A role that selects it may
+  execute permission-admitted one-shot commands but cannot start, observe,
+  write to, stop, or otherwise acquire or retain an interactive terminal
+  session.
 
 ### Exclusive skill roots
 
@@ -218,12 +222,6 @@ servers.
 
 ### Launch permission policy
 
-- Support global `--permission-mode auto` on fresh and exactly resumed native
-  interactive launches. It is process-only, outranks `FX_PERMISSION_MODE` and
-  saved profile/workspace preferences, accepts only the exact lowercase
-  `auto` value, and is preserved by controlled relaunch without rewriting
-  saved configuration. ACP and noninteractive commands do not acquire this
-  interactive-only authority.
 - Support global `--permissions-file FILE` on interactive TUI and ACP launches.
   Load the existing permission-rule JSON shape before agent startup.
   Canonicalize the file path, reject unreadable or malformed policy, and use
@@ -233,6 +231,26 @@ servers.
   saved grant to override a launch-policy deny. Command rules retain the
   existing static parse requirement, so compound shell syntax does not inherit
   a simple-command allow.
+
+### Launch permission mode
+
+- `carry/launch-permission-mode` depends on the recomposed
+  `carry/launch-control-continuity`. The new control traverses the private
+  provider, invocation-build, and controlled-relaunch authority that
+  continuity owns.
+- Support global `--permission-mode auto` and `--permission-mode=auto` on a
+  fresh interactive TUI launch or exact TUI resume. Accept the option once and
+  require the exact lowercase value `auto`; reject a missing value, case
+  variants, `ask`, `yolo`, duplicates, ACP, and non-launch commands before
+  agent startup.
+- Treat the option as process-only authority. An explicit `auto` overrides
+  `FX_PERMISSION_MODE` and profile or workspace permission-mode preferences
+  without rewriting any saved setting. Omitting the option preserves the
+  existing precedence and behavior.
+- Compose the mode with `--permissions-file` and preserve it through controlled
+  upgrade relaunch. The private launch provider admits only that same exact
+  `auto` control and rejects every widening value before returning an
+  invocation.
 
 ### State isolation
 
@@ -247,6 +265,11 @@ servers.
   `HOME`. Shell commands and MCP processes retain the operator's normal home
   environment. Workspace instruction and skill discovery retains that real
   home boundary while profile-global discovery uses the selected root.
+- Keep workspace, selected-profile, and invocation skill roots as separate
+  authorities during discovery and refresh. Workspace ancestor skills always
+  resolve against the real workspace home, profile-global skills always
+  resolve against the selected state profile, and ordered invocation roots
+  remain visible without allowing either home to leak globals into the other.
 - Let an explicit selected-state launch set `FX_AUTH_READ_ONLY_HOME` to one
   canonical existing Fx profile home. Fx borrows only an already-valid saved
   provider credential from that profile at startup; it never copies, refreshes,
@@ -599,6 +622,9 @@ servers.
   within the terminal even when it extends beyond stale prior viewport bounds.
 - Direct Codex sessions must remain usable beyond 64 sequential provider calls
   without leaking usage reservations.
+- Generate every fresh native session identity as a compact URL-safe token
+  whose first byte is alphanumeric, so it always satisfies the coordinated
+  launch wire instead of intermittently beginning with `-` or `_`.
 
 ### Scope
 
@@ -638,7 +664,10 @@ servers.
   the `fx.launch-admission-final` schema-1 codec and durable race reducer, and
   private launch-provider schema-1 preservation and schema-2 exact resume
   availability through durable Session authority, selected-state read-only
-  credential borrowing and process provider selection, and tool-free
+  credential borrowing and process provider selection, process-only automatic
+  permission authority and its relaunch/provider rejection boundaries,
+  workspace/profile/invocation skill-root separation, leading-alphanumeric
+  session identities, bounded one-shot native-tool selection, and tool-free
   structured inference. The gate exercises the fresh native binary against
   isolated state roots and deterministic local provider/catalog fixtures,
   proves the structured path creates no session, and keeps any opt-in real
