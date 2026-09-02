@@ -130,7 +130,6 @@ servers.
 | `carry/exclusive-skill-roots` | Exclusive skill roots |
 | `carry/acp-project-instructions` | Project instructions |
 | `carry/acp-permission-policy` | Launch permission policy |
-| `carry/launch-permission-mode` | Launch permission mode |
 | `carry/acp-state-isolation` | State isolation |
 | `carry/launch-control-continuity` | Launch-control continuity |
 | `carry/state-auth-borrowing` | State isolation |
@@ -248,28 +247,12 @@ servers.
   existing static parse requirement, so compound shell syntax does not inherit
   a simple-command allow.
 
-### Launch permission mode
-
-- `carry/launch-permission-mode` depends on the recomposed
-  `carry/launch-control-continuity`. The new control traverses the private
-  provider, invocation-build, and controlled-relaunch authority that
-  continuity owns.
-- Support global `--permission-mode auto` and `--permission-mode=auto` on a
-  fresh interactive TUI launch or exact TUI resume. Accept the option once and
-  require the exact lowercase value `auto`; reject a missing value, case
-  variants, `ask`, `yolo`, duplicates, ACP, and non-launch commands before
-  agent startup.
-- Treat the option as process-only authority. An explicit `auto` overrides
-  `FX_PERMISSION_MODE` and profile or workspace permission-mode preferences
-  without rewriting any saved setting. Omitting the option preserves the
-  existing precedence and behavior.
-- Compose the mode with `--permissions-file` and preserve it through controlled
-  upgrade relaunch. The private launch provider admits only that same exact
-  `auto` control and rejects every widening value before returning an
-  invocation.
-
 ### State isolation
 
+- `carry/state-auth-borrowing` depends on `carry/acp-state-isolation`: the
+  borrowed credential is only meaningful beside a selected state root. It
+  declares its narrow canaries on `carry/local-gate-support`, which owns the
+  gate inventory.
 - Support global `--state-dir DIR` on interactive TUI and ACP launches. It
   selects the Fx profile/state root for that process, covering settings,
   authorization, profile-level instructions, managed and profile-global
@@ -338,11 +321,15 @@ servers.
   context, directory, native-tool, skill-root, project-instruction,
   permission-policy, and state-root controls. If process replacement fails,
   print a shell-safe recovery command that preserves the same selections.
-- Keep the private `fx.private-launch-provider` schema 1 contract unchanged.
-  Schema 2 adds `resume_status`, derived from the durable Session authority,
-  so an external process owner can distinguish exact resume availability
-  without inferring it from a transcript or process outcome. A schema-1
-  request and response never acquire schema-2 fields.
+- The fork previously carried the private `fx.private-launch-provider`
+  boundary, in schema 1 and in a schema 2 that added `resume_status`. Both are
+  retired; the fork carries no launch provider, and nothing replaces it.
+- The fork also used to carry `--record` through upgrade relaunch, rebuilding
+  the flag into the replacement invocation so an active terminal recording
+  survived the restart. Upstream has internalized terminal recording, so
+  `--record` is no longer a launch control and `InteractiveLaunch` no longer
+  carries it. The fork no longer carries that relaunch plumbing, and the
+  recovery command it printed no longer names the flag.
 
 ### Effort
 
@@ -483,40 +470,18 @@ servers.
 - Keep work control independent of the ADE event feed. Command replies are
   reliable acknowledgements of native state changes; ADE remains passive,
   best-effort lifecycle telemetry and cannot become a command transport.
-- Preserve the existing authenticated Work-control schema 1 unchanged. For a
-  coordinated native launch, expose the distinct role-neutral
-  `fx.launch-admission-final` schema 1 boundary over bounded length-prefixed
-  local frames. Accept a caller-owned admission key and immutable launch
-  digest, then serialize initial semantic admission and the narrow pre-start
-  cancellation against one durable decision. Exactly one outcome wins:
-  `cancelled_before_start`, or `admitted` with the positive decimal Turn id
-  and the actual `queued` or `steering` disposition.
-- Return the same admitted-or-cancelled decision permanently for a retry with
-  the same key and digest, reject conflicting key reuse, and recover the
-  winner after a crash before either caller observes it. A cancellation winner
-  permanently refuses later admission; an admission winner makes later
-  cancellation return the original Turn and disposition without interrupting
-  it. This is neither general queue cancellation nor a second prompt execution
-  path: admitted work still enters the native FIFO and steering race above.
-- Retain the launch's final active main-session identity and authoritative
-  process outcome (`exited`, `signalled`, or `exec_failed`) as a correlated
-  final receipt until its exact digest is acknowledged. Fresh launches,
-  exact-resume launches, cancellation before any session exists, and process
-  failure all use the selected state root's bounded launch authority rather
-  than treating a session transcript as the recovery ledger. Replayed
-  acknowledgement is idempotent, and no role or lifecycle policy is inferred
-  from the opaque launch and admission keys.
+- Preserve the existing authenticated Work-control schema 1 unchanged. The
+  fork previously also carried a distinct `fx.launch-admission-final`
+  boundary for coordinated native launches, with a durable admission and
+  pre-start cancellation decision and a retained final receipt. That boundary
+  is retired; work control exposes no launch admission or receipt surface.
 
 ### Native session naming
 
-- Accept an optional explicit display name on a native interactive launch,
-  including exact resume and controlled relaunch. Validate and persist it
-  through the same native display-metadata authority and 240-byte UTF-8 title
-  bound as `/rename`; do not add a stricter launch-only limit. It is never a
-  session identity or authorization input. A supplied name suppresses
-  automatic generation for that session, while absence preserves the current
-  automatic behavior exactly. Starting `/new` does not copy the explicit name
-  to the new session.
+- The fork previously accepted an explicit `--name` display name on a native
+  interactive launch, resume, and controlled relaunch. That launch control is
+  retired. Session names are set by `/rename` and by automatic generation
+  only, and the fork carries no launch-time naming flag.
 - For the first admitted prompt of each saved interactive main session, start
   at most one best-effort, nonblocking title request through the active
   provider. Use profile-owned per-provider model, effort, and timeout settings;
@@ -694,15 +659,13 @@ servers.
   and approval-resolution assertions. That migration does not admit a new
   quarantine signature: only the declared tmux teardown and pane-predicate
   runtime timeouts remain eligible.
-- Keep narrow canaries for explicit native naming and exact resume conformance,
-  the `fx.launch-admission-final` schema-1 codec and durable race reducer, and
-  private launch-provider schema-1 preservation and schema-2 exact resume
-  availability through durable Session authority, selected-state read-only
-  credential borrowing and process provider selection, process-only automatic
-  permission authority and its relaunch/provider rejection boundaries,
-  workspace/profile/invocation skill-root separation, leading-alphanumeric
-  session identities, bounded one-shot native-tool selection, and tool-free
-  structured inference. The gate exercises the fresh native binary against
+- Keep narrow canaries for selected-state read-only credential borrowing and
+  process provider selection, workspace/profile/invocation skill-root
+  separation, leading-alphanumeric session identities, bounded one-shot
+  native-tool selection, and tool-free structured inference. This carry owns
+  the whole gate inventory: a carry based on a dependency that has no
+  `tests/fxnk/runner.zig` declares its canaries here rather than on its own
+  head. The gate exercises the fresh native binary against
   isolated state roots and deterministic local provider/catalog fixtures,
   proves the structured path creates no session, and keeps any opt-in real
   subscription smoke separate from deterministic shipping proof.

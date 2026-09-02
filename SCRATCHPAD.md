@@ -129,6 +129,40 @@ composition.
 
 ## Current notes
 
+- 2026-09-02, by operator decision: the AgentWorkplace program is abandoned and
+  its Fx-only additions are retired. Four behaviors left the fork — durable
+  launch admission with final receipts, launch-time `--name` conversation
+  naming, the private launch provider in both schema 1 and schema 2, and
+  process-only `--permission-mode auto`. The upgrade-relaunch `--record`
+  plumbing went with them, not as a retirement but because upstream
+  internalized terminal recording.
+- Six carry heads were rewritten: `carry/fmx-work-control` to `4cfcef71`,
+  `carry/session-naming` to `8b9ab450`, and
+  `carry/launch-control-continuity` to `7ebe1b38`, all three back on their
+  2026-08-31 baseline; `carry/structured-inference` to `d2de4399`;
+  `carry/local-gate-support` to `01e53271`; and `carry/state-auth-borrowing`
+  to `0c9d6250`. `carry/launch-permission-mode` keeps its ref at `ed0b75e4`
+  and leaves the composition and the inventory; no branch was deleted.
+- Two carries had the retired code in their trees while none of the retired
+  commits was an ancestor. `carry/local-gate-support` sat on the Phase 1A
+  composition, and `carry/state-auth-borrowing` descended from `54a2a9a9`, a
+  squashed recomposition of the whole downstream stack. Ancestry checks alone
+  do not prove a carry clean; scan the tree.
+- `carry/state-auth-borrowing` now sits on `carry/acp-state-isolation` and
+  declares its four canaries on `carry/local-gate-support`, because its
+  dependency has no `tests/fxnk/runner.zig`. `carry/structured-inference`
+  declares its fifteen there for the same reason.
+- The candidate composition is `36ead08f` on
+  `maintain/awp-retire-candidate-20260902`. It builds ReleaseSafe, passes
+  80 of 80 canaries, and contains no retired symbol or file. It is not
+  published: `local-gate.sh` refuses it because the composition does not
+  contain tracked `origin/main` at `b8dd29f9`, 22 commits ahead of the mirror.
+  The previously published Integration `27689151` fails that same check, so
+  the drift predates this work and shipping the retirement requires an
+  upstream advance in the same cycle.
+- Backup refs for all 28 carry heads and Integration are under
+  `refs/awp-retire-backup/`. Do not prune or gc `~/src/fx` while they matter.
+
 - Fx now exposes one authenticated semantic work-control endpoint per opted-in
   interactive main Agent. Snapshot, queue, steer-with-safe-fallback,
   cooperative interrupt, queued-item update/delete, and queue resume use Fx's
