@@ -682,6 +682,11 @@ servers.
   child continue to a fake-gateway response that can never satisfy the parent,
   disguising a stale fixture as a network timeout instead of exercising the
   intended subagent permission and Git-root events.
+- Create that ADE fixture child through the current wrapped `subagent.run`
+  request and assert its task-derived display label. Do not restore internal
+  create-only fields such as caller-chosen child name, persistence mode, or
+  permission mode to the model fixture; those are Fx-owned translations under
+  the managed-subagent contract.
 - Review the quarantined subagent probes against the current upstream managed
   request shape. The isolation and always-approval probes now create children
   with wrapped `subagent.run` and address the generated task label/model-safe
