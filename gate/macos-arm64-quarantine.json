@@ -26,9 +26,9 @@
       "sha": "082ade5fcac40e4af7847e0991a69d275b452360",
       "result": "Reviewed the macOS x86_64 shard-3 durable-generation correction: configured generation now advances beyond the initial value, and the withDuration expectation binds its generation. Focused native E2E passed."
     },
-    "fe119_integration_review": {
-      "sha": "6feec58ad24368201ef44aa14aeea7e4ca6d1f5e",
-      "result": "Reviewed the complete pinned-to-candidate deltas for both quarantined inputs. The shared tmux helper only adds the model-facing shell.run fixture. The subagent file migrates terminal.exec fixtures and presentation assertions to shell.run, removes an unrelated full-detail detour, and keeps all three selected probe names, ownership checks, and permission decisions intact. The render/replay test blob is unchanged. The 4ba18e7c-to-6feec58a delta changes only the non-quarantined ADE integration fixture from the retired terminal/start request to wrapped bounded shell.run; both quarantined input blobs remain exact. No assertion signature is admitted: only the two existing runtime timeout shapes remain quarantinable."
+    "dd717_integration_review": {
+      "sha": "cf98de5c0ab69a011abf449a4b12d4e90d309654",
+      "result": "Reviewed the complete prior-pinned-to-candidate deltas for both quarantined inputs. The shared tmux helper retains the model-facing shell.run fixture and adds only the pure canonicalSubagentIdForStore adapter for upstream's reversible compact child handles. The subagent file adopts upstream's wrapped managed run request and task-derived display label, removes unrelated tests, and keeps all three selected probe names unique. The isolation and always-approval probes retain their ownership, canonical-scope, external-write, and permission assertions; the selected-child approval probe is unchanged. The render/replay test blob is unchanged. The non-quarantined ADE integration fixture remains on wrapped bounded shell.run. No assertion signature is admitted: only the two existing runtime timeout shapes remain quarantinable."
     },
     "pre_pr_165": {
       "sha": "78a183545905c70b3aa8b28465bcb008af82e447",
@@ -59,11 +59,11 @@
       "required_blobs": [
         {
           "path": "tests/e2e/tui-subagent-manager.test.ts",
-          "oid": "7c7531150fb7cc2b463520d98e773693b233544c"
+          "oid": "d155f8715486fe543be685fcbe26aab9361bb9e9"
         },
         {
           "path": "tests/e2e/tmux-helpers.ts",
-          "oid": "53752780fb1e6dc7dd3cddbb59aea94abdd3808e"
+          "oid": "bf4bec8cab2fea75c3e4b20fa9eca962d98fd1c9"
         }
       ],
       "allowed_signatures": [
@@ -89,7 +89,7 @@
         },
         {
           "path": "tests/e2e/tmux-helpers.ts",
-          "oid": "53752780fb1e6dc7dd3cddbb59aea94abdd3808e"
+          "oid": "bf4bec8cab2fea75c3e4b20fa9eca962d98fd1c9"
         }
       ],
       "allowed_signatures": [

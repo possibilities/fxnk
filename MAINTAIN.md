@@ -198,6 +198,22 @@ servers.
   write to, stop, or otherwise acquire or retain an interactive terminal
   session.
 
+### Current upstream managed-subagent contract
+
+- Compose upstream's model-safe `subagent` surface without reopening its
+  internal control schema. The model receives only one wrapped request with
+  `run`, `wait`, `send`, or `stop`; `run` accepts a task plus optional exact
+  model and effort, returns the model-facing child handle, and Fx owns child
+  naming, persistence, inspection bounds, relationship state, notifications,
+  permissions, and lifecycle translation. The reversible compact handle is a
+  presentation boundary, not a second child identity.
+- Preserve the fork's ADE, permission, and work-control authorities across
+  that upstream change. Managed children still publish their exact durable
+  session and owning-main attribution to ADE, and automatic review remains
+  scoped to the exact action, targets, origin, bounded masked prior results,
+  and canonical root-request context. Neither a task string nor the compact
+  handle widens execution authority.
+
 ### Exclusive skill roots
 
 - Support global `--no-default-skills` alongside repeatable `--skills-dir`.
@@ -666,6 +682,13 @@ servers.
   child continue to a fake-gateway response that can never satisfy the parent,
   disguising a stale fixture as a network timeout instead of exercising the
   intended subagent permission and Git-root events.
+- Review the quarantined subagent probes against the current upstream managed
+  request shape. The isolation and always-approval probes now create children
+  with wrapped `subagent.run` and address the generated task label/model-safe
+  handle, while retaining their ownership, external-write, canonical-scope,
+  and approval-resolution assertions. That migration does not admit a new
+  quarantine signature: only the declared tmux teardown and pane-predicate
+  runtime timeouts remain eligible.
 - Keep narrow canaries for explicit native naming and exact resume conformance,
   the `fx.launch-admission-final` schema-1 codec and durable race reducer, and
   private launch-provider schema-1 preservation and schema-2 exact resume
