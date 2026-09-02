@@ -660,6 +660,12 @@ servers.
   snapshot rather than the main agent's, and that `sequence` advances through
   both the oversized-record and full-queue drop paths, because "a gap means a
   drop" is what makes the feed's recovery story true.
+- Keep the ADE integration fixture on the current model-facing command
+  contract: its managed child emits a wrapped, bounded `shell.run`, not the
+  retired `terminal`/`start` shape. An unsupported legacy tool call makes the
+  child continue to a fake-gateway response that can never satisfy the parent,
+  disguising a stale fixture as a network timeout instead of exercising the
+  intended subagent permission and Git-root events.
 - Keep narrow canaries for explicit native naming and exact resume conformance,
   the `fx.launch-admission-final` schema-1 codec and durable race reducer, and
   private launch-provider schema-1 preservation and schema-2 exact resume

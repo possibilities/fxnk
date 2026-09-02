@@ -27,8 +27,8 @@
       "result": "Reviewed the macOS x86_64 shard-3 durable-generation correction: configured generation now advances beyond the initial value, and the withDuration expectation binds its generation. Focused native E2E passed."
     },
     "fe119_integration_review": {
-      "sha": "4ba18e7cd616987d7778563ed9d357738e0a3a94",
-      "result": "Reviewed the complete pinned-to-candidate deltas for both quarantined inputs. The shared tmux helper only adds the model-facing shell.run fixture. The subagent file migrates terminal.exec fixtures and presentation assertions to shell.run, removes an unrelated full-detail detour, and keeps all three selected probe names, ownership checks, and permission decisions intact. The render/replay test blob is unchanged. No assertion signature is admitted: only the two existing runtime timeout shapes remain quarantinable."
+      "sha": "6feec58ad24368201ef44aa14aeea7e4ca6d1f5e",
+      "result": "Reviewed the complete pinned-to-candidate deltas for both quarantined inputs. The shared tmux helper only adds the model-facing shell.run fixture. The subagent file migrates terminal.exec fixtures and presentation assertions to shell.run, removes an unrelated full-detail detour, and keeps all three selected probe names, ownership checks, and permission decisions intact. The render/replay test blob is unchanged. The 4ba18e7c-to-6feec58a delta changes only the non-quarantined ADE integration fixture from the retired terminal/start request to wrapped bounded shell.run; both quarantined input blobs remain exact. No assertion signature is admitted: only the two existing runtime timeout shapes remain quarantinable."
     },
     "pre_pr_165": {
       "sha": "78a183545905c70b3aa8b28465bcb008af82e447",
