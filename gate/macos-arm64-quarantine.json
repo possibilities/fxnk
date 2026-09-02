@@ -26,6 +26,10 @@
       "sha": "082ade5fcac40e4af7847e0991a69d275b452360",
       "result": "Reviewed the macOS x86_64 shard-3 durable-generation correction: configured generation now advances beyond the initial value, and the withDuration expectation binds its generation. Focused native E2E passed."
     },
+    "fe119_integration_review": {
+      "sha": "4ba18e7cd616987d7778563ed9d357738e0a3a94",
+      "result": "Reviewed the complete pinned-to-candidate deltas for both quarantined inputs. The shared tmux helper only adds the model-facing shell.run fixture. The subagent file migrates terminal.exec fixtures and presentation assertions to shell.run, removes an unrelated full-detail detour, and keeps all three selected probe names, ownership checks, and permission decisions intact. The render/replay test blob is unchanged. No assertion signature is admitted: only the two existing runtime timeout shapes remain quarantinable."
+    },
     "pre_pr_165": {
       "sha": "78a183545905c70b3aa8b28465bcb008af82e447",
       "result": "43 pass, 2 fail in tui-subagent-manager.test.ts"
@@ -55,11 +59,11 @@
       "required_blobs": [
         {
           "path": "tests/e2e/tui-subagent-manager.test.ts",
-          "oid": "6311f180bd497e0144f2757b638db65c77efd817"
+          "oid": "7c7531150fb7cc2b463520d98e773693b233544c"
         },
         {
           "path": "tests/e2e/tmux-helpers.ts",
-          "oid": "eb96ba8305391e7042a869add7248251296eda9a"
+          "oid": "53752780fb1e6dc7dd3cddbb59aea94abdd3808e"
         }
       ],
       "allowed_signatures": [
@@ -85,7 +89,7 @@
         },
         {
           "path": "tests/e2e/tmux-helpers.ts",
-          "oid": "eb96ba8305391e7042a869add7248251296eda9a"
+          "oid": "53752780fb1e6dc7dd3cddbb59aea94abdd3808e"
         }
       ],
       "allowed_signatures": [
