@@ -12,7 +12,7 @@ fail() {
 known=$(
     python3 "$root/scripts/classify-quarantine.py" \
         --manifest "$root/gate/macos-arm64-quarantine.json" \
-        --file tests/e2e/tui-subagent-manager.test.ts \
+        --file tests/e2e/tui-render-replay.test.ts \
         --output "$root/tests/local-gate/fixtures/known-timeout.log" \
         --exit-code 1
 )
@@ -28,7 +28,7 @@ set +e
 assertion_output=$(
     python3 "$root/scripts/classify-quarantine.py" \
         --manifest "$root/gate/macos-arm64-quarantine.json" \
-        --file tests/e2e/tui-subagent-manager.test.ts \
+        --file tests/e2e/tui-render-replay.test.ts \
         --output "$root/tests/local-gate/fixtures/known-assertion.log" \
         --exit-code 1 2>&1
 )
@@ -42,7 +42,7 @@ set +e
 unknown_output=$(
     python3 "$root/scripts/classify-quarantine.py" \
         --manifest "$root/gate/macos-arm64-quarantine.json" \
-        --file tests/e2e/tui-subagent-manager.test.ts \
+        --file tests/e2e/tui-render-replay.test.ts \
         --output "$root/tests/local-gate/fixtures/unknown-mixed.log" \
         --exit-code 1 2>&1
 )
@@ -56,7 +56,7 @@ set +e
 trailing_output=$(
     python3 "$root/scripts/classify-quarantine.py" \
         --manifest "$root/gate/macos-arm64-quarantine.json" \
-        --file tests/e2e/tui-subagent-manager.test.ts \
+        --file tests/e2e/tui-render-replay.test.ts \
         --output "$root/tests/local-gate/fixtures/trailing-error.log" \
         --exit-code 1 2>&1
 )
@@ -71,7 +71,7 @@ set +e
 crash_output=$(
     python3 "$root/scripts/classify-quarantine.py" \
         --manifest "$root/gate/macos-arm64-quarantine.json" \
-        --file tests/e2e/tui-subagent-manager.test.ts \
+        --file tests/e2e/tui-render-replay.test.ts \
         --output "$root/tests/local-gate/fixtures/trailing-crash.log" \
         --exit-code 139 2>&1
 )

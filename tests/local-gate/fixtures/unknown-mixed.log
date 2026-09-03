@@ -5,7 +5,7 @@ error: expect(received).toBe(expected)
 Expected: 1
 Received: 0
 error: Timed out waiting for tmux session fx-test-39122-1 to exit after 5000ms
-(fail) tui: Agents & processes > unrelated product assertion
+(fail) tui: render replay > unrelated product assertion
 
  44 pass
  1 fail

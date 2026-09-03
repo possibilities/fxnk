@@ -1,7 +1,7 @@
 bun test v1.4.0
 
 error: Timed out waiting for tmux session fx-test-39122-1 to exit after 5000ms
-(fail) tui: Agents & processes > known teardown timeout
+(fail) tui: render replay > recorded stdout and resize bytes replay to a valid final grid
 TypeError: unrelated trailing harness failure
 
  1 fail
