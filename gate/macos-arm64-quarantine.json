@@ -54,32 +54,6 @@
   },
   "entries": [
     {
-      "file": "tests/e2e/tui-subagent-manager.test.ts",
-      "test_name_pattern": "Ctrl-X isolates an idle child from active parent streaming and restores the current parent immediately|child file always approval reuses canonical scope and keeps external writes governed|selected child preserves and resolves its approval across Ctrl-X reopen",
-      "required_blobs": [
-        {
-          "path": "tests/e2e/tui-subagent-manager.test.ts",
-          "oid": "d155f8715486fe543be685fcbe26aab9361bb9e9"
-        },
-        {
-          "path": "tests/e2e/tmux-helpers.ts",
-          "oid": "bf4bec8cab2fea75c3e4b20fa9eca962d98fd1c9"
-        }
-      ],
-      "allowed_signatures": [
-        {
-          "id": "tmux-session-exit-timeout",
-          "kind": "runtime",
-          "regex": "Timed out waiting for tmux session fx-test-[0-9]+-[0-9]+ to exit after 5000ms"
-        },
-        {
-          "id": "pane-predicate-timeout",
-          "kind": "runtime",
-          "regex": "Timed out waiting for pane predicate"
-        }
-      ]
-    },
-    {
       "file": "tests/e2e/tui-render-replay.test.ts",
       "test_name_pattern": "automatic recording writes a private tape under the test home|composer frames omit synchronized updates when disabled|composer frames restore the visible cursor after synchronized updates|frame trace scopes are metadata-only during prompt resize and replay|opt-in input recording captures bracketed paste and Return without changing replay|recorded stdout and resize bytes replay to a valid final grid",
       "required_blobs": [
