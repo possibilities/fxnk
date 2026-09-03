@@ -22,12 +22,12 @@ or its installer.
   cycle reconciles only what that section states.
 - `SCRATCHPAD.md` is current maintenance state, not a second specification or
   an unbounded transcript.
-- `style/` is the fxnk style guide for fx-derived surfaces such as fmx and the
+- `style/` is the fxnk style guide for fx-derived surfaces such as the
   agentbrowse OpenTUI frontend: `style/STYLE.md` (developer prose),
   `style/tokens.json` (extracted ground truth; on conflict it
   wins), and `style/captures/` (swatch sheets and welcome-screen PNGs).
   `style/viewer/` is the interactive visual guide (bun + `@opentui/core`,
-  pinned to fmx's version), opened with `scripts/style-view.sh`.
+  fxnk's own pin), opened with `scripts/style-view.sh`.
   `scripts/style-extract.sh`, `scripts/style-swatch.sh`, and
   `scripts/style-capture.sh` maintain the artifacts; the methodology is
   `MAINTAIN.md` section "Style guide". The scripts read `~/src/fx` and never

@@ -7,8 +7,9 @@ entries on every maintenance cycle and appends one compact history entry.
 
 - Current maintenance: 2026-08-31. The complete upstream audit, nine carry
   repairs, exact atomic publication, direct installation, final branch
-  reconciliation, and the exact fmx and AgentStart consumer handoffs are
-  complete. Hosted Full CI is running as nonblocking observability for the
+  reconciliation, and the exact AgentStart consumer handoff are complete.
+  fmx is deprecated as of 2026-09-03 and is no longer a consumer: no cycle
+  verifies, hands off to, or pins against it. Hosted Full CI is running as nonblocking observability for the
   delivered Integration SHA.
 - Upstream base and Main mirror:
   `ef03b480874a49a9cc508c39b7b98214c34178ee`
@@ -22,9 +23,9 @@ entries on every maintenance cycle and appends one compact history entry.
   `SHIP beadc01a82891ef22bfa6cd3bc88f12edcec9176`.
 - Installed SHA-256:
   `62eeb7e014153845f474928b84ea03a95a06fd3cc7cd2f7a06096265ce8ea9b0`.
-  The receipt, clean bound checkout, published ref, installed `fx`, and fmx's
-  installed `fmx-fx` all match; both binaries report
-  `fxnk 0.5.0 (fx 0.0.7)`, and Fx auto-upgrade is disabled.
+  The receipt, clean bound checkout, published ref, and installed `fx` all
+  match; the binary reports `fxnk 0.5.0 (fx 0.0.7)`, and Fx auto-upgrade is
+  disabled.
 - Both quarantine files recorded `pass` with zero failures and no signatures.
   Semantic review accepted subagent-manager blob
   `0e747981a4efd7c6d33296f83deed2cb59d47273` and render-replay blob
@@ -218,16 +219,13 @@ composition.
   native admission order and return authoritative post-operation state. The
   surface does not control permissions, questions, sessions, subagents,
   settings, or queue reordering, and remains independent of ADE.
-- fmx `10b7c878615814b07ab7ae3955786a501a188a57` retains the eleven-tool
-  stdio MCP surface and advances its exact Fx source pin to Integration
-  `beadc01a`. Its exact isolated gate passed 407 tests with 18 intentional
-  skips plus both PTY E2Es. The source installer and `fmx doctor` passed; the
-  installed Fx SHA-256 is the same as the Workshop binary, and the Companion
-  is `0.7.0+fmx.2ffb1c1e425f`.
+- fmx is deprecated and no longer a consumer; its last recorded pin was
+  Integration `beadc01a` at fmx `10b7c878615814b07ab7ae3955786a501a188a57`,
+  and nothing here advances or verifies it again.
 - AgentStart `e6128efb42b8a2209b89c9b47aa610f8887af4df` advances the exact
   Integration pin, its check-plan assertion, and the fleet pin map. Full
   validation and convergence passed; both Fx binaries report
-  `fxnk 0.5.0 (fx 0.0.7)` and are byte-identical, `fmx doctor` passes, and the
+  `fxnk 0.5.0 (fx 0.0.7)` and are byte-identical, and the
   installed Collab manifest is the expected policy-qualified form of
   agentguidance's source template. Cass declined a nonessential refresh for
   low disk headroom while its healthy lexical index still covered all 3,042
@@ -343,6 +341,10 @@ composition.
   atomically published and installed `beadc01a`, advanced fmx and AgentStart,
   and reconciled the graph without moving any unrelated head or starting a
   carry run.
+- 2026-09-03: Deprecated fmx as a consumer. Removed the fmx source-identity
+  entry, validation, glossary term, README usage, and the viewer's fmx pin
+  rule; re-mapped `carry/fmx-distribution` to Hosted Full CI and kept both
+  `carry/fmx-*` heads and their features unchanged.
 
 ## Open before the next upstream absorb (2026-09-03)
 

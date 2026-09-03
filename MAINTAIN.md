@@ -62,8 +62,8 @@ shipping it.
   machine is not running is the drift this repository exists to prevent. In the
   operator's vocabulary "build" and "install" both name that one command, which
   aligns the checkout, builds ReleaseSafe, and installs atomically. A consumer's
-  own pin — fmx's `companion.json`, for instance — is a separate release act and
-  moves only when that consumer's release says so.
+  own pin — AgentStart's `fx_integration_sha`, for instance — is a separate
+  release act and moves only when that consumer's release says so.
 - Deletion marker prefix: `DELETEME/`. Creating, moving, or removing
   `DELETEME/<original-name>` requires an explicit human decision naming the
   branch. Maintenance never infers deletion from branch age, ownership,
@@ -126,7 +126,7 @@ servers.
 | `carry/local-gate-support` | Local gate support |
 | `carry/terminal-probe-determinism` | Terminal probe determinism |
 | `carry/hosted-full-ci` | Hosted Full CI |
-| `carry/fmx-distribution` | fmx source identity |
+| `carry/fmx-distribution` | Hosted Full CI |
 | `carry/acp-capability-gates` | Launch capability gates |
 | `carry/acp-tool-selection` | Native-tool selection |
 | `carry/exclusive-skill-roots` | Exclusive skill roots |
@@ -144,30 +144,6 @@ servers.
   `fxnk <fxnk-version> (fx <fx-version>)`. The independent fxnk version follows
   semantic versioning for downstream consumer compatibility; the Fx version
   remains the current upstream source version.
-
-### fmx source identity
-
-- Keep the intentionally undocumented `--fxnk-version` probe stable so fmx
-  can verify its private Fx source build. Fmx pins one exact published
-  Integration commit in `fx.json`; its own `scripts/install.sh` checks out and
-  builds that commit as `fmx-fx`, or accepts AgentStart's already-gated build
-  only with the same exact commit identity.
-- Fx and fxnk publish no fmx-specific binaries, archives, checksums, mutable
-  pointers, installer payload, or release tags. The Integration Git branch is
-  source publication, not a binary release, and remains the only source this
-  Workshop's installer builds.
-- Fmx resolves its `fmx-fx` once per Runtime and launches every Agent with
-  `FX_AUTO_UPGRADE=0`. An Agent never spends another lookup or compatibility
-  probe, and the private binary cannot update itself into an upstream build.
-- The Local development gate on macOS arm64 remains the only blocking
-  authority for publishing Integration. Hosted Full CI remains a binary
-  pass/fail run on macOS and Linux, arm64 and x86_64, after Integration is
-  pushed; it is nonblocking observability consumed later by Agentsource.
-- `carry/fmx-distribution` carries no Fx source of its own. Its private binary
-  distribution was retired, so its whole content is the Integration-only Full
-  CI trigger, which `carry/hosted-full-ci` already owns. The head is kept
-  because this entry's behavior is real and this is the branch that names it;
-  do not read an empty diff as a missing carry.
 
 ### System prompts
 
@@ -914,6 +890,16 @@ servers.
   are outside this guarantee. Only the current tip's verdict is worth waiting
   for, and a suite that never completes under sustained churn is an accepted
   cost because Full CI gates nothing.
+- Fx and fxnk publish no consumer-specific binaries, archives, checksums,
+  mutable pointers, installer payload, or release tags. The Integration Git
+  branch is source publication, not a binary release, and remains the only
+  source this Workshop's installer builds.
+- `carry/fmx-distribution` carries no Fx source of its own. Its private binary
+  distribution for the now-deprecated fmx was retired, so its whole content
+  is the Integration-only Full CI trigger this entry describes and
+  `carry/hosted-full-ci` owns. The head is kept only because removing a
+  `carry/*` ref is an explicit `DELETEME/` decision; do not read its empty
+  diff as a missing carry, and do not base new work on it.
 
 ## Gate
 
@@ -1031,9 +1017,9 @@ the next machine convergence will correctly reject that stale consumer pin.
 
 This repository also owns the fxnk style guide for fx-derived surfaces:
 `style/STYLE.md`, its machine-readable ground truth `style/tokens.json`, and
-the rendered references in `style/captures/`. fmx (`~/code/fmx`) and the
-agentbrowse OpenTUI frontend treat fx as their living style guide; this is
-where that edge is documented and kept true.
+the rendered references in `style/captures/`. The agentbrowse OpenTUI
+frontend treats fx as its living style guide; this is where that edge is
+documented and kept true.
 
 Methodology, run whenever the bound checkout's `integration` moves (every
 maintenance cycle qualifies, since carried features can touch UI):
@@ -1048,9 +1034,9 @@ maintenance cycle qualifies, since carried features can touch UI):
    themes against the new tokens.json. The viewer (`style/viewer/`, bun +
    `@opentui/core`) reads tokens.json generically, so most drift needs no
    code change; a schema change in tokens.json is the exception and must
-   update `style/viewer/index.ts` in the same commit. Keep its
-   `@opentui/core` pin matched to fmx's (`~/code/fmx/package.json`) —
-   rendering with fmx's own toolkit version is the point.
+   update `style/viewer/index.ts` in the same commit. Its `@opentui/core`
+   pin is fxnk's own; bump it deliberately when a consumer needs a newer
+   toolkit, and re-prove the viewer in the same commit.
 3. After any token drift, regenerate the visual references:
    `scripts/style-capture.sh` (swatch sheets from tokens.json, plus
    welcome-screen PNGs of the freshly built `~/src/fx/zig-out/bin/fx` in

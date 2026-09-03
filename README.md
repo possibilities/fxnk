@@ -2,15 +2,9 @@
 
 A Workshop for maintaining and installing the `possibilities/fx` fork. It keeps selected Fx features rebuilt on current upstream and publishes them through the fork's Integration branch.
 
-## Use from fmx
+## Consumers
 
-```sh
-git clone https://github.com/possibilities/fmx.git
-cd fmx
-scripts/install.sh --install
-```
-
-Fmx pins an exact approved Integration commit and builds it from source as
-`~/.local/bin/fmx-fx`. Fxnk publishes no private fmx binaries. AgentStart uses
-the same Fmx installer with the exact source build already proved by this
-Workshop, while retaining its independently managed `~/.local/bin/fx`.
+AgentStart is the consumer. It pins the exact approved Integration commit as
+`fx_integration_sha` in its own installer and builds `~/.local/bin/fx` from
+that source. Fxnk publishes no binaries; the Integration branch is source
+publication, and `scripts/install.sh` here builds it for this machine.

@@ -57,11 +57,6 @@ _Avoid_: CI result, approval, mutable status.
 integration branch into a ReleaseSafe binary on the system path.
 _Avoid_: maintainer, updater.
 
-**fmx Fx source pin** — The exact published Integration commit in fmx's
-`fx.json`. Fmx's own source installer builds it as the private `fmx-fx` and
-never replaces the separate `fx` binary the Workshop Installer manages.
-_Avoid_: binary release, Fx installer, moving latest.
-
 **Supervision policy** — fxnk's tracked `supervision/SUPERVISE.md`, installed
 locally into the upstream checkout with `supervisor.trunk=integration`. It keeps
 Fx work visible to `supervise` while routing product integration to the

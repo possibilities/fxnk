@@ -184,16 +184,13 @@ grep -F '~/.local/state/fxnk/full-ci/pending.json' MAINTAIN.md >/dev/null \
     || fail "the gate does not make an open verdict a cycle input"
 grep -Fx '### Hosted Full CI' MAINTAIN.md >/dev/null \
     || fail "the inventory does not carry the hosted Full CI trigger and serialization"
-grep -Fx '### fmx source identity' MAINTAIN.md >/dev/null \
-    || fail "the inventory does not carry fmx's private Fx source contract"
-for distribution_contract in \
-    '`--fxnk-version`' \
-    'builds that commit as `fmx-fx`' \
-    'publish no fmx-specific binaries' \
-    '`FX_AUTO_UPGRADE=0`'; do
-    grep -F "$distribution_contract" MAINTAIN.md >/dev/null \
-        || fail "the fmx source contract omits: $distribution_contract"
-done
+grep -F '`--fxnk-version`' MAINTAIN.md >/dev/null \
+    || fail "the inventory does not carry the consumer version probe"
+grep -F 'publish no consumer-specific binaries' MAINTAIN.md >/dev/null \
+    || fail "the inventory does not state that Integration is source publication"
+if grep -Fx '### fmx source identity' MAINTAIN.md >/dev/null; then
+    fail "the inventory still carries the deprecated fmx consumer contract"
+fi
 # shellcheck disable=SC2016 # Match the literal documented SHA variable.
 grep -F 'scripts/install.sh --install --sha "$integration_sha"' MAINTAIN.md >/dev/null \
     || fail "the consumer does not name the installer"
