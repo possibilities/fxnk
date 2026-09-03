@@ -300,7 +300,7 @@ cli_pattern='system prompt files replace and append in command-line order|repeat
 bun_step cli-integration 4 env TMUX_TMPDIR="$scratch/tmux" \
     "$bun_bin" test --max-concurrency 1 \
     --test-name-pattern "$cli_pattern" ./cli.test.ts
-bun_step ade-integration 4 env TMUX_TMPDIR="$scratch/tmux" FX_REQUIRE_TMUX=1 \
+bun_step ade-integration 3 env TMUX_TMPDIR="$scratch/tmux" FX_REQUIRE_TMUX=1 \
     "$bun_bin" test --max-concurrency 1 ./ade-event-feed.test.ts
 
 quarantine_jsonl="$scratch/quarantine.jsonl"

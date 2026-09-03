@@ -501,7 +501,9 @@ servers.
 - The fork previously accepted an explicit `--name` display name on a native
   interactive launch, resume, and controlled relaunch. That launch control is
   retired. Session names are set by `/rename` and by automatic generation
-  only, and the fork carries no launch-time naming flag.
+  only, and the fork carries no launch-time naming flag. The retirement took
+  that flag's E2E fixture with it, so the local gate's `ade-integration` step
+  now expects three tests in `tests/e2e/ade-event-feed.test.ts`, not four.
 - For the first admitted prompt of each saved interactive main session, start
   at most one best-effort, nonblocking title request through the active
   provider. Use profile-owned per-provider model, effort, and timeout settings;

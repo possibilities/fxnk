@@ -45,7 +45,7 @@ case " $* " in
         printf '4 pass\n0 fail\n'
         ;;
     *' ./ade-event-feed.test.ts '*)
-        printf '4 pass\n0 fail\n'
+        printf '3 pass\n0 fail\n'
         ;;
     *)
         printf '1 pass\n0 fail\n'
