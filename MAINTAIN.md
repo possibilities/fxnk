@@ -161,6 +161,11 @@ servers.
   authority for publishing Integration. Hosted Full CI remains a binary
   pass/fail run on macOS and Linux, arm64 and x86_64, after Integration is
   pushed; it is nonblocking observability consumed later by Agentsource.
+- `carry/fmx-distribution` carries no Fx source of its own. Its private binary
+  distribution was retired, so its whole content is the Integration-only Full
+  CI trigger, which `carry/hosted-full-ci` already owns. The head is kept
+  because this entry's behavior is real and this is the branch that names it;
+  do not read an empty diff as a missing carry.
 
 ### System prompts
 
