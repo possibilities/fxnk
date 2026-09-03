@@ -117,6 +117,7 @@ servers.
 | `carry/session-naming` | Native session naming |
 | `carry/structured-inference` | Structured subscription inference |
 | `carry/libfx-provider-authorization` | Libfx provider authorization |
+| `carry/codex-credential-authority` | Codex credential authority |
 | `carry/invocation-skill-roots` | Invocation skill roots |
 | `carry/external-editor` | External editor support |
 | `carry/notification-sound-single-flight` | Notification sound availability |
@@ -596,6 +597,69 @@ servers.
   processes, Grok, and the native secret store remain unavailable on every
   libfx surface.
 
+### Codex credential authority
+
+- `carry/codex-credential-authority` depends on
+  `carry/libfx-provider-authorization`, which owns the fork's Codex
+  session-store and account-pinning behavior. Its consumer is AgentVoice,
+  whose voice sidecar holds no login, credential store, ambient key, or
+  refresh token and receives bounded runtime leases from Fx alone.
+- Support global `--codex-credential-fd <n>` on interactive TUI, resume, and
+  ACP launches, and reject it on every other command. Activation is
+  all-or-none: with the flag the broker is serving before any other startup
+  callback runs and before `fx acp` answers `initialize`, or the launch fails.
+  Without it nothing is exposed. The descriptor number is the only capability
+  in argv, and the channel appears in no environment variable, log, telemetry
+  record, crash output, or generic JSON-RPC surface. Standard input, output,
+  and error are never accepted. Fx sets close-on-exec on its end before
+  anything the bootstrap can spawn exists.
+- Serve one persistent, sequential, length-prefixed schema 1 channel on that
+  descriptor: 64 KiB maximum frame, one request in flight, every response
+  correlated to its request id. The idle wait for the next request is
+  unbounded because the channel is persistent, while a frame that has begun
+  carries a read and write deadline so a stalled partial frame fails instead
+  of holding the channel. Writes are SIGPIPE-safe through `MSG_NOSIGNAL` on
+  Linux and `SO_NOSIGPIPE` on macOS; both are declared platforms.
+- Bind admission to the socket, not to the caller's word. The peer's effective
+  UID must equal Fx's own, the peer PID is pinned at the first admitted
+  request and re-read from the socket on every later one, and a one-time
+  per-instance nonce issued in the hello frame must be echoed by every
+  request. A refusal answers once with `unauthorized` and ends the channel.
+  Record the honest bound: a connected local stream's peer credentials are
+  fixed when it is created, so the PID pin cannot observe a descriptor passed
+  onward over `SCM_RIGHTS` and the nonce is what actually defeats a leaked
+  descriptor. The PID comparison is proved by a narrow canary against the same
+  production admission path rather than claimed end to end.
+- Expose exactly `codex.credential.resolve { minimum_validity_seconds }` and
+  `codex.credential.refresh { account_id, prior_generation }`. A success
+  result carries exactly `access_token`, `account_id`, `refresh_deadline` in
+  whole epoch seconds, and `generation`, and nothing else: never a refresh
+  token, a plan, a serialized session, or any store representation. A
+  resolution floor of 313 seconds keeps a delivered lease usable past the
+  consumer's own request timeout and transport grace.
+- Build the authority on upstream's unified auth runtime, not on the retired
+  credential store or a direct `chatgpt_oauth` reach-through.
+  `auth_runtime.prepareCredential` establishes the pin at activation,
+  `auth_runtime.refreshCredentialForAccount` serves both the stored
+  observation and the forced rotation with account pinning built in, and
+  `credential_authority.derive` is the identity every later load, OAuth
+  result, persisted rotation, and broker response is compared against. Refresh
+  is serialized by generation: the current generation rotates once, an older
+  generation receives the already newer lease unchanged, and a future
+  generation fails.
+- Fail closed rather than lease authority Fx may not rotate. Host-managed
+  authentication (`FX_AUTH_MODE=host-managed`) has nothing to lease, and a
+  borrowed read-only profile is refused before the broker starts. The broker
+  reads `FX_AUTH_READ_ONLY_HOME` by name rather than importing
+  `carry/state-auth-borrowing`, so the refusal holds whether or not that head
+  is composed.
+- Keep the broker out of the ADE event feed and out of semantic work control.
+  It is an authority channel, not telemetry and not a command transport.
+- The launch control is intentionally undocumented, like `--fxnk-version`: it
+  is a private contract with one consumer and appears in no help output.
+  `tests/e2e/codex-credential-broker.test.ts` is its consumer-shaped proof and
+  runs as its own gate step.
+
 ### Invocation skill roots
 
 - Support repeatable `--skills-dir PATH` and `--skills-dir=PATH` global options
@@ -690,7 +754,12 @@ servers.
 - Keep narrow canaries for selected-state read-only credential borrowing and
   process provider selection, workspace/profile/invocation skill-root
   separation, leading-alphanumeric session identities, bounded one-shot
-  native-tool selection, and tool-free structured inference. This carry owns
+  native-tool selection, and tool-free structured inference. Keep narrow canaries
+  for the Codex credential broker as well: peer and nonce admission, one
+  generation rotation with the stale and future cases, the exact four-field
+  lease, persistent framing with a stalled-frame deadline, fail-closed
+  host-managed and borrowed authority, the all-or-none launch grammar, and the
+  broker starting before every other interactive startup callback. This carry owns
   the whole gate inventory: a carry based on a dependency that has no
   `tests/fxnk/runner.zig` declares its canaries here rather than on its own
   head. The gate exercises the fresh native binary against
@@ -753,8 +822,9 @@ publishing any affected carry:
 The gate runs formatting, the public-surface audit, and upstream's direct-write
 audit, first proves that the exact candidate HEAD contains
 `carry/hosted-full-ci` and preserves its exact workflow blob, builds
-ReleaseSafe, executes the narrow `test-fxnk` native target, runs focused CLI
-and ADE integration tests, and exercises the fresh binary. It also runs bounded probes
+ReleaseSafe, executes the narrow `test-fxnk` native target, runs focused CLI,
+ADE, and Codex credential broker integration tests, and exercises the fresh
+binary. It also runs bounded probes
 from the known fragile macOS-arm64 terminal surface. A green probe passes; a
 failure is quarantined only when its file and harness blobs still match
 `gate/macos-arm64-quarantine.json` and every failure has a declared normalized

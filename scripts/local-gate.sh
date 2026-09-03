@@ -239,8 +239,8 @@ canary_step() {
     set -e
     sed -n '1,240p' "$output"
     [ "$status" -eq 0 ] || die "fxnk-unit-canaries exited $status"
-    [ "$(grep -Fxc 'FXNK-CANARIES 89/89 passed' "$output")" -eq 1 ] \
-        || die "fxnk-unit-canaries did not prove exactly 89 declared canaries"
+    [ "$(grep -Fxc 'FXNK-CANARIES 96/96 passed' "$output")" -eq 1 ] \
+        || die "fxnk-unit-canaries did not prove exactly 96 declared canaries"
     printf ' pass\n'
 }
 
@@ -302,6 +302,8 @@ bun_step cli-integration 4 env TMUX_TMPDIR="$scratch/tmux" \
     --test-name-pattern "$cli_pattern" ./cli.test.ts
 bun_step ade-integration 3 env TMUX_TMPDIR="$scratch/tmux" FX_REQUIRE_TMUX=1 \
     "$bun_bin" test --max-concurrency 1 ./ade-event-feed.test.ts
+bun_step credential-broker-integration 2 \
+    "$bun_bin" test --max-concurrency 1 ./codex-credential-broker.test.ts
 
 quarantine_jsonl="$scratch/quarantine.jsonl"
 : >"$quarantine_jsonl"
@@ -417,6 +419,7 @@ if [ "$record" -eq 1 ]; then
             format:"pass",public_surface:"pass",direct_write_audit:"pass",
             release_safe_build:"pass",
             fxnk_unit_canaries:"pass",cli_integration:"pass",ade_integration:"pass",
+            credential_broker_integration:"pass",
             fresh_binary:"pass",quarantine:$quarantine},
           duration_seconds:$duration,recorded_at:$recorded_at}' \
         >"$pending_receipt"

@@ -173,6 +173,7 @@ jq -e \
         .outcomes.fxnk_unit_canaries == "pass" and
         .outcomes.cli_integration == "pass" and
         .outcomes.ade_integration == "pass" and
+        .outcomes.credential_broker_integration == "pass" and
         .outcomes.fresh_binary == "pass" and
         (.duration_seconds | type == "number" and . >= 0) and
         (.recorded_at | type == "string" and length > 0) and
