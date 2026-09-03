@@ -343,3 +343,20 @@ composition.
   atomically published and installed `beadc01a`, advanced fmx and AgentStart,
   and reconciled the graph without moving any unrelated head or starting a
   carry run.
+
+## Open before the next upstream absorb (2026-09-03)
+
+- Upstream `7f4780be` "Retire unusable OAuth sessions after refresh" adds a
+  `retire_fx_session` delete on a provider session after a rejected or
+  malformed refresh, across the Vercel, Codex, and Grok paths in
+  `credentials.zig`, `chatgpt_oauth.zig`, and `grok_oauth.zig`. The
+  state-isolation contract promises the borrowed home is never deleted from,
+  and the credential broker's two primitives sit on the same path. This needs
+  a deliberate re-derivation of `carry/state-auth-borrowing` and
+  `carry/codex-credential-authority`, not a union merge, when it is absorbed.
+- Replay helpers from this cycle are under `scripts/resolvers/`.
+- `tests/e2e/acp.test.ts` is run by no gate step; it sat unparseable through a
+  whole cycle. Consider a parse-only step.
+- Pending test on `carry/acp-tool-selection`: under `--tool terminal:exec` an
+  admitted one-shot run still stalls past admission.
+
