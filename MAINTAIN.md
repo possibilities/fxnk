@@ -352,6 +352,15 @@ servers.
 
 ### ADE event feed
 
+- The E2E fixture's scope ends at the feed itself. It drives one main turn, a
+  question, a subagent turn with a permission answered on the mirrored main
+  prompt, and both agents' completion, then asserts session discovery on disk:
+  parent and child both persist and the parent is the session holding the child
+  registry, which is what keeps a child private to it. It deliberately does not
+  drive the resume picker, whose semantics belong to upstream, and it does not
+  wait for a child's own text in the parent pane, because upstream renders a
+  child there as a tool-call summary.
+
 - Provide the opt-in schema `1` ADE event feed documented in
   `docs/ade-event-feed.md`. An ADE binds a shared POSIX Unix socket and launches
   each interactive Fx TUI with both `FX_ADE_SOCKET_PATH` and its own opaque
