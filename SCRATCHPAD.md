@@ -129,6 +129,25 @@ composition.
 
 ## Current notes
 
+- 2026-09-03, this cycle in progress: two carries are being added together,
+  `carry/codex-credential-authority` and `carry/acp-voice-control`, and the
+  cycle absorbed a third upstream advance to `090c4582` to do it. Every carry
+  was replayed onto that mirror with content verified file-set identical.
+- Two agents worked in `~/code/fxnk` at once and the boundary slipped.
+  Commit `0041272` is carry 2's Features commit with one paragraph belonging to
+  carry 1 folded into it by a mistaken `--amend`; both paragraphs are correct
+  and present, only the boundary is wrong, and it was left alone deliberately
+  rather than rewrite history under a live writer.
+- Rerere holds a corrupt resolution for `src/core/agent/worker_runtime.zig`.
+  Replaying it stacks two return types on `admitPromptObserved` and cannot
+  compile. Merges touching that file were resolved by hand with rerere off this
+  cycle; the next maintainer should clear that entry from `.git/rr-cache`
+  rather than trust it.
+- `tests/e2e/acp.test.ts` had stopped parsing entirely at Integration
+  `11e8d5cc`: an earlier replay fused two subagent tests into one `test(` call
+  with two name strings. The gate never runs that file, so a whole cycle
+  passed without noticing. It is repaired on `carry/acp-tool-selection`.
+
 - 2026-09-02, by operator decision: the AgentWorkplace program is abandoned and
   its Fx-only additions are retired. Four behaviors left the fork - durable
   launch admission with final receipts, launch-time `--name` conversation
