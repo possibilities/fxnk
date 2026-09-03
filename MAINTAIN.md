@@ -195,6 +195,13 @@ servers.
   at startup and apply the resolved set to both tool advertisement and dispatch
   for the main session and every in-process child. Reject combining any
   `--tool` selection with `--no-native-tools`.
+- `tests/e2e/acp.test.ts` owns this carry's end-to-end proof. An earlier
+  replay fused its two subagent tests into one `test(` call with two name
+  strings and orphaned the upstream body, which stopped the whole file
+  parsing; the gate never runs that file, so nothing caught it. Upstream's
+  cancellation test is restored verbatim beside the carry's own
+  native-tool propagation test. A replay that touches this file re-checks that
+  it still parses.
 - Treat `terminal:exec` as the one-shot specification of upstream's shell tool
   rather than its interactive surface. Upstream renamed the tool from
   `terminal` to `shell` and now advertises it to the model under that name, so
