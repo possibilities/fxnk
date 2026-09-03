@@ -130,19 +130,35 @@ composition.
 ## Current notes
 
 - 2026-09-02, by operator decision: the AgentWorkplace program is abandoned and
-  its Fx-only additions are retired. Four behaviors left the fork — durable
+  its Fx-only additions are retired. Four behaviors left the fork - durable
   launch admission with final receipts, launch-time `--name` conversation
   naming, the private launch provider in both schema 1 and schema 2, and
   process-only `--permission-mode auto`. The upgrade-relaunch `--record`
   plumbing went with them, not as a retirement but because upstream
   internalized terminal recording.
-- Six carry heads were rewritten: `carry/fmx-work-control` to `4cfcef71`,
-  `carry/session-naming` to `8b9ab450`, and
-  `carry/launch-control-continuity` to `7ebe1b38`, all three back on their
-  2026-08-31 baseline; `carry/structured-inference` to `d2de4399`;
-  `carry/local-gate-support` to `01e53271`; and `carry/state-auth-borrowing`
-  to `0c9d6250`. `carry/launch-permission-mode` keeps its ref at `ed0b75e4`
-  and leaves the composition and the inventory; no branch was deleted.
+- The retirement could not ship on the old mirror: the previously published
+  Integration `27689151` already failed the gate's tracked-upstream check, so
+  the cycle absorbed the upstream advance to `b8dd29f9` and replayed all 27
+  carries onto it with real merges. `carry/launch-permission-mode` keeps its
+  ref at `ed0b75e4`, leaves the composition and the inventory, and is marked
+  locally as `DELETEME/launch-permission-mode`; no fork branch was deleted.
+- Published Integration is `081a3563`, with all 27 declared carry heads
+  published beneath it under exact leases. Receipt:
+  `~/.local/state/fxnk/local-gates/081a3563e5867aad5cb6d9246082c3b7f7664cb7.json`.
+- The ship gate refused: `origin/main` moved to `49fc251a` during the cycle,
+  156 commits and 235 files past the `b8dd29f9` the receipt covers, including a
+  host-managed authentication rework, the libfx kernel, steering by default,
+  and the `/provider` picker replacing `/setup`. Nothing was installed. Chasing
+  that mirror is the next cycle, not a fix inside this one.
+- `fork/main` is still `dd7179f3` and behind the local mirror at `b8dd29f9`.
+  Advancing it was outside this cycle's push authorization.
+- The replay silently dropped the ADE feed's shutdown emission.
+  `LifecycleAppRuntime.prepareStopped` and `ade_events.deinit()` sat directly
+  beneath `subagents.deinit`, which upstream deleted with the subagent stores,
+  so the resolution took upstream's side whole and fx exited without
+  `FxStopped`. Restored on `carry/ade-event-feed` at `922284d9`. A carry whose
+  lines sit adjacent to code upstream deletes is where a replay loses contract,
+  and only the E2E fixture caught it.
 - Two carries had the retired code in their trees while none of the retired
   commits was an ancestor. `carry/local-gate-support` sat on the Phase 1A
   composition, and `carry/state-auth-borrowing` descended from `54a2a9a9`, a
@@ -152,14 +168,8 @@ composition.
   declares its four canaries on `carry/local-gate-support`, because its
   dependency has no `tests/fxnk/runner.zig`. `carry/structured-inference`
   declares its fifteen there for the same reason.
-- The candidate composition is `36ead08f` on
-  `maintain/awp-retire-candidate-20260902`. It builds ReleaseSafe, passes
-  80 of 80 canaries, and contains no retired symbol or file. It is not
-  published: `local-gate.sh` refuses it because the composition does not
-  contain tracked `origin/main` at `b8dd29f9`, 22 commits ahead of the mirror.
-  The previously published Integration `27689151` fails that same check, so
-  the drift predates this work and shipping the retirement requires an
-  upstream advance in the same cycle.
+- The canary inventory is 89, down from 134. The ADE E2E fixture is three
+  tests, down from four: the fourth covered the retired `--name` flag.
 - Backup refs for all 28 carry heads and Integration are under
   `refs/awp-retire-backup/`. Do not prune or gc `~/src/fx` while they matter.
 
