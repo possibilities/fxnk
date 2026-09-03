@@ -195,6 +195,16 @@ servers.
   at startup and apply the resolved set to both tool advertisement and dispatch
   for the main session and every in-process child. Reject combining any
   `--tool` selection with `--no-native-tools`.
+- One test in that file is pending under nonblocking Full CI: "ACP native
+  tool selection narrows schema and rejects terminal session actions before
+  permission". Its advertisement and refusal halves pass, so the narrowed
+  schema and the session-action refusal are proved. It stops where an admitted
+  one-shot run stalls instead of executing. Two causes were found and fixed on
+  the way there, both the same blind spot: the terminal lease tracker and
+  command admission each read only a flat `action` and never looked inside a
+  wrapped `request`, so a narrowed call wedged the turn and was denied command
+  authority. What remains is a third stall past admission, not a fixture
+  problem, and the gap reaches only this selection.
 - `tests/e2e/acp.test.ts` owns this carry's end-to-end proof. An earlier
   replay fused its two subagent tests into one `test(` call with two name
   strings and orphaned the upstream body, which stopped the whole file
