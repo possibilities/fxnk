@@ -59,11 +59,11 @@
       "required_blobs": [
         {
           "path": "tests/e2e/tui-render-replay.test.ts",
-          "oid": "b05e06b4e765e1126d28e9c78e1ed9bc4c491ad9"
+          "oid": "2805f916de4553f1801bf90108c9d7f4d4efc2e0"
         },
         {
           "path": "tests/e2e/tmux-helpers.ts",
-          "oid": "bf4bec8cab2fea75c3e4b20fa9eca962d98fd1c9"
+          "oid": "f0a06767786fe417c6008b55c2b7d4f3f48bd36e"
         }
       ],
       "allowed_signatures": [

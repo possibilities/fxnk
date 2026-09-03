@@ -564,9 +564,15 @@ servers.
 
 - Let native Node `createFxAgent()` accept one tagged `auth` entry or an
   ordered list for Gateway and Codex. The first entry selects the initial
-  provider; `env.AI_GATEWAY_API_KEY` remains Gateway shorthand; provider
-  switching may select only an authorization the host supplied. Do not compile
-  Grok into native libfx.
+  provider; provider switching may select only an authorization the host
+  supplied. Do not compile Grok into native libfx.
+- libfx takes upstream's flat `apiKey` and `model` options. Upstream 49fc251a
+  made `createFxAgent()` refuse `env` outright and routed native agents through
+  the same option validation as WebAssembly ones, so `env.AI_GATEWAY_API_KEY`
+  is no longer Gateway shorthand. Translate a tagged `auth` entry into those
+  flat options before upstream's guard runs, and let a Gateway agent take
+  upstream's native path unchanged; only a Codex authorization, which carries
+  no Gateway key, goes straight to the addon.
 - Keep Codex credential access explicit. A host may supply a bounded session
   store with opaque load and optimistic revisioned commit operations, or opt
   into the fx profile with `fxProfileSession()`. Never fall back from a custom
