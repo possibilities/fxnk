@@ -714,11 +714,16 @@ servers.
   `turn_id`, `agent_role`, `agent_name`, `agent_state`, and `attention_kind`.
   The events are `fx_started`, `turn_started`, `turn_ended`,
   `attention_raised`, `attention_cleared`, `question_raised`, `child_changed`,
-  and `stop`. `turn_ended` adds the outcome, the provider disposition, and
-  `final_text`, so a client recovers a turn's final assistant text without
-  accumulating chunks. `session/cancel` produces `turn_ended` with outcome
-  `interrupted`. Native `agent_message_chunk`, `tool_call`, and
-  `tool_call_update` keep streaming unchanged.
+  and `stop`. `turn_ended` adds the outcome and the provider disposition, and
+  `session/cancel` produces `turn_ended` with outcome `interrupted`. Open a
+  session's feed lazily with its first record rather than when the session is
+  created: a session that does nothing must publish nothing, because an ACP
+  client counting notifications is entitled to see none it did not ask for.
+  Native `agent_message_chunk`, `tool_call`, and `tool_call_update` keep
+  streaming, and `agent_message_chunk` gains `turn_id` so a turn's assistant
+  text is recoverable per turn. Do not put that text in a lifecycle record
+  instead: it would reach the client twice, and what the client renders is
+  what the presented stream says.
 - Take the turn and attention edges from the shared hook runtime rather than
   instrumenting the ACP path a second time, so the main agent and every
   in-process child publish through one seam. Register before the runtime is
