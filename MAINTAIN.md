@@ -118,6 +118,7 @@ servers.
 | `carry/structured-inference` | Structured subscription inference |
 | `carry/libfx-provider-authorization` | Libfx provider authorization |
 | `carry/codex-credential-authority` | Codex credential authority |
+| `carry/acp-voice-control` | ACP voice control |
 | `carry/invocation-skill-roots` | Invocation skill roots |
 | `carry/external-editor` | External editor support |
 | `carry/notification-sound-single-flight` | Notification sound availability |
@@ -659,6 +660,86 @@ servers.
   is a private contract with one consumer and appears in no help output.
   `tests/e2e/codex-credential-broker.test.ts` is its consumer-shaped proof and
   runs as its own gate step.
+- The host must let go of its own copy of Fx's end once Fx holds it. Both
+  descriptors name one open file description, so a parent that keeps reading
+  competes for the consumer's request bytes and can restore the non-blocking
+  mode Fx cleared. That is the consumer's ordinary descriptor hygiene rather
+  than something Fx can enforce, and it is what made the consumer-shaped test
+  fail about one run in four until the harness dropped that end on the child's
+  spawn.
+
+### ACP voice control
+
+- `carry/acp-voice-control` declares `carry/fmx-work-control` and
+  `carry/ade-event-feed` as its dependencies and reuses both rather than
+  restating them. Steering and queueing go through the same `WorkerRuntime`
+  FIFO the work-control socket drives, the queue is encoded by work control's
+  own writer, and every lifecycle record carries the ADE reducer's
+  `agent_state` and `attention_kind` with the ADE spellings. Its consumer is
+  AgentVoice, whose voice layer talks to one parent ACP session and never
+  addresses a child directly.
+- Serve `_fx/session/steer { sessionId, text }` under `fx acp`, answering
+  `{ turnId, disposition, snapshot }`. With a turn active the text is admitted
+  into that turn as genuine in-flight steering, `disposition` is `steering`,
+  and `turnId` names the active turn, because that is the turn the person is
+  redirecting. With the session idle the text is queued, `disposition` is
+  `queued`, `turnId` names the turn it created, and that turn starts without a
+  second `session/prompt`. The method never answers "Session is busy" and is
+  served while the same client's `session/prompt` is outstanding, whose
+  eventual `stopReason` still ends its turn. Steering text is user-authored
+  and is never reinterpreted as a subagent message.
+- Do not add a second prompt execution path for this. One ACP turn runner
+  owns the admission-ordered queue, marks the worker's active turn identity
+  before execution, and releases that ownership only while observing the queue
+  empty, so work admitted as a turn ends is always somebody's responsibility.
+  The ACP agent watches the worker's own cancel flag, which is what lets one
+  signal mean steering when the boundary owns it and interruption when an
+  explicit cancel cleared that ownership.
+- Serve `_fx/session/snapshot { sessionId }` with work control's exact queue
+  encoding plus `children`: the parent's own registry with each child's id,
+  name, `one_off`/`persistent` kind, and `idle`/`running`/`awaiting_approval`/
+  `interrupted`/`finished` phase. A one-off child has no agent name, so its
+  session id names it. Turn identities are decimal strings on every surface,
+  matching work control.
+- Publish lifecycle to the client as `session/update` notifications whose
+  `sessionUpdate` kind is `_fx/lifecycle`, with a monotonic per-session
+  `sequence` that restarts at one for each session. Every record carries
+  `turn_id`, `agent_role`, `agent_name`, `agent_state`, and `attention_kind`.
+  The events are `fx_started`, `turn_started`, `turn_ended`,
+  `attention_raised`, `attention_cleared`, `question_raised`, `child_changed`,
+  and `stop`. `turn_ended` adds the outcome, the provider disposition, and
+  `final_text`, so a client recovers a turn's final assistant text without
+  accumulating chunks. `session/cancel` produces `turn_ended` with outcome
+  `interrupted`. Native `agent_message_chunk`, `tool_call`, and
+  `tool_call_update` keep streaming unchanged.
+- Take the turn and attention edges from the shared hook runtime rather than
+  instrumenting the ACP path a second time, so the main agent and every
+  in-process child publish through one seam. Register before the runtime is
+  frozen; a handler added after the freeze never runs.
+- Keep the ADE feed's single-surface subagent approval contract. A child's
+  approval reaches a person only through its parent, so when a child enters
+  `awaiting_approval` the fork publishes `child_changed` for the child and
+  `attention_raised { permission, agent_name }` for the parent, issues
+  `session/request_permission` on the parent session carrying the child's role,
+  name, and id, and clears both on the answer. The observer polls the parent's
+  own child and approval registries and never blocks on one outstanding answer
+  while another child changes.
+- Relay a question the client can answer: `question_raised` carries the
+  question id, text, options, and the complete batch, and
+  `_fx/session/question { sessionId, questionId, answer }` answers it, with
+  `answers` for a batch of more than one. The relay borrows the correlated
+  outbound slot a permission uses, so cancelling the session releases an
+  outstanding question exactly as it releases a pending permission, and it is
+  never announced to the client as an outbound request the client did not make.
+- Advertise the extension in `initialize` as
+  `agentCapabilities._fx = { steer, snapshot, lifecycle, question }`, where
+  `lifecycle` is the envelope revision rather than a boolean, so the consumer
+  flips its steering capability without probing. Expose the process identity
+  in the same response and on demand from `_fx/status`: build revision,
+  version, auth, model source, connected providers, permission mode, and the
+  resolved model and effort. Report what this process resolved rather than
+  re-reading the credential store on every call.
+- Document the wire contract in `docs/acp-voice-control.md` and keep it true.
 
 ### Invocation skill roots
 
