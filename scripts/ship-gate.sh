@@ -203,14 +203,11 @@ receipt_upstream_sha=$(jq -r '.upstream.sha' "$receipt")
 published_sha=$(remote_branch_sha)
 [ "$published_sha" = "$expected_sha" ] \
     || die "fork/$published_branch moved to $published_sha during the gate"
-git -C "$branch_worktree" fetch --quiet origin main \
-    || die "could not refresh origin/main"
-upstream_sha=$(git -C "$branch_worktree" rev-parse refs/remotes/origin/main)
-[ "$receipt_upstream_sha" = "$upstream_sha" ] \
-    || die "local gate receipt covered origin/main at $receipt_upstream_sha, current origin/main is $upstream_sha"
-git -C "$branch_worktree" merge-base --is-ancestor \
-    "$upstream_sha" "$expected_sha" \
-    || die "published branch does not contain current origin/main at $upstream_sha"
+# Upstream currency is deliberately not a ship condition (operator decision,
+# 2026-09-03): upstream merges faster than a record-publish-ship window, and
+# advancing the mirror is a maintenance act, not a gate. The receipt still
+# records the tracked upstream SHA it covered, for the next cycle to read.
+printf 'fxnk ship gate: receipt covered origin/main at %s\n' "$receipt_upstream_sha" >&2
 
 # Leave no network, CI, or fetch operation between these final state checks and
 # SHIP.
