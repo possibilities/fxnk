@@ -111,18 +111,20 @@ upstream_ref=refs/remotes/origin/main
 git -C "$fx_worktree" rev-parse --verify --quiet "$upstream_ref^{commit}" >/dev/null \
     || die "$fx_worktree has no origin/main tracking commit"
 upstream_sha=$(git -C "$fx_worktree" rev-parse "$upstream_ref")
-git -C "$fx_worktree" merge-base --is-ancestor "$upstream_sha" "$fx_sha" \
-    || die "$fx_sha does not contain tracked origin/main at $upstream_sha"
+# The candidate is not required to contain the tracked origin/main head
+# (operator decision, 2026-09-03): upstream currency is recorded in the
+# receipt, never gated. The hosted CI carry is measured against the merge base
+# it actually sits on.
+hosted_ci_base=$(git -C "$fx_worktree" merge-base "$upstream_sha" "$fx_sha")
 
 hosted_ci_ref=refs/heads/carry/hosted-full-ci
 hosted_ci_workflow=.github/workflows/full-ci.yml
 hosted_ci_sha=$(git -C "$fx_worktree" rev-parse --verify \
     "$hosted_ci_ref^{commit}" 2>/dev/null) \
     || die "$fx_worktree has no carry/hosted-full-ci commit"
-git -C "$fx_worktree" merge-base --is-ancestor "$upstream_sha" "$hosted_ci_sha" \
-    || die "carry/hosted-full-ci does not contain tracked origin/main at $upstream_sha"
+hosted_ci_base=$(git -C "$fx_worktree" merge-base "$hosted_ci_base" "$hosted_ci_sha")
 [ "$(git -C "$fx_worktree" diff --name-only \
-    "$upstream_sha..$hosted_ci_sha")" = "$hosted_ci_workflow" ] \
+    "$hosted_ci_base..$hosted_ci_sha")" = "$hosted_ci_workflow" ] \
     || die "carry/hosted-full-ci changes files outside its owned workflow"
 git -C "$fx_worktree" merge-base --is-ancestor "$hosted_ci_sha" "$fx_sha" \
     || die "$fx_sha does not contain carry/hosted-full-ci at $hosted_ci_sha"

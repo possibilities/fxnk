@@ -971,9 +971,12 @@ The record is an atomic mode-0600 JSON receipt under
 platform, gate-contract digest, quarantine outcomes, and duration. Publish that
 exact Integration commit once with the lease captured before refresh. Then run
 the project-owned ship gate; it re-reads the remote Integration branch,
-refreshes current upstream, validates the exact-SHA receipt and current
-contract, and prints `SHIP <sha>` only when every local, remote, receipt, and
-upstream identity still agrees:
+validates the exact-SHA receipt and current contract, and prints `SHIP <sha>`
+only when every local, remote, and receipt identity still agrees. Upstream
+currency is deliberately not a ship or gate condition (operator decision,
+2026-09-03): the receipt records the tracked `origin/main` SHA it covered, and
+advancing the mirror is a maintenance act the next cycle performs, never a
+race against upstream's merge cadence:
 
 ```sh
 ~/code/fxnk/scripts/ship-gate.sh \
