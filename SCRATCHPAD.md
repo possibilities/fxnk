@@ -136,22 +136,18 @@ composition.
   process-only `--permission-mode auto`. The upgrade-relaunch `--record`
   plumbing went with them, not as a retirement but because upstream
   internalized terminal recording.
-- The retirement could not ship on the old mirror: the previously published
-  Integration `27689151` already failed the gate's tracked-upstream check, so
-  the cycle absorbed the upstream advance to `b8dd29f9` and replayed all 27
-  carries onto it with real merges. `carry/launch-permission-mode` keeps its
-  ref at `ed0b75e4`, leaves the composition and the inventory, and is marked
-  locally as `DELETEME/launch-permission-mode`; no fork branch was deleted.
-- Published Integration is `081a3563`, with all 27 declared carry heads
-  published beneath it under exact leases. Receipt:
-  `~/.local/state/fxnk/local-gates/081a3563e5867aad5cb6d9246082c3b7f7664cb7.json`.
-- The ship gate refused: `origin/main` moved to `49fc251a` during the cycle,
-  156 commits and 235 files past the `b8dd29f9` the receipt covers, including a
-  host-managed authentication rework, the libfx kernel, steering by default,
-  and the `/provider` picker replacing `/setup`. Nothing was installed. Chasing
-  that mirror is the next cycle, not a fix inside this one.
-- `fork/main` is still `dd7179f3` and behind the local mirror at `b8dd29f9`.
-  Advancing it was outside this cycle's push authorization.
+- The retirement could not ship on the old mirror, so the cycle absorbed two
+  upstream advances. The first, to `b8dd29f9`, produced Integration `081a3563`,
+  which the ship gate then refused because `origin/main` had moved again. The
+  second, to `49fc251a`, is what shipped: `SHIP 11e8d5cc`. Receipt:
+  `~/.local/state/fxnk/local-gates/11e8d5cc417f0bacb63dc8a57bec98cb352a7b09.json`.
+  Nothing was installed.
+- The mirror is exact again. Local `main` and `fork/main` are both `49fc251a`,
+  and `carry/hosted-full-ci` is `6835a182`; upstream did not touch the Full CI
+  workflow across either advance, so the carried diff is byte-identical.
+- `carry/launch-permission-mode` keeps its ref at `ed0b75e4`, leaves the
+  composition and the inventory, and is marked locally as
+  `DELETEME/launch-permission-mode`; no fork branch was deleted.
 - The replay silently dropped the ADE feed's shutdown emission.
   `LifecycleAppRuntime.prepareStopped` and `ade_events.deinit()` sat directly
   beneath `subagents.deinit`, which upstream deleted with the subagent stores,
@@ -159,6 +155,29 @@ composition.
   `FxStopped`. Restored on `carry/ade-event-feed` at `922284d9`. A carry whose
   lines sit adjacent to code upstream deletes is where a replay loses contract,
   and only the E2E fixture caught it.
+- Upstream absorbed one carry outright. It adopted
+  `layoutForTranscriptProjection` and its three call sites verbatim, so
+  `carry/resume-bounds` now carries only the canary that proves the contract.
+- Four carries were found carrying `carry/launch-control-continuity`'s
+  upgrade-relaunch argv composition, one of them still rebuilding the retired
+  `--record` flag. Each took upstream's path; the contract stays in its own
+  carry, re-derived onto upstream's revision-carrying relaunch.
+- `carry/libfx-provider-authorization` was re-specced by operator ruling.
+  Upstream's libfx kernel made `createFxAgent()` refuse `env` outright and take
+  flat `apiKey` and `model`, which the carry's `env.AI_GATEWAY_API_KEY`
+  shorthand contradicted. The tagged `auth` entry, the Codex session store,
+  account pinning, catalog loading and the WebAssembly Gateway-only guard all
+  survive; `auth` is translated into upstream's flat options before its guard
+  runs, so upstream's own loader tests pass untouched.
+- Three canaries were re-specified rather than repaired, because upstream's
+  behavior changed under them: a manual queue review is now refused while
+  steering is pending, an empty managed skill root now produces its own
+  diagnostic, and a partially built ACP server state must declare it has no
+  host tools.
+- Two quarantine blob pins moved after review. Upstream renamed the setup hub
+  to the provider picker, changing one expectation in the render-replay
+  fixture, and removed the post-tool decision prompt from the tmux helpers.
+  Neither touches the tolerated session-exit timeout signature.
 - Two carries had the retired code in their trees while none of the retired
   commits was an ancestor. `carry/local-gate-support` sat on the Phase 1A
   composition, and `carry/state-auth-borrowing` descended from `54a2a9a9`, a
@@ -170,8 +189,9 @@ composition.
   declares its fifteen there for the same reason.
 - The canary inventory is 89, down from 134. The ADE E2E fixture is three
   tests, down from four: the fourth covered the retired `--name` flag.
-- Backup refs for all 28 carry heads and Integration are under
-  `refs/awp-retire-backup/`. Do not prune or gc `~/src/fx` while they matter.
+- Backup refs are under `refs/awp-retire-backup/` for the pre-retirement heads
+  and `refs/awp-b8dd-backup/` for the `081a3563` heads. Do not prune or gc
+  `~/src/fx` while they matter.
 
 - Fx now exposes one authenticated semantic work-control endpoint per opted-in
   interactive main Agent. Snapshot, queue, steer-with-safe-fallback,
