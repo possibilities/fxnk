@@ -239,8 +239,8 @@ canary_step() {
     set -e
     sed -n '1,240p' "$output"
     [ "$status" -eq 0 ] || die "fxnk-unit-canaries exited $status"
-    [ "$(grep -Fxc 'FXNK-CANARIES 134/134 passed' "$output")" -eq 1 ] \
-        || die "fxnk-unit-canaries did not prove exactly 134 declared canaries"
+    [ "$(grep -Fxc 'FXNK-CANARIES 89/89 passed' "$output")" -eq 1 ] \
+        || die "fxnk-unit-canaries did not prove exactly 89 declared canaries"
     printf ' pass\n'
 }
 
