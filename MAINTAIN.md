@@ -684,6 +684,10 @@ servers.
   than something Fx can enforce, and it is what made the consumer-shaped test
   fail about one run in four until the harness dropped that end on the child's
   spawn.
+- `--codex-credential-fd` is a global launch control and must precede the
+  command: `fx --codex-credential-fd 3 acp` activates the broker under ACP,
+  while `fx acp --codex-credential-fd 3` is rejected by the ACP grammar. A
+  consumer will guess the second form first; document the first.
 
 ### ACP voice control
 
