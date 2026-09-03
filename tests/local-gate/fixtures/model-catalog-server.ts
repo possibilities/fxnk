@@ -19,6 +19,14 @@ const body = JSON.stringify({
     input_modalities: ["text"],
     context_window: 272000,
   }, {
+    slug: "gpt-5.6-luna",
+    visibility: "list",
+    supported_in_api: true,
+    supported_reasoning_levels: [{ effort: "medium" }],
+    additional_speed_tiers: [],
+    input_modalities: ["text"],
+    context_window: 272000,
+  }, {
     slug: "gpt-5.4-mini",
     visibility: "list",
     supported_in_api: true,
