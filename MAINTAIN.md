@@ -193,14 +193,20 @@ servers.
   at startup and apply the resolved set to both tool advertisement and dispatch
   for the main session and every in-process child. Reject combining any
   `--tool` selection with `--no-native-tools`.
-- Treat `terminal:exec` as the existing one-shot terminal specification rather
-  than the interactive terminal surface. Advertise it to the model as `shell`
-  with only the bounded `request.action = "run"` shape, and preserve that exact
-  command authority whether the model-facing request is still wrapped or has
-  already been normalized for internal dispatch. A role that selects it may
-  execute permission-admitted one-shot commands but cannot start, observe,
-  write to, stop, or otherwise acquire or retain an interactive terminal
-  session.
+- Treat `terminal:exec` as the one-shot specification of upstream's shell tool
+  rather than its interactive surface. Upstream renamed the tool from
+  `terminal` to `shell` and now advertises it to the model under that name, so
+  no alias work remains there; the selector keeps its `terminal:exec` spelling,
+  and there is deliberately no `shell:exec` spelling. Advertise only the
+  bounded `request.action = "run"` shape, narrower than upstream's own
+  process-only specification, which also admits `interact` and `stop`.
+  Preserve that exact command authority whether the model-facing request is
+  still wrapped or has already been normalized for internal dispatch, and
+  enforce it at dispatch as well as in advertisement: a run that is still
+  running when the tool returns is stopped rather than retained. A role that
+  selects it may execute permission-admitted one-shot commands but cannot
+  start, observe, write to, stop, or otherwise acquire or retain an
+  interactive shell session.
 
 ### Current upstream managed-subagent contract
 
