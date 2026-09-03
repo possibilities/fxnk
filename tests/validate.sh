@@ -249,8 +249,10 @@ grep -F 'hosted-ci-composition' scripts/local-gate.sh >/dev/null \
 grep -F 'changes the hosted Full CI workflow' \
     tests/local-gate/receipt-transaction.sh >/dev/null \
     || fail "local gate transaction does not reject an Integration workflow mutation"
-grep -F 'merge-base --is-ancestor' scripts/ship-gate.sh >/dev/null \
-    || fail "ship gate does not require current upstream ancestry"
+grep -F 'does not contain current origin/main' scripts/ship-gate.sh >/dev/null \
+    && fail "ship gate must not require current upstream ancestry (operator decision 2026-09-03)"
+grep -F 'receipt covered origin/main at' scripts/ship-gate.sh >/dev/null \
+    || fail "ship gate does not report the tracked upstream the receipt covered"
 gate_test_sha=0000000000000000000000000000000000000000
 set +e
 integration_gate_output=$(scripts/ship-gate.sh \

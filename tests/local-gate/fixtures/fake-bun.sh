@@ -47,6 +47,12 @@ case " $* " in
     *' ./ade-event-feed.test.ts '*)
         printf '3 pass\n0 fail\n'
         ;;
+    *' ./codex-credential-broker.test.ts '*)
+        printf '2 pass\n0 fail\n'
+        ;;
+    *' ./acp.test.ts '*)
+        printf '7 pass\n0 fail\n'
+        ;;
     *)
         printf '1 pass\n0 fail\n'
         ;;
