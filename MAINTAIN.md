@@ -136,6 +136,7 @@ servers.
 | `carry/launch-control-continuity` | Launch-control continuity |
 | `carry/state-auth-borrowing` | State isolation |
 | `carry/state-system-prompts` | State system prompts |
+| `carry/agent-shape-sessions` | Agent shape and session provenance |
 
 ### Fork identity
 
