@@ -20,10 +20,12 @@ entries on every maintenance cycle and appends one compact history entry.
   `11d6d7d9ba28a786d409ee167a66870dbf5dce4f9fb73d405fed18b416bdb40b`.
   `/Users/arthack/.local/bin/fx --fxnk-version` reports
   `fxnk 0.5.0 (fx 0.0.7)`.
-- AgentStart consumer handoff is published on `origin/main` at
+- AgentStart's exact Fx consumer handoff is
   `9da5d08d8a5f1e81eeffcc32d43c412d7c0298d6`; validation, installation,
   exact Fx pinning, current Smolmux contract, and retirement guards passed.
-  fmx remains deprecated and is not a consumer.
+  Its subsequent source-root migration is published on `origin/main` at
+  `062c47af7eca871304aa3efcbd3a5395830040e5`. fmx remains deprecated and is
+  not a consumer.
 
 ## Audited-upstream frontier
 
