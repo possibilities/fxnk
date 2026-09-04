@@ -6,7 +6,7 @@ do not integrate product branches here.
 
 - Trunk for ancestry and roster classification: `integration` on the `fork`
   remote (`possibilities/fx`).
-- `origin` is `vercel-labs/fx`, upstream. Never push there.
+- `upstream` is `vercel-labs/fx`. Never push there.
 - `main` is an exact upstream mirror. It is never an integration base or a
   target for downstream work.
 - The workshop is `~/code/fxnk`; its `MAINTAIN.md` is the authority for branch

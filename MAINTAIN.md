@@ -18,8 +18,9 @@ shipping it.
 
 ## Upstream
 
-- Bound checkout: `~/src/fx`. `origin` is `vercel-labs/fx`; `fork` is
-  `possibilities/fx`. Read `~/src/fx/AGENTS.md` completely before touching Fx.
+- Bound checkout: `~/source/vercel-labs--fx`. `upstream` is `vercel-labs/fx`;
+  `fork` is `possibilities/fx`. Read
+  `~/source/vercel-labs--fx/AGENTS.md` completely before touching Fx.
 - Contribution stance: regular maintenance is downstream-only. We do not open,
   update, support, or preserve upstream pull requests, and we do not wait on
   upstream review. Pull requests #242, #244, #320, and #323 and related issues
@@ -63,8 +64,8 @@ shipping it.
   Local development gate on the exact Integration composition containing every
   changed carry is the authority that permits it, so an unproved composition is
   never published no matter who asks. This authorizes
-  only `fork/integration` and the current declared `fork/carry/*` refs: `origin`
-  and all other fork heads stay untouched.
+  only `fork/integration` and the current declared `fork/carry/*` refs:
+  `upstream` and all other fork heads stay untouched.
 - Installation: immediate, and not a second decision. Work merged to
   Integration is installed as part of landing it — run
   `scripts/install.sh --install --sha <published sha>` without asking, because
@@ -983,7 +984,7 @@ MAINTAIN_UPSTREAM_SHA="$cycle_upstream_sha" \
 
 `MAINTAIN_UPSTREAM_SHA` is required for every gate run. The gate verifies that
 the exact captured object exists and is contained in the candidate; it does not
-select a target from `origin/main`, inspect a reflog, or claim to rediscover the
+select a target from `upstream/main`, inspect a reflog, or claim to rediscover the
 cycle's upstream base after the exact-object fetch established it.
 
 The gate runs formatting, the public-surface audit, and upstream's direct-write
@@ -1100,8 +1101,9 @@ Methodology, run whenever the bound checkout's `integration` moves (every
 maintenance cycle qualifies, since carried features can touch UI):
 
 1. `scripts/style-extract.sh --check` — re-extracts the tokens from
-   `~/src/fx` and diffs against the committed `style/tokens.json`, ignoring
-   the generated stamp. No drift: done. Drift: run it without `--check`,
+   `~/source/vercel-labs--fx` and diffs against the committed
+   `style/tokens.json`, ignoring the generated stamp. No drift: done. Drift:
+   run it without `--check`,
    read the diff, and update the tables and prose in `style/STYLE.md` to
    agree — the tables mirror tokens.json and must never contradict it.
 2. After any token drift, prove the interactive viewer still works:
@@ -1114,15 +1116,15 @@ maintenance cycle qualifies, since carried features can touch UI):
    toolkit, and re-prove the viewer in the same commit.
 3. After any token drift, regenerate the visual references:
    `scripts/style-capture.sh` (swatch sheets from tokens.json, plus
-   welcome-screen PNGs of the freshly built `~/src/fx/zig-out/bin/fx` in
-   both `FX_THEME` values). Commit the changed captures; they are small and
-   diffable.
+   welcome-screen PNGs of the freshly built
+   `~/source/vercel-labs--fx/zig-out/bin/fx` in both `FX_THEME` values). Commit
+   the changed captures; they are small and diffable.
 4. If the extractor itself fails, fx refactored a styling site. Re-derive
    the sites with the census greps below, fix the extractor's parsers, and
    reconcile STYLE.md prose against what actually changed.
 
 Discovery method (how the styling sites were found, and how to find them
-again after a refactor) — run in `~/src/fx`:
+again after a refactor) — run in `~/source/vercel-labs--fx`:
 
 ```sh
 # every file carrying SGR color literals, ranked; excludes tests

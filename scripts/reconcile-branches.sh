@@ -18,11 +18,11 @@ if [ ! -f "$script" ]; then
 fi
 
 export MAINTAIN_WORKSHOP="$(cd "$(dirname "$0")/.." && pwd)"
-export MAINTAIN_CHECKOUT="${FXNK_FX_CHECKOUT:-$HOME/src/fx}"
+export MAINTAIN_CHECKOUT="${FXNK_FX_CHECKOUT:-$HOME/source/vercel-labs--fx}"
 export MAINTAIN_FORK_REPO=possibilities/fx
 export MAINTAIN_UPSTREAM_REPO=vercel-labs/fx
 export MAINTAIN_FORK_REMOTE=fork
-export MAINTAIN_UPSTREAM_REMOTE=origin
+export MAINTAIN_UPSTREAM_REMOTE=upstream
 export MAINTAIN_MAIN_BRANCH=main
 export MAINTAIN_INTEGRATION_BRANCH=integration
 export MAINTAIN_CARRY_PREFIX=carry/

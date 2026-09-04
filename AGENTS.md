@@ -30,8 +30,8 @@ or its installer.
   fxnk's own pin), opened with `scripts/style-view.sh`.
   `scripts/style-extract.sh`, `scripts/style-swatch.sh`, and
   `scripts/style-capture.sh` maintain the artifacts; the methodology is
-  `MAINTAIN.md` section "Style guide". The scripts read `~/src/fx` and never
-  write outside this repository.
+  `MAINTAIN.md` section "Style guide". The scripts read
+  `~/source/vercel-labs--fx` and never write outside this repository.
 - `scripts/install.sh` consumes the published `fork/integration` branch. It
   must not rebase, push, inspect PRs, or decide which patches should be carried.
   It also converges fxnk's local-only `SUPERVISE.md` and
@@ -46,8 +46,8 @@ or its installer.
   them for evidence, but must not update, support, or preserve their branches.
   Regular maintenance does not open or tend upstream requests.
 
-The checkout being maintained is `~/src/fx`, with `fork` pointing to
-`possibilities/fx` and `origin` pointing to `vercel-labs/fx`. Its
+The checkout being maintained is `~/source/vercel-labs--fx`, with `fork`
+pointing to `possibilities/fx` and `upstream` pointing to `vercel-labs/fx`. Its
 `integration` branch is the only install source. Read that checkout's
 `AGENTS.md` completely before modifying or validating Fx.
 
@@ -111,8 +111,8 @@ tests/validate.sh
 Installer changes also require an isolated real install using temporary binary,
 state, and settings paths, followed by execution of the built binary. Fx feature
 work follows the Local development gate and real-binary requirements in
-`~/src/fx/AGENTS.md`. Hosted Full CI is nonblocking observability and is never a
-shipping prerequisite.
+`~/source/vercel-labs--fx/AGENTS.md`. Hosted Full CI is nonblocking
+observability and is never a shipping prerequisite.
 
 Finished work lands on `main` and is pushed. The installer may rebind a clean
 local integration branch only after receiving the exact SHA approved by the

@@ -37,7 +37,7 @@ case "${1:-}" in
 esac
 
 root=$(cd "$(dirname "$0")/.." && pwd)
-checkout="${FXNK_FX_CHECKOUT:-$HOME/src/fx}"
+checkout="${FXNK_FX_CHECKOUT:-$HOME/source/vercel-labs--fx}"
 source_policy="$root/supervision/SUPERVISE.md"
 target_policy="$checkout/SUPERVISE.md"
 managed_marker='<!-- Managed by fxnk. Run scripts/configure-supervision.sh --install to converge it. -->'

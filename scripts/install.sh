@@ -42,7 +42,7 @@ case "${1:-}" in
         ;;
 esac
 
-fx_checkout="${FXNK_FX_CHECKOUT:-$HOME/src/fx}"
+fx_checkout="${FXNK_FX_CHECKOUT:-$HOME/source/vercel-labs--fx}"
 fx_branch=integration
 fx_fork_url="${FXNK_FX_FORK_URL:-https://github.com/possibilities/fx.git}"
 fx_upstream_url="${FXNK_FX_UPSTREAM_URL:-https://github.com/vercel-labs/fx.git}"
@@ -58,7 +58,7 @@ if [ "${check_only:-0}" -eq 1 ]; then
 Fx fork installation:
   checkout: $fx_checkout
   source: fork/$fx_branch ($fx_fork_url)
-  upstream: origin/main ($fx_upstream_url; maintained by /maintain)
+  upstream: upstream/main ($fx_upstream_url; maintained by /maintain)
   binary: $fx_bin
   receipts: $state_dir
   supervision: install fxnk's local report-and-route policy and Integration trunk config
@@ -268,7 +268,7 @@ git -C "$fx_checkout" rev-parse --is-inside-work-tree >/dev/null 2>&1 \
     || die "$fx_checkout is not a git worktree"
 ensure_remote fork "$fx_fork_url" \
     'https://github.com/possibilities/fx.git' 'git@github.com:possibilities/fx.git'
-ensure_remote origin "$fx_upstream_url" \
+ensure_remote upstream "$fx_upstream_url" \
     'https://github.com/vercel-labs/fx.git' 'git@github.com:vercel-labs/fx.git'
 
 FXNK_FX_CHECKOUT="$fx_checkout" \

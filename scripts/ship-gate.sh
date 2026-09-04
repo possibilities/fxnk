@@ -104,19 +104,19 @@ git check-ref-format --branch "$published_branch" >/dev/null 2>&1 \
 if [ "$test_mode" -eq 0 ]; then
     fork_url=$(git -C "$branch_worktree" remote get-url fork 2>/dev/null) \
         || die "$branch_worktree has no fork remote"
-    origin_url=$(git -C "$branch_worktree" remote get-url origin 2>/dev/null) \
-        || die "$branch_worktree has no origin remote"
+    upstream_url=$(git -C "$branch_worktree" remote get-url upstream 2>/dev/null) \
+        || die "$branch_worktree has no upstream remote"
     case "$fork_url" in
         https://github.com/possibilities/fx | \
         https://github.com/possibilities/fx.git | \
         git@github.com:possibilities/fx.git) ;;
         *) die "$branch_worktree fork points at $fork_url" ;;
     esac
-    case "$origin_url" in
+    case "$upstream_url" in
         https://github.com/vercel-labs/fx | \
         https://github.com/vercel-labs/fx.git | \
         git@github.com:vercel-labs/fx.git) ;;
-        *) die "$branch_worktree origin points at $origin_url" ;;
+        *) die "$branch_worktree upstream points at $upstream_url" ;;
     esac
 fi
 

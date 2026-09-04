@@ -69,6 +69,7 @@ fi
 plan=$(scripts/install.sh --check)
 for required in \
     'source: fork/integration' \
+    'upstream: upstream/main' \
     'maintained by /maintain' \
     "supervision: install fxnk's local report-and-route policy" \
     'build ReleaseSafe' \
@@ -116,7 +117,7 @@ grep -F 'paired commits' AGENTS.md >/dev/null \
     || fail "agent guidance does not require paired Fx and inventory commits"
 grep -F 'The user does not need to mention maintenance' AGENTS.md >/dev/null \
     || fail "agent guidance does not classify ordinary Fx feature requests"
-fx_checkout="${FXNK_FX_CHECKOUT:-$HOME/src/fx}"
+fx_checkout="${FXNK_FX_CHECKOUT:-$HOME/source/vercel-labs--fx}"
 if git -C "$fx_checkout" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
     features_section=$(awk '
         /^## Features$/ { inside = 1; next }
@@ -214,6 +215,8 @@ fi
 for declared in \
     'MAINTAIN_FORK_REPO=possibilities/fx' \
     'MAINTAIN_UPSTREAM_REPO=vercel-labs/fx' \
+    'MAINTAIN_FORK_REMOTE=fork' \
+    'MAINTAIN_UPSTREAM_REMOTE=upstream' \
     'MAINTAIN_MAIN_BRANCH=main' \
     'MAINTAIN_INTEGRATION_BRANCH=integration' \
     'MAINTAIN_CARRY_PREFIX=carry/' \
@@ -253,7 +256,7 @@ grep -F 'Fetch exactly that object' MAINTAIN.md >/dev/null \
     || fail "maintenance does not require the exact captured upstream fetch"
 grep -F 'exact-object fetch is the provenance boundary' MAINTAIN.md >/dev/null \
     || fail "maintenance does not name the captured-object provenance boundary"
-if grep -Ei 'git .*reflog|refs/remotes/origin/main|fetch .*origin[[:space:]]+main' \
+if grep -Ei 'git .*reflog|refs/remotes/upstream/main|fetch .*upstream[[:space:]]+main' \
     scripts/local-gate.sh scripts/ship-gate.sh \
     tests/local-gate/receipt-transaction.sh >/dev/null; then
     fail "local gate still infers upstream provenance from moving ref state"

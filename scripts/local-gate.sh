@@ -84,13 +84,13 @@ bun_bin="${FXNK_LOCAL_GATE_BUN_BIN:-$(command -v bun || true)}"
     || die "$fx_worktree is not a git worktree"
 fx_worktree=$(cd "$fx_worktree" && pwd -P)
 if [ "$test_mode" -eq 0 ]; then
-    origin_url=$(git -C "$fx_worktree" remote get-url origin 2>/dev/null) \
-        || die "$fx_worktree has no origin remote"
-    case "$origin_url" in
+    upstream_url=$(git -C "$fx_worktree" remote get-url upstream 2>/dev/null) \
+        || die "$fx_worktree has no upstream remote"
+    case "$upstream_url" in
         https://github.com/vercel-labs/fx | \
         https://github.com/vercel-labs/fx.git | \
         git@github.com:vercel-labs/fx.git) ;;
-        *) die "$fx_worktree origin points at $origin_url" ;;
+        *) die "$fx_worktree upstream points at $upstream_url" ;;
     esac
 fi
 fx_sha=$(git -C "$fx_worktree" rev-parse HEAD) \

@@ -48,7 +48,7 @@ git clone --quiet --bare "$seed" "$fork_repo"
 git clone --quiet --bare "$seed" "$upstream_repo"
 git --git-dir="$fork_repo" update-ref refs/heads/integration "$old_sha"
 git clone --quiet --origin fork --branch integration "$fork_repo" "$checkout"
-git -C "$checkout" remote add origin "$upstream_repo"
+git -C "$checkout" remote add upstream "$upstream_repo"
 git -C "$checkout" config user.name fxnk-test
 git -C "$checkout" config user.email fxnk@example.invalid
 

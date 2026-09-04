@@ -99,7 +99,7 @@ function transcriptSection(theme: Theme): Line[] {
   lines.push([])
   lines.push([paint(role("divider", t), "─".repeat(46), t)])
   lines.push([paint(role("hint", t), tokens.glyphs.input_prefix, t), paint(role("hint", t), "█", t)])
-  lines.push([paint(role("statusline", t), "~/src/fx · integration · ", t), paint(role("permission_auto", t), "auto", t), paint(role("statusline", t), " · 45k", t)])
+  lines.push([paint(role("statusline", t), "~/source/vercel-labs--fx · integration · ", t), paint(role("permission_auto", t), "auto", t), paint(role("statusline", t), " · 45k", t)])
   lines.push([])
   lines.push([paint(role("approval_button_active", t), "  Yes  ", t), note("  ", t), paint(role("approval_button_inactive", t), "  No  ", t), note("   approval buttons", t)])
   return lines
