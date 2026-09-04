@@ -315,6 +315,47 @@ servers.
   `--no-project-instructions` does not suppress a state system prompt, and a
   controlled relaunch or resume re-reads it through the preserved state root.
 
+### Agent shape and session provenance
+
+- `carry/agent-shape-sessions` depends on `carry/state-system-prompts`, which
+  supplies the composed launch controls, state-root conventions, and focused
+  gate support this behavior separates into explicit authorities.
+- Treat the agent's shape, credential identity, and writable history as three
+  independent launch axes on interactive TUI, resume, ask, and ACP launches.
+  `--state-dir DIR` continues to select all three together. `--shape DIR`
+  selects only the prompt, skills, MCP configuration, native-tool selection,
+  permission policy, and project-instruction inputs that define behavior;
+  `--identity DIR` selects only an already-valid saved provider credential;
+  and `--history-dir DIR` selects only durable sessions, prompt history, and
+  profile usage. Canonicalize every selected directory before startup and do
+  not change the process or subprocess `HOME`.
+- A shape root uses its conventional `.fx/SYSTEM.md` or
+  `.fx/SYSTEM_APPEND.md`, its `.fx/skills` directory as an ordered invocation
+  root, and its `.fx/mcp.json` when present. An explicit `--mcp-config FILE`
+  selects one canonical regular MCP configuration file and wins over that
+  convention without moving MCP credentials out of the identity/profile
+  authority. Existing explicit prompt and skill options retain their current
+  precedence, exclusivity, and invocation-only behavior.
+- `--identity DIR` is an explicit operator selection and may stand without
+  `--state-dir`, but it borrows the selected profile under the same read-only
+  credential contract as `FX_AUTH_READ_ONLY_HOME`: never copy, refresh,
+  delete, or replace bytes there. Keep the environment form's existing
+  `--state-dir` precondition, and reject a launch that names both authorities
+  instead of silently choosing an account.
+- Derive a non-secret SHA-256 shape identity from the fully resolved launch
+  declaration: prompt text by content; skill roots, MCP configuration, and
+  permission policy by canonical path; selected tools; and the boolean launch
+  suppressions. Pair it with a bounded UTF-8 display label, while treating the
+  digest rather than that mutable prose as the authority.
+- Stamp new durable sessions, turn authority, and usage generations with the
+  shape identity and label plus the existing non-secret credential source and
+  credential identity. Keep old sessions readable, preserve the trailing-key
+  and exact-variant compatibility rules, reject malformed digests or a
+  credential identity without its source, and never place an access token,
+  refresh token, API key, or serialized credential in provenance. Session
+  listings and usage grouping must make shape and account provenance visible
+  without changing the history root that owns those records.
+
 ### Launch-control continuity
 
 - `carry/launch-control-continuity` depends on
