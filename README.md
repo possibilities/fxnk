@@ -1,6 +1,9 @@
 # fxnk
 
-A Workshop for maintaining and installing the `possibilities/fx` fork. It keeps selected Fx features rebuilt on current upstream and publishes them through the fork's Integration branch.
+A Workshop for maintaining and installing the `possibilities/fx` fork. Each
+maintenance invocation rebuilds selected Fx features on one upstream commit
+captured before the cycle's exact-object fetch, then publishes them through the
+fork's Integration branch.
 
 ## Consumers
 

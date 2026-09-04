@@ -78,12 +78,12 @@ available, it rejects local `carry/*` heads absent from § Features.
 
 Work directly on `main` in this repository. Outside this repository, develop
 each carried Fx feature in a dedicated worktree on its `carry/<feature>` branch,
-based on current Main or a declared carry dependency. Gate and publish that
-  carry, compose it into Integration, and remove the worktree after the published
-  result is installed. Run focused checks in the carry worktree and the Local
-  development gate in the exact composition worktree containing it. Never do
-  feature work in the bound Fx checkout or push onto a historical upstream PR
-  branch.
+based on the cycle's captured Main or a declared carry dependency. Gate and
+publish that carry, compose it into Integration, and remove the worktree after
+the published result is installed. Run focused checks in the carry worktree and
+the Local development gate in the exact composition worktree containing it.
+Never do feature work in the bound Fx checkout or push onto a historical
+upstream PR branch.
 
 Maintenance owns only Main, Integration, and the declared `carry/*` heads.
 Every other fork head remains unchanged. Creating, moving, or removing a

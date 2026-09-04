@@ -38,10 +38,14 @@ shipping it.
 - Mirror branch: `main`, an exact mirror of `vercel-labs/fx:main` locally and on
   the fork. Never an integration base with downstream-only commits.
 - Maintenance target: one `/maintain` invocation captures the upstream Main
-  SHA once before fetching and binds the entire audit, replay, gate,
-  publication, and final reconciliation to that exact commit. Never refetch or
-  rebase onto an upstream advance during the same invocation; any later tip is
-  work for the next maintenance cycle.
+  SHA before fetching and binds the entire audit, replay, gate, publication,
+  and final reconciliation to that exact commit. Fetch exactly that object,
+  never a moving upstream ref or the remote's configured refspec. Never
+  refetch, reselect, or rebase onto an upstream advance during the same
+  invocation; any later tip is work for the next maintenance cycle. That
+  exact-object fetch is the provenance boundary: later gates consume the
+  captured SHA and never infer an upstream base from remote-tracking refs or
+  reflogs.
 - Integration branch: `integration`, containing every carried feature together.
   It is the fork's GitHub default branch, the base and merge target for
   downstream development, and the only branch the installer consumes. One
@@ -964,6 +968,11 @@ MAINTAIN_UPSTREAM_SHA="$cycle_upstream_sha" \
   ~/code/fxnk/scripts/local-gate.sh --worktree "$composition_worktree"
 ```
 
+`MAINTAIN_UPSTREAM_SHA` is required for every gate run. The gate verifies that
+the exact captured object exists and is contained in the candidate; it does not
+select a target from `origin/main`, inspect a reflog, or claim to rediscover the
+cycle's upstream base after the exact-object fetch established it.
+
 The gate runs formatting, the public-surface audit, and upstream's direct-write
 audit, first proves that the exact candidate HEAD contains
 `carry/hosted-full-ci` and preserves its exact workflow blob, builds
@@ -1010,14 +1019,14 @@ MAINTAIN_UPSTREAM_SHA="$cycle_upstream_sha" \
 ```
 
 The record is an atomic mode-0600 JSON receipt under
-`~/.local/state/fxnk/local-gates/`, bound to the Fx SHA, pinned upstream SHA,
+`~/.local/state/fxnk/local-gates/`, bound to the Fx SHA, captured upstream SHA,
 platform, gate-contract digest, quarantine outcomes, and duration. Publish that
 exact Integration commit once with the lease captured at invocation start. Then run
 the project-owned ship gate; it re-reads the remote Integration branch,
 validates the exact-SHA receipt and current contract, and prints `SHIP <sha>`
 only when every local, remote, and receipt identity still agrees. Upstream
 currency is deliberately not a ship or gate condition: the receipt records the
-cycle's pinned `origin/main` SHA, and an upstream advance is ignored until the
+cycle's captured SHA directly, and an upstream advance is ignored until the
 next one-shot maintenance invocation rather than restarting this one:
 
 ```sh

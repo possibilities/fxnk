@@ -12,7 +12,13 @@ die() {
 }
 
 usage() {
-    printf 'Usage: scripts/local-gate.sh --worktree PATH [--record]\n'
+    cat <<'EOF'
+Usage: MAINTAIN_UPSTREAM_SHA=SHA scripts/local-gate.sh \
+  --worktree PATH [--record]
+
+Run the local gate against the exact upstream SHA captured for this maintenance
+invocation. The gate never selects a target from an upstream tracking ref.
+EOF
 }
 
 fx_worktree=
@@ -96,9 +102,15 @@ fi
 if [ "$record" -eq 1 ] && [ "$worktree_subject" != "$fx_sha" ]; then
     die "recording requires a clean Fx worktree"
 fi
-if [ "$record" -eq 1 ] && [ -z "${MAINTAIN_UPSTREAM_SHA:-}" ]; then
-    die "MAINTAIN_UPSTREAM_SHA is required with --record"
-fi
+[ -n "${MAINTAIN_UPSTREAM_SHA:-}" ] \
+    || die "MAINTAIN_UPSTREAM_SHA is required"
+case "$MAINTAIN_UPSTREAM_SHA" in
+    *[!0-9a-f]*|'')
+        die "MAINTAIN_UPSTREAM_SHA must be one exact lowercase commit SHA"
+        ;;
+esac
+[ "${#MAINTAIN_UPSTREAM_SHA}" -eq 40 ] \
+    || die "MAINTAIN_UPSTREAM_SHA must be one exact lowercase commit SHA"
 
 verify_recordable_state() {
     local current_sha
@@ -110,43 +122,15 @@ verify_recordable_state() {
         || die "Fx worktree changed during the recorded gate"
 }
 
-upstream_ref=refs/remotes/origin/main
-git -C "$fx_worktree" rev-parse --verify --quiet "$upstream_ref^{commit}" >/dev/null \
-    || die "$fx_worktree has no origin/main tracking commit"
-tracked_upstream_sha=$(git -C "$fx_worktree" rev-parse "$upstream_ref")
-upstream_sha=${MAINTAIN_UPSTREAM_SHA:-$tracked_upstream_sha}
-if [ -n "${MAINTAIN_UPSTREAM_SHA:-}" ]; then
-    printf '%s\n' "$upstream_sha" | grep -Eq '^[0-9a-f]{40}$' \
-        || die "MAINTAIN_UPSTREAM_SHA must be one exact lowercase commit SHA"
-    git -C "$fx_worktree" rev-parse --verify --quiet "$upstream_sha^{commit}" >/dev/null \
-        || die "$fx_worktree does not contain pinned upstream commit $upstream_sha"
-    git -C "$fx_worktree" merge-base --is-ancestor "$upstream_sha" "$fx_sha" \
-        || die "$fx_sha does not contain pinned upstream commit $upstream_sha"
-    # Reconciliation deliberately resets origin/main to the pinned target. Its
-    # reflog retains every newer upstream tip this checkout observed before
-    # that reset. Reject a candidate sharing any of those later commits, while
-    # leaving a divergent or advanced ambient ref irrelevant to target choice.
-    upstream_reflog_shas=$(git -C "$fx_worktree" reflog show \
-        --format='%H' "$upstream_ref" 2>/dev/null || true)
-    observed_upstream_shas=$(
-        printf '%s\n%s\n%s\n' \
-            "$upstream_sha" "$tracked_upstream_sha" "$upstream_reflog_shas" \
-            | awk 'NF && !seen[$0]++'
-    )
-    for observed_upstream_sha in $observed_upstream_shas; do
-        git -C "$fx_worktree" merge-base --is-ancestor \
-            "$upstream_sha" "$observed_upstream_sha" || continue
-        candidate_upstream_base=$(git -C "$fx_worktree" merge-base \
-            "$observed_upstream_sha" "$fx_sha") \
-            || die "could not determine the candidate's upstream base"
-        [ "$candidate_upstream_base" = "$upstream_sha" ] \
-            || die "$fx_sha uses observed upstream base $candidate_upstream_base, not pinned target $upstream_sha"
-    done
-fi
-# A maintenance cycle records its immutable target even if another process has
-# advanced the ambient origin/main tracking ref. The hosted CI carry is measured
-# against the merge base it actually sits on.
-hosted_ci_base=$(git -C "$fx_worktree" merge-base "$upstream_sha" "$fx_sha")
+upstream_sha=$MAINTAIN_UPSTREAM_SHA
+git -C "$fx_worktree" rev-parse --verify --quiet "$upstream_sha^{commit}" >/dev/null \
+    || die "$fx_worktree does not contain captured upstream commit $upstream_sha"
+git -C "$fx_worktree" merge-base --is-ancestor "$upstream_sha" "$fx_sha" \
+    || die "$fx_sha does not contain captured upstream commit $upstream_sha"
+# The cycle's exact-object fetch establishes provenance. The gate consumes that
+# captured identity and does not try to reconstruct it from mutable tracking
+# refs or incomplete reflogs.
+hosted_ci_base=$upstream_sha
 
 hosted_ci_ref=refs/heads/carry/hosted-full-ci
 hosted_ci_workflow=.github/workflows/full-ci.yml
@@ -451,7 +435,7 @@ if [ "$record" -eq 1 ]; then
         --argjson quarantine "$quarantine" \
         '{schema:1,authority:$authority,fx_sha:$sha,platform:{os:$os,arch:$arch},
           contract_digest:$contract_digest,
-          upstream:{ref:"origin/main",sha:$upstream_sha},
+          upstream:{sha:$upstream_sha},
           outcomes:{hosted_ci_composition:"pass",
             format:"pass",public_surface:"pass",direct_write_audit:"pass",
             release_safe_build:"pass",

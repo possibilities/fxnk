@@ -36,10 +36,11 @@ branch. Maintenance never creates the marker by heuristic and never treats an
 unknown branch as deletion intent.
 _Avoid_: quarantine branch, stale branch, automatic archive.
 
-**Maintenance cycle** — One `/maintain` run that reviews upstream movement and
-historical references, reconciles every carried feature, passes the Local
-development gate, publishes Integration, updates the scratchpad, and installs
-the published result.
+**Maintenance cycle** — One `/maintain` run bound to an upstream Main SHA
+captured before its exact-object fetch. It reviews that snapshot and historical
+references, reconciles every carried feature, passes the Local development
+gate, publishes Integration, updates the scratchpad, and installs the published
+result. A later upstream tip belongs to another cycle.
 _Avoid_: update, install.
 
 **Local development gate** — The macOS-arm64 proof owned by this Workshop and
@@ -49,8 +50,9 @@ explicit upstream terminal quarantine; it is the only blocking test authority.
 _Avoid_: carve-out, Full CI, smoke test.
 
 **Gate receipt** — A mode-0600 atomic JSON record proving that one exact Fx SHA
-passed the current Local development gate contract against one exact upstream
-revision. A changed gate or quarantine contract invalidates an older receipt.
+passed the current Local development gate contract against the cycle's exact
+captured upstream SHA. A changed gate or quarantine contract invalidates an
+older receipt.
 _Avoid_: CI result, approval, mutable status.
 
 **Installer** — `scripts/install.sh`, which only converges the published

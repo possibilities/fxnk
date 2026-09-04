@@ -246,10 +246,23 @@ grep -F 'hosted-ci-composition' scripts/local-gate.sh >/dev/null \
 grep -F 'changes the hosted Full CI workflow' \
     tests/local-gate/receipt-transaction.sh >/dev/null \
     || fail "local gate transaction does not reject an Integration workflow mutation"
-grep -F 'does not contain current origin/main' scripts/ship-gate.sh >/dev/null \
-    && fail "ship gate must not require current upstream ancestry (operator decision 2026-09-03)"
-grep -F 'receipt covered origin/main at' scripts/ship-gate.sh >/dev/null \
-    || fail "ship gate does not report the tracked upstream the receipt covered"
+# shellcheck disable=SC2016 # Match the literal environment-variable check.
+grep -F '[ -n "${MAINTAIN_UPSTREAM_SHA:-}" ]' scripts/local-gate.sh >/dev/null \
+    || fail "local gate does not require the captured upstream target"
+grep -F 'Fetch exactly that object' MAINTAIN.md >/dev/null \
+    || fail "maintenance does not require the exact captured upstream fetch"
+grep -F 'exact-object fetch is the provenance boundary' MAINTAIN.md >/dev/null \
+    || fail "maintenance does not name the captured-object provenance boundary"
+if grep -Ei 'git .*reflog|refs/remotes/origin/main|fetch .*origin[[:space:]]+main' \
+    scripts/local-gate.sh scripts/ship-gate.sh \
+    tests/local-gate/receipt-transaction.sh >/dev/null; then
+    fail "local gate still infers upstream provenance from moving ref state"
+fi
+# shellcheck disable=SC2016 # Match the literal receipt constructor.
+grep -F 'upstream:{sha:$upstream_sha}' scripts/local-gate.sh >/dev/null \
+    || fail "local gate receipt does not bind the captured upstream SHA directly"
+grep -F 'receipt covered captured upstream at' scripts/ship-gate.sh >/dev/null \
+    || fail "ship gate does not report the captured upstream target"
 gate_test_sha=0000000000000000000000000000000000000000
 set +e
 integration_gate_output=$(MAINTAIN_UPSTREAM_SHA="$gate_test_sha" scripts/ship-gate.sh \

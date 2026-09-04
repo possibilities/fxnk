@@ -18,7 +18,7 @@ Usage: MAINTAIN_UPSTREAM_SHA=SHA scripts/ship-gate.sh \
 
 Verify that a published fork branch still names SHA, the local worktree is
 clean at SHA, and the macOS-arm64 local gate receipt proves SHA under the
-current gate contract. The receipt records the cycle's pinned upstream target;
+current gate contract. The receipt records the cycle's captured upstream target;
 this command never refreshes or chases upstream. Prints "SHIP <sha>" on success.
 EOF
 }
@@ -175,7 +175,7 @@ jq -e \
         .fx_sha == $sha and
         .platform == {os:"Darwin",arch:"arm64"} and
         .contract_digest == $digest and
-        .upstream.ref == "origin/main" and
+        (.upstream | keys) == ["sha"] and
         (.upstream.sha | test("^[0-9a-f]{40}$")) and
         .outcomes.format == "pass" and
         .outcomes.public_surface == "pass" and
@@ -209,16 +209,17 @@ jq -e \
     || die "local gate receipt does not prove the current gate contract for $expected_sha"
 receipt_upstream_sha=$(jq -r '.upstream.sha' "$receipt")
 [ "$receipt_upstream_sha" = "$MAINTAIN_UPSTREAM_SHA" ] \
-    || die "local gate receipt covers upstream $receipt_upstream_sha, expected pinned target $MAINTAIN_UPSTREAM_SHA"
+    || die "local gate receipt covers upstream $receipt_upstream_sha, expected captured target $MAINTAIN_UPSTREAM_SHA"
 
-# Re-read the moving remote ref after receipt inspection.
+# Re-read the published Integration ref after receipt inspection.
 published_sha=$(remote_branch_sha)
 [ "$published_sha" = "$expected_sha" ] \
     || die "fork/$published_branch moved to $published_sha during the gate"
 # Upstream currency is deliberately not a ship condition. The receipt records
-# the cycle's immutable upstream target; later upstream movement belongs to the
+# the cycle's immutable captured target; later upstream movement belongs to the
 # next one-shot maintenance invocation.
-printf 'fxnk ship gate: receipt covered origin/main at %s\n' "$receipt_upstream_sha" >&2
+printf 'fxnk ship gate: receipt covered captured upstream at %s\n' \
+    "$receipt_upstream_sha" >&2
 
 # Leave no network, CI, or fetch operation between these final state checks and
 # SHIP.
