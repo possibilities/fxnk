@@ -565,9 +565,11 @@ servers.
   made `createFxAgent()` refuse `env` outright and routed native agents through
   the same option validation as WebAssembly ones, so `env.AI_GATEWAY_API_KEY`
   is no longer Gateway shorthand. Translate a tagged `auth` entry into those
-  flat options before upstream's guard runs, and let a Gateway agent take
-  upstream's native path unchanged; only a Codex authorization, which carries
-  no Gateway key, goes straight to the addon.
+  flat options before upstream's guard runs. Keep native Gateway and Codex
+  behind one public Agent instance with `prompt()`, `checkpoint()`,
+  `setConfig()`, `configOptions`, and `close()`; expose only host-supplied
+  providers for switching, and do not restore the retired public sub-session
+  API. Browser and direct WebAssembly agents remain Gateway-only.
 - Keep Codex credential access explicit. A host may supply a bounded session
   store with opaque load and optimistic revisioned commit operations, or opt
   into the fx profile with `fxProfileSession()`. Never fall back from a custom
