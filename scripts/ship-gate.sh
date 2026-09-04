@@ -13,12 +13,13 @@ die() {
 
 usage() {
     cat <<'EOF'
-Usage: scripts/ship-gate.sh --worktree PATH --branch BRANCH --sha SHA
+Usage: MAINTAIN_UPSTREAM_SHA=SHA scripts/ship-gate.sh \
+  --worktree PATH --branch BRANCH --sha SHA
 
 Verify that a published fork branch still names SHA, the local worktree is
-clean at SHA, current upstream is contained in SHA, and the macOS-arm64 local
-gate receipt proves SHA under the current gate contract. Prints "SHIP <sha>"
-on success.
+clean at SHA, and the macOS-arm64 local gate receipt proves SHA under the
+current gate contract. The receipt records the cycle's pinned upstream target;
+this command never refreshes or chases upstream. Prints "SHIP <sha>" on success.
 EOF
 }
 
@@ -57,6 +58,15 @@ done
 [ -n "$branch_worktree" ] || die "--worktree is required"
 [ -n "$published_branch" ] || die "--branch is required"
 [ -n "$expected_sha" ] || die "--sha is required"
+[ -n "${MAINTAIN_UPSTREAM_SHA:-}" ] \
+    || die "MAINTAIN_UPSTREAM_SHA is required"
+case "$MAINTAIN_UPSTREAM_SHA" in
+    *[!0-9a-f]*|'')
+        die "MAINTAIN_UPSTREAM_SHA must be one exact lowercase commit SHA"
+        ;;
+esac
+[ "${#MAINTAIN_UPSTREAM_SHA}" -eq 40 ] \
+    || die "MAINTAIN_UPSTREAM_SHA must be one exact lowercase commit SHA"
 
 command -v git >/dev/null 2>&1 || die "git is required"
 command -v jq >/dev/null 2>&1 || die "jq is required"
@@ -198,15 +208,16 @@ jq -e \
     ' "$receipt" >/dev/null \
     || die "local gate receipt does not prove the current gate contract for $expected_sha"
 receipt_upstream_sha=$(jq -r '.upstream.sha' "$receipt")
+[ "$receipt_upstream_sha" = "$MAINTAIN_UPSTREAM_SHA" ] \
+    || die "local gate receipt covers upstream $receipt_upstream_sha, expected pinned target $MAINTAIN_UPSTREAM_SHA"
 
 # Re-read the moving remote ref after receipt inspection.
 published_sha=$(remote_branch_sha)
 [ "$published_sha" = "$expected_sha" ] \
     || die "fork/$published_branch moved to $published_sha during the gate"
-# Upstream currency is deliberately not a ship condition (operator decision,
-# 2026-09-03): upstream merges faster than a record-publish-ship window, and
-# advancing the mirror is a maintenance act, not a gate. The receipt still
-# records the tracked upstream SHA it covered, for the next cycle to read.
+# Upstream currency is deliberately not a ship condition. The receipt records
+# the cycle's immutable upstream target; later upstream movement belongs to the
+# next one-shot maintenance invocation.
 printf 'fxnk ship gate: receipt covered origin/main at %s\n' "$receipt_upstream_sha" >&2
 
 # Leave no network, CI, or fetch operation between these final state checks and

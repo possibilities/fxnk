@@ -252,12 +252,12 @@ grep -F 'receipt covered origin/main at' scripts/ship-gate.sh >/dev/null \
     || fail "ship gate does not report the tracked upstream the receipt covered"
 gate_test_sha=0000000000000000000000000000000000000000
 set +e
-integration_gate_output=$(scripts/ship-gate.sh \
+integration_gate_output=$(MAINTAIN_UPSTREAM_SHA="$gate_test_sha" scripts/ship-gate.sh \
     --worktree "$root/does-not-exist" \
     --branch integration \
     --sha "$gate_test_sha" 2>&1)
 integration_gate_status=$?
-main_gate_output=$(scripts/ship-gate.sh \
+main_gate_output=$(MAINTAIN_UPSTREAM_SHA="$gate_test_sha" scripts/ship-gate.sh \
     --worktree "$root/does-not-exist" \
     --branch main \
     --sha "$gate_test_sha" 2>&1)

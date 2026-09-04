@@ -96,6 +96,9 @@ fi
 if [ "$record" -eq 1 ] && [ "$worktree_subject" != "$fx_sha" ]; then
     die "recording requires a clean Fx worktree"
 fi
+if [ "$record" -eq 1 ] && [ -z "${MAINTAIN_UPSTREAM_SHA:-}" ]; then
+    die "MAINTAIN_UPSTREAM_SHA is required with --record"
+fi
 
 verify_recordable_state() {
     local current_sha
@@ -110,11 +113,39 @@ verify_recordable_state() {
 upstream_ref=refs/remotes/origin/main
 git -C "$fx_worktree" rev-parse --verify --quiet "$upstream_ref^{commit}" >/dev/null \
     || die "$fx_worktree has no origin/main tracking commit"
-upstream_sha=$(git -C "$fx_worktree" rev-parse "$upstream_ref")
-# The candidate is not required to contain the tracked origin/main head
-# (operator decision, 2026-09-03): upstream currency is recorded in the
-# receipt, never gated. The hosted CI carry is measured against the merge base
-# it actually sits on.
+tracked_upstream_sha=$(git -C "$fx_worktree" rev-parse "$upstream_ref")
+upstream_sha=${MAINTAIN_UPSTREAM_SHA:-$tracked_upstream_sha}
+if [ -n "${MAINTAIN_UPSTREAM_SHA:-}" ]; then
+    printf '%s\n' "$upstream_sha" | grep -Eq '^[0-9a-f]{40}$' \
+        || die "MAINTAIN_UPSTREAM_SHA must be one exact lowercase commit SHA"
+    git -C "$fx_worktree" rev-parse --verify --quiet "$upstream_sha^{commit}" >/dev/null \
+        || die "$fx_worktree does not contain pinned upstream commit $upstream_sha"
+    git -C "$fx_worktree" merge-base --is-ancestor "$upstream_sha" "$fx_sha" \
+        || die "$fx_sha does not contain pinned upstream commit $upstream_sha"
+    # Reconciliation deliberately resets origin/main to the pinned target. Its
+    # reflog retains every newer upstream tip this checkout observed before
+    # that reset. Reject a candidate sharing any of those later commits, while
+    # leaving a divergent or advanced ambient ref irrelevant to target choice.
+    upstream_reflog_shas=$(git -C "$fx_worktree" reflog show \
+        --format='%H' "$upstream_ref" 2>/dev/null || true)
+    observed_upstream_shas=$(
+        printf '%s\n%s\n%s\n' \
+            "$upstream_sha" "$tracked_upstream_sha" "$upstream_reflog_shas" \
+            | awk 'NF && !seen[$0]++'
+    )
+    for observed_upstream_sha in $observed_upstream_shas; do
+        git -C "$fx_worktree" merge-base --is-ancestor \
+            "$upstream_sha" "$observed_upstream_sha" || continue
+        candidate_upstream_base=$(git -C "$fx_worktree" merge-base \
+            "$observed_upstream_sha" "$fx_sha") \
+            || die "could not determine the candidate's upstream base"
+        [ "$candidate_upstream_base" = "$upstream_sha" ] \
+            || die "$fx_sha uses observed upstream base $candidate_upstream_base, not pinned target $upstream_sha"
+    done
+fi
+# A maintenance cycle records its immutable target even if another process has
+# advanced the ambient origin/main tracking ref. The hosted CI carry is measured
+# against the merge base it actually sits on.
 hosted_ci_base=$(git -C "$fx_worktree" merge-base "$upstream_sha" "$fx_sha")
 
 hosted_ci_ref=refs/heads/carry/hosted-full-ci

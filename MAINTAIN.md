@@ -3,15 +3,16 @@
 This repository delivers and maintains our local fork of
 [`vercel-labs/fx`](https://github.com/vercel-labs/fx). It owns the behavior we
 want independently of upstream review or publication while continuously
-rebuilding that behavior on current upstream Fx. `/maintain` — the shared
+rebuilding that behavior on one captured upstream Fx snapshot per cycle.
+`/maintain` — the shared
 `maintain` skill — runs a maintenance cycle from this file; this file is the
 whole of what that skill knows about Fx.
 
 ## Purpose
 
 Keep a published `integration` branch of Fx that carries every feature below,
-rebuilt on current upstream every cycle, and installed on this machine by this
-repository's own installer. The fork is not a place to develop Fx in general:
+rebuilt on the cycle's once-captured upstream target, and installed on this
+machine by this repository's own installer. The fork is not a place to develop Fx in general:
 a feature lives here because we need it before — or instead of — upstream
 shipping it.
 
@@ -36,16 +37,22 @@ shipping it.
 
 - Mirror branch: `main`, an exact mirror of `vercel-labs/fx:main` locally and on
   the fork. Never an integration base with downstream-only commits.
+- Maintenance target: one `/maintain` invocation captures the upstream Main
+  SHA once before fetching and binds the entire audit, replay, gate,
+  publication, and final reconciliation to that exact commit. Never refetch or
+  rebase onto an upstream advance during the same invocation; any later tip is
+  work for the next maintenance cycle.
 - Integration branch: `integration`, containing every carried feature together.
   It is the fork's GitHub default branch, the base and merge target for
   downstream development, and the only branch the installer consumes. One
   publication lease serializes exact-leased updates.
 - Composition: stable published `carry/<feature>` heads, one per current entry
-  in the feature inventory. Develop each carry in its own worktree from current
-  Main or a declared carry dependency, then compose every carry into
-  Integration. Every published carry head must be an ancestor of published
-  Integration. During upstream maintenance, replay each carry on current Main
-  or its declared dependency and publish the proved graph under exact leases.
+  in the feature inventory. Develop each carry in its own worktree from the
+  cycle's captured Main or a declared carry dependency, then compose every
+  carry into Integration. Every published carry head must be an ancestor of
+  published Integration. During upstream maintenance, replay each carry on
+  the cycle's captured Main or its declared dependency and publish the proved
+  graph under exact leases.
 - Publication: standing authorization. Pushing the declared carry heads and
   Integration to `fork` needs no
   per-cycle approval and is not a question to bring to the operator. A green
@@ -953,7 +960,8 @@ clean candidate, then run the gate from that exact composition worktree before
 publishing any affected carry:
 
 ```sh
-~/code/fxnk/scripts/local-gate.sh --worktree "$composition_worktree"
+MAINTAIN_UPSTREAM_SHA="$cycle_upstream_sha" \
+  ~/code/fxnk/scripts/local-gate.sh --worktree "$composition_worktree"
 ```
 
 The gate runs formatting, the public-surface audit, and upstream's direct-write
@@ -995,25 +1003,26 @@ After merging the proved feature commit into the final Integration worktree,
 rerun the gate with `--record` on the clean exact Integration SHA:
 
 ```sh
-~/code/fxnk/scripts/local-gate.sh \
-  --worktree "$integration_worktree" \
-  --record
+MAINTAIN_UPSTREAM_SHA="$cycle_upstream_sha" \
+  ~/code/fxnk/scripts/local-gate.sh \
+    --worktree "$integration_worktree" \
+    --record
 ```
 
 The record is an atomic mode-0600 JSON receipt under
-`~/.local/state/fxnk/local-gates/`, bound to the Fx SHA, tracked upstream SHA,
+`~/.local/state/fxnk/local-gates/`, bound to the Fx SHA, pinned upstream SHA,
 platform, gate-contract digest, quarantine outcomes, and duration. Publish that
-exact Integration commit once with the lease captured before refresh. Then run
+exact Integration commit once with the lease captured at invocation start. Then run
 the project-owned ship gate; it re-reads the remote Integration branch,
 validates the exact-SHA receipt and current contract, and prints `SHIP <sha>`
 only when every local, remote, and receipt identity still agrees. Upstream
-currency is deliberately not a ship or gate condition (operator decision,
-2026-09-03): the receipt records the tracked `origin/main` SHA it covered, and
-advancing the mirror is a maintenance act the next cycle performs, never a
-race against upstream's merge cadence:
+currency is deliberately not a ship or gate condition: the receipt records the
+cycle's pinned `origin/main` SHA, and an upstream advance is ignored until the
+next one-shot maintenance invocation rather than restarting this one:
 
 ```sh
-~/code/fxnk/scripts/ship-gate.sh \
+MAINTAIN_UPSTREAM_SHA="$cycle_upstream_sha" \
+  ~/code/fxnk/scripts/ship-gate.sh \
   --worktree "$integration_worktree" \
   --branch integration \
   --sha "$integration_sha"

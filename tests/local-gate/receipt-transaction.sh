@@ -132,6 +132,20 @@ git --git-dir="$fork_repo" update-ref refs/heads/integration "$sha"
 git -C "$fx_worktree" remote add origin "$upstream_repo"
 git -C "$fx_worktree" remote add fork "$fork_repo"
 git -C "$fx_worktree" fetch --quiet origin main
+pinned_upstream_sha=$(git -C "$fx_worktree" rev-parse refs/remotes/origin/main)
+future_upstream_sha=$(
+    GIT_AUTHOR_NAME=fxnk-test \
+    GIT_AUTHOR_EMAIL=fxnk@example.invalid \
+    GIT_COMMITTER_NAME=fxnk-test \
+    GIT_COMMITTER_EMAIL=fxnk@example.invalid \
+    git --git-dir="$upstream_repo" commit-tree \
+        "$(git --git-dir="$upstream_repo" rev-parse 'main^{tree}')" \
+        -p "$pinned_upstream_sha" <<'EOF'
+future upstream
+EOF
+)
+git --git-dir="$upstream_repo" update-ref refs/heads/main "$future_upstream_sha"
+git -C "$fx_worktree" fetch --quiet origin main
 
 jq -n --arg blob "$blob" \
     '{schema:1,platform:{os:"Darwin",arch:"arm64"},entries:[{
@@ -141,6 +155,7 @@ jq -n --arg blob "$blob" \
     }]}' >"$manifest"
 
 gate_env=(
+    MAINTAIN_UPSTREAM_SHA="$pinned_upstream_sha"
     FXNK_LOCAL_GATE_TESTING=1
     FXNK_LOCAL_GATE_UNAME_S=Darwin
     FXNK_LOCAL_GATE_UNAME_M=arm64
@@ -151,14 +166,37 @@ gate_env=(
     FXNK_TEST_FAKE_BUN_QUARANTINE=1
     FXNK_STATE_DIR="$state_dir"
 )
+
+set +e
+missing_record_pin_output=$(
+    FXNK_LOCAL_GATE_TESTING=1 \
+    FXNK_LOCAL_GATE_UNAME_S=Darwin \
+    FXNK_LOCAL_GATE_UNAME_M=arm64 \
+    FXNK_LOCAL_GATE_MANIFEST="$manifest" \
+    FXNK_LOCAL_GATE_ZIG_BIN="$root/tests/local-gate/fixtures/fake-zig.sh" \
+    FXNK_LOCAL_GATE_BUN_BIN="$root/tests/local-gate/fixtures/fake-bun.sh" \
+    FXNK_TEST_FAKE_FX="$root/tests/local-gate/fixtures/fake-fx.sh" \
+    FXNK_TEST_FAKE_BUN_QUARANTINE=1 \
+    FXNK_STATE_DIR="$state_dir" \
+    "$root/scripts/local-gate.sh" --worktree "$fx_worktree" --record 2>&1
+)
+missing_record_pin_status=$?
+set -e
+[ "$missing_record_pin_status" -ne 0 ] \
+    || fail "recorded gate accepted no pinned upstream target"
+printf '%s\n' "$missing_record_pin_output" | grep -F \
+    'MAINTAIN_UPSTREAM_SHA is required with --record' >/dev/null \
+    || fail "recorded gate did not explain its missing upstream pin"
+
 env "${gate_env[@]}" "$root/scripts/local-gate.sh" \
     --worktree "$fx_worktree" --record >/dev/null
 receipt="$state_dir/local-gates/$sha.json"
 [ -f "$receipt" ] || fail "recorded gate did not write the exact-SHA receipt"
 [ "$(stat -f '%Lp' "$receipt")" = 600 ] \
     || fail "recorded gate receipt is not mode 0600"
-jq -e --arg sha "$sha" \
+jq -e --arg sha "$sha" --arg upstream_sha "$pinned_upstream_sha" \
     '.authority == "test" and .fx_sha == $sha and
+     .upstream.sha == $upstream_sha and
      .outcomes.hosted_ci_composition == "pass" and
      .outcomes.direct_write_audit == "pass" and
      .outcomes.fresh_binary == "pass" and
@@ -167,6 +205,23 @@ jq -e --arg sha "$sha" \
      .outcomes.quarantine[0].signatures == ["fixture"] and
      (.outcomes.quarantine[0].blob | test("^[0-9a-f]{40}$"))' \
     "$receipt" >/dev/null || fail "recorded gate receipt has the wrong proof"
+
+git -C "$fx_worktree" checkout --quiet -b future-integration "$future_upstream_sha"
+git -C "$fx_worktree" merge --quiet --no-edit carry/hosted-full-ci
+# The real reconciliation path resets origin/main to the pin. The local gate
+# must still reject the later upstream commit retained only in that ref's log.
+git -C "$fx_worktree" update-ref refs/remotes/origin/main "$pinned_upstream_sha"
+set +e
+future_base_output=$(env "${gate_env[@]}" "$root/scripts/local-gate.sh" \
+    --worktree "$fx_worktree" 2>&1)
+future_base_status=$?
+set -e
+[ "$future_base_status" -ne 0 ] \
+    || fail "gate accepted a candidate based on later upstream"
+printf '%s\n' "$future_base_output" | grep -F \
+    "not pinned target $pinned_upstream_sha" >/dev/null \
+    || fail "later-upstream refusal did not explain the pinned target"
+git -C "$fx_worktree" checkout --quiet integration
 
 git -C "$fx_worktree" checkout --quiet -b integration-workflow-mismatch
 printf '\n# integration-only mutation\n' \
@@ -216,11 +271,43 @@ printf '%s\n' "$failure_output" | grep -F \
 after=$(shasum -a 256 "$receipt" | awk '{print $1}')
 [ "$before" = "$after" ] || fail "failed receipt replacement changed prior proof"
 
+set +e
+missing_ship_pin_output=$(
+    FXNK_LOCAL_GATE_TESTING=1 FXNK_LOCAL_GATE_MANIFEST="$manifest" \
+    FXNK_STATE_DIR="$state_dir" \
+        "$root/scripts/ship-gate.sh" \
+        --worktree "$fx_worktree" --branch integration --sha "$sha" 2>&1
+)
+missing_ship_pin_status=$?
+set -e
+[ "$missing_ship_pin_status" -ne 0 ] \
+    || fail "ship gate accepted no pinned upstream target"
+printf '%s\n' "$missing_ship_pin_output" | grep -F \
+    'MAINTAIN_UPSTREAM_SHA is required' >/dev/null \
+    || fail "ship gate did not explain its missing upstream pin"
+
+MAINTAIN_UPSTREAM_SHA="$pinned_upstream_sha" \
 FXNK_LOCAL_GATE_TESTING=1 FXNK_LOCAL_GATE_MANIFEST="$manifest" FXNK_STATE_DIR="$state_dir" \
     "$root/scripts/ship-gate.sh" \
     --worktree "$fx_worktree" --branch integration --sha "$sha" \
     | grep -Fx "SHIP $sha" >/dev/null \
     || fail "ship gate rejected the exact local proof"
+
+set +e
+mismatched_ship_pin_output=$(
+    MAINTAIN_UPSTREAM_SHA="$future_upstream_sha" \
+    FXNK_LOCAL_GATE_TESTING=1 FXNK_LOCAL_GATE_MANIFEST="$manifest" \
+    FXNK_STATE_DIR="$state_dir" \
+        "$root/scripts/ship-gate.sh" \
+        --worktree "$fx_worktree" --branch integration --sha "$sha" 2>&1
+)
+mismatched_ship_pin_status=$?
+set -e
+[ "$mismatched_ship_pin_status" -ne 0 ] \
+    || fail "ship gate accepted a receipt for a different upstream target"
+printf '%s\n' "$mismatched_ship_pin_output" | grep -F \
+    "expected pinned target $future_upstream_sha" >/dev/null \
+    || fail "ship gate did not explain the mismatched upstream pin"
 
 invalid_receipt="$test_root/invalid-receipt.json"
 jq '.contract_digest = "0000000000000000000000000000000000000000000000000000000000000000"' \
@@ -229,6 +316,7 @@ chmod 0600 "$invalid_receipt"
 mv "$invalid_receipt" "$receipt"
 set +e
 invalid_output=$(
+    MAINTAIN_UPSTREAM_SHA="$pinned_upstream_sha" \
     FXNK_LOCAL_GATE_TESTING=1 FXNK_LOCAL_GATE_MANIFEST="$manifest" FXNK_STATE_DIR="$state_dir" \
         "$root/scripts/ship-gate.sh" \
         --worktree "$fx_worktree" --branch integration --sha "$sha" 2>&1
