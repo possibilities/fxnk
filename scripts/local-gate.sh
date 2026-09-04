@@ -256,8 +256,8 @@ canary_step() {
     set -e
     sed -n '1,240p' "$output"
     [ "$status" -eq 0 ] || die "fxnk-unit-canaries exited $status"
-    [ "$(grep -Fxc 'FXNK-CANARIES 100/100 passed' "$output")" -eq 1 ] \
-        || die "fxnk-unit-canaries did not prove exactly 100 declared canaries"
+    [ "$(grep -Fxc 'FXNK-CANARIES 116/116 passed' "$output")" -eq 1 ] \
+        || die "fxnk-unit-canaries did not prove exactly 116 declared canaries"
     printf ' pass\n'
 }
 
@@ -319,7 +319,7 @@ bun_step cli-integration 4 env TMUX_TMPDIR="$scratch/tmux" \
     --test-name-pattern "$cli_pattern" ./cli.test.ts
 bun_step ade-integration 3 env TMUX_TMPDIR="$scratch/tmux" FX_REQUIRE_TMUX=1 \
     "$bun_bin" test --max-concurrency 1 ./ade-event-feed.test.ts
-bun_step credential-broker-integration 2 \
+bun_step credential-broker-integration 4 \
     "$bun_bin" test --max-concurrency 1 ./codex-credential-broker.test.ts
 voice_pattern='voice control'
 bun_step voice-control-integration 7 \

@@ -696,12 +696,25 @@ servers.
   is serialized by generation: the current generation rotates once, an older
   generation receives the already newer lease unchanged, and a future
   generation fails.
+- Keep broker ownership aligned with the launch's writable profile authority.
+  With `--state-dir`, resolve, refresh, and persist every broker lease only
+  beneath that selected profile; never fall through to ambient `HOME` for
+  either activation or a later generation rotation. Without a selected state
+  root, retain the ordinary ambient Fx profile behavior.
 - Fail closed rather than lease authority Fx may not rotate. Host-managed
-  authentication (`FX_AUTH_MODE=host-managed`) has nothing to lease, and a
-  borrowed read-only profile is refused before the broker starts. The broker
-  reads `FX_AUTH_READ_ONLY_HOME` by name rather than importing
-  `carry/state-auth-borrowing`, so the refusal holds whether or not that head
-  is composed.
+  authentication (`FX_AUTH_MODE=host-managed`) has nothing to lease, and both
+  read-only borrowing forms — `FX_AUTH_READ_ONLY_HOME` and standalone
+  `--identity` — are refused before the broker starts. Keep the broker
+  decoupled from the borrowing feature: it reads the compatibility environment
+  name directly while the TUI and ACP composition roots pass the explicit
+  identity-borrow fact inward without passing credential bytes.
+- An active broker channel cannot survive an in-process upgrade replacement.
+  `exec` may preserve the PID, but the replacement mints a new per-instance
+  nonce; carrying that nonce in argv would expose the authority it protects.
+  Let Fx install the upgrade, suppress the replacement, and tell the operator
+  to restart from the host. Do not print a partial `Continue session with`
+  command that silently omits the credential channel; the fresh host launch
+  must establish a new descriptor and nonce.
 - Keep the broker out of the ADE event feed and out of semantic work control.
   It is an authority channel, not telemetry and not a command transport.
 - The launch control is intentionally undocumented, like `--fxnk-version`: it
