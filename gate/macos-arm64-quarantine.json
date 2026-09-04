@@ -30,6 +30,10 @@
       "sha": "2768915148c927e0fd87cb87c3cf0001af719a39",
       "result": "Reviewed the complete prior-pinned-to-candidate deltas for both quarantined inputs. The shared tmux helper retains the model-facing shell.run fixture and adds only the pure canonicalSubagentIdForStore adapter for upstream's reversible compact child handles. The subagent file adopts upstream's wrapped managed run request and task-derived display label, removes unrelated tests, and keeps all three selected probe names unique. The isolation and always-approval probes retain their ownership, canonical-scope, external-write, and permission assertions; the selected-child approval probe is unchanged. The render/replay test blob is unchanged. The cf98de5c-to-b8cd5938 merge records the recomposed hosted and state/auth carry ancestry without changing tree c60275df. The b8cd5938-to-27689151 delta changes only the non-quarantined tests/e2e/ade-event-feed.test.ts fixture from internal command.create to wrapped subagent.run, asserts its task-derived display label, and retains its bounded child shell.run command. No assertion signature is admitted: only the two existing runtime timeout shapes remain quarantinable."
     },
+    "provider_version_helper_review": {
+      "sha": "7cf57fb7776660a94bf8ed9d7e2d66057fda7f99",
+      "result": "Reviewed the complete f0a06767-to-e3ea787f shared tmux-helper delta. It removes one unused classifier evidence accessor and routes requested environments through providerVersionTestEnv, which injects a pinned Codex client version only when a test supplies a Codex model-catalog URL without its own version source. The quarantined render/replay file supplies no such URL, so its runtime environment is unchanged. All six selected test names and the two runtime-only timeout signatures remain unchanged; assertions and undeclared failures still block."
+    },
     "pre_pr_165": {
       "sha": "78a183545905c70b3aa8b28465bcb008af82e447",
       "result": "43 pass, 2 fail in tui-subagent-manager.test.ts"
@@ -63,7 +67,7 @@
         },
         {
           "path": "tests/e2e/tmux-helpers.ts",
-          "oid": "f0a06767786fe417c6008b55c2b7d4f3f48bd36e"
+          "oid": "e3ea787f20d5dd612a57bf22c5f550590d816e43"
         }
       ],
       "allowed_signatures": [
