@@ -134,7 +134,12 @@ declared graph while leaving unrelated fork heads unchanged.
 - The selected-profile Codex account pin lives on
   `carry/launch-control-continuity`, where `--state-dir` meets the
   account-pinned session store, not on `carry/codex-credential-authority`.
-- Hosted Full CI: `~/.local/state/fxnk/full-ci/pending.json` holds seven open obligations and is overdue; the recorded verdict for `ca773013` is `failed` (sixteen deterministic failures, every one repaired in this cycle on its owning carry, plus native races that did not reproduce locally in forty runs). The watcher records the verdict for `61eb3da1` on its own; a red verdict there is the next cycle's first task.
+- Hosted Full CI: `~/.local/state/fxnk/full-ci/pending.json` holds seven open
+  obligations and is overdue; the recorded verdict for `ca773013` is `failed`
+  (sixteen deterministic failures, every one repaired in this cycle on its
+  owning carry, plus native races that did not reproduce locally in forty runs).
+  The watcher records the verdict for `61eb3da1` on its own; a red verdict there
+  is the next cycle's first task.
 - The full native suite (`zig build test`) is not a gate step. Run on this
   machine it reports only shell-profile noise failing; the hosted run is the
   clean-environment proof.
