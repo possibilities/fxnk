@@ -256,8 +256,8 @@ canary_step() {
     set -e
     sed -n '1,240p' "$output"
     [ "$status" -eq 0 ] || die "fxnk-unit-canaries exited $status"
-    [ "$(grep -Fxc 'FXNK-CANARIES 116/116 passed' "$output")" -eq 1 ] \
-        || die "fxnk-unit-canaries did not prove exactly 116 declared canaries"
+    [ "$(grep -Fxc 'FXNK-CANARIES 130/130 passed' "$output")" -eq 1 ] \
+        || die "fxnk-unit-canaries did not prove exactly 130 declared canaries"
     printf ' pass\n'
 }
 
@@ -304,6 +304,7 @@ step format "$zig_bin" fmt --check "$fx_worktree/src/" "$fx_worktree/build.zig" 
     "$fx_worktree/tests/fxnk/"
 step public-surface run_in_dir "$fx_worktree" ./scripts/check-public-surface.sh
 audit_step
+step e2e-structure "$bun_bin" "$root/scripts/check-e2e-structure.ts" "$fx_worktree"
 step release-safe-build run_in_dir "$fx_worktree" \
     "$zig_bin" build -Doptimize=ReleaseSafe
 canary_step
@@ -416,6 +417,8 @@ recorded_at=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
 
 if [ "$record" -eq 1 ]; then
     verify_recordable_state
+    [ "$(fxnk_gate_contract_digest "$root" "$manifest")" = "$contract_digest" ] \
+        || die "gate contract changed during the recorded gate"
     state_dir="${FXNK_STATE_DIR:-$HOME/.local/state/fxnk}"
     receipt_dir="$state_dir/local-gates"
     mkdir -p "$receipt_dir"
@@ -438,6 +441,7 @@ if [ "$record" -eq 1 ]; then
           upstream:{sha:$upstream_sha},
           outcomes:{hosted_ci_composition:"pass",
             format:"pass",public_surface:"pass",direct_write_audit:"pass",
+            e2e_structure:"pass",
             release_safe_build:"pass",
             fxnk_unit_canaries:"pass",cli_integration:"pass",ade_integration:"pass",
             credential_broker_integration:"pass",

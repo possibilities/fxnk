@@ -178,6 +178,9 @@ jq -e \
         (.upstream | keys) == ["sha"] and
         (.upstream.sha | test("^[0-9a-f]{40}$")) and
         .outcomes.format == "pass" and
+        .outcomes.hosted_ci_composition == "pass" and
+        .outcomes.direct_write_audit == "pass" and
+        .outcomes.e2e_structure == "pass" and
         .outcomes.public_surface == "pass" and
         .outcomes.release_safe_build == "pass" and
         .outcomes.fxnk_unit_canaries == "pass" and

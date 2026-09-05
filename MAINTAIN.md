@@ -215,6 +215,10 @@ servers.
   selects it may execute permission-admitted one-shot commands but cannot
   start, observe, write to, stop, or otherwise acquire or retain an
   interactive shell session.
+- Resolve command text, working directory, terminal mode, and profile from the
+  same validated request payload used to select command authority. Wrapped and
+  normalized one-shot requests must reach the same permission decision and
+  execution path; a wrapper must never turn an admitted command into a stall.
 
 ### Current upstream managed-subagent contract
 
@@ -241,6 +245,9 @@ servers.
   intentionally produces no skill catalog.
 - Keep the option invocation-only. It does not mutate managed skill storage,
   and controlled relaunches preserve the same exclusive-root policy.
+- The `--skills-dir` help row belongs to Invocation skill roots; this carry
+  registers only `--no-default-skills`, so composed help prints each flag
+  once even though both carries parse `--skills-dir`.
 
 ### Project instructions
 
@@ -368,6 +375,10 @@ servers.
   refresh token, API key, or serialized credential in provenance. Session
   listings and usage grouping must make shape and account provenance visible
   without changing the history root that owns those records.
+- Preserve provenance through upstream's conversation metadata, legacy-session
+  conversion, rename, compaction, resume, and every session listing. The
+  conversation log remains the history authority; do not restore retired
+  session caches to retain these fields.
 
 ### Launch-control continuity
 
@@ -375,7 +386,10 @@ servers.
   `carry/system-prompt-files`, `carry/invocation-skill-roots`,
   `carry/acp-capability-gates`, `carry/acp-tool-selection`,
   `carry/exclusive-skill-roots`, `carry/acp-project-instructions`,
-  `carry/acp-permission-policy`, and `carry/acp-state-isolation`.
+  `carry/acp-permission-policy`, `carry/acp-state-isolation`, and
+  `carry/libfx-provider-authorization`. It is where the selected profile
+  meets the account-pinned Codex session store, so the selected-profile
+  account pin of Codex credential authority is carried here.
 - Preserve every selected global launch control when an interactive TUI
   upgrades, replaces itself, and resumes its session. This includes prompt,
   context, directory, native-tool, skill-root, project-instruction,
@@ -533,9 +547,12 @@ servers.
   ordinary queued work when that turn wins the race.
 - Do not expose permission decisions, question answers, session transitions,
   subagent control, runtime settings, queue reordering, arbitrary-item start,
-  or a second prompt execution path. Reject mutation while the human's queue
-  editor is visible, and reject text replacement for queued work carrying
-  images, skill bindings, or an editable native review draft.
+  or a second prompt execution path. Reject text replacement for queued work
+  carrying images or skill bindings. Upstream has removed the human queue
+  editor and its queued-prompt review draft, so the former rejection while
+  that editor was visible no longer applies; steering during an active turn
+  is now upstream's default, and the carry's pause, update, delete, and resume
+  operations act on the same admission-ordered queue.
 - Keep work control independent of the ADE event feed. Command replies are
   reliable acknowledgements of native state changes; ADE remains passive,
   best-effort lifecycle telemetry and cannot become a command transport.
@@ -602,7 +619,10 @@ servers.
   and recovery preserves completed, cancelled, refused, and provider-failed
   outcomes across a lost response or process restart until acknowledgement.
   Cancellation before provider admission wins durably; after admission it is
-  best effort and the authoritative provider outcome wins.
+  best effort and the authoritative provider outcome wins: a provider
+  terminal event already read from the stream while cancellation is pending
+  is reconciled and recorded with its usage and generation id, never
+  abandoned as cancelled.
 - Never advertise or dispatch tools, start MCP or background work, create an
   interactive Conversation or session directory, create a Worktree, or expose
   Workplace policy. This narrow Core/native-executable primitive is not libfx,
@@ -651,7 +671,11 @@ servers.
 
 - `carry/codex-credential-authority` depends on
   `carry/libfx-provider-authorization`, which owns the fork's Codex
-  session-store and account-pinning behavior. Its consumer is AgentVoice,
+  session-store and account-pinning behavior, and on
+  `carry/agent-shape-sessions`, beneath which launch-control continuity
+  supplies the selected profile and the identity axis supplies the explicit
+  borrow fact the broker binds to; the composition roots pass both inward
+  on this head, never in the Integration commit alone. Its consumer is AgentVoice,
   whose voice sidecar holds no login, credential store, ambient key, or
   refresh token and receives bounded runtime leases from Fx alone.
 - Support global `--codex-credential-fd <n>` on interactive TUI, resume, and
@@ -697,6 +721,9 @@ servers.
   is serialized by generation: the current generation rotates once, an older
   generation receives the already newer lease unchanged, and a future
   generation fails.
+- Check the pinned account before any selected-profile OAuth refresh or
+  credential write. A swapped saved account must be rejected without rotating
+  or persisting that account, including through `--state-dir`.
 - Keep broker ownership aligned with the launch's writable profile authority.
   With `--state-dir`, resolve, refresh, and persist every broker lease only
   beneath that selected profile; never fall through to ambient `HOME` for
@@ -847,9 +874,11 @@ servers.
   within the terminal even when it extends beyond stale prior viewport bounds.
 - Direct Codex sessions must remain usable beyond 64 sequential provider calls
   without leaking usage reservations.
-- Generate every fresh native session identity as a compact URL-safe token
-  whose first byte is alphanumeric, so it always satisfies the coordinated
-  launch wire instead of intermittently beginning with `-` or `_`.
+- The fork previously required every fresh native session identity to begin
+  with an alphanumeric byte for the retired coordinated launch wire. That
+  consumer is gone with the AgentWorkplace program, no carry implements the
+  bound, and upstream's compact URL-safe generator is the current behavior.
+  The requirement is retired; nothing replaces it.
 
 ### Scope
 
@@ -905,13 +934,22 @@ servers.
   runtime timeouts remain eligible.
 - Keep narrow canaries for selected-state read-only credential borrowing and
   process provider selection, workspace/profile/invocation skill-root
-  separation, leading-alphanumeric session identities, bounded one-shot
-  native-tool selection, and tool-free structured inference. Keep narrow canaries
+  separation, bounded one-shot native-tool selection, and tool-free structured
+  inference. Keep canaries for the native tests the hosted suite once carried
+  alone: wrapped shell admission equivalence, the injected command catalog,
+  native tool selection and its ACP resolution, the upgrade relaunch handoff,
+  compact help rows, the ACP native tool gate, and the voice turn identity on
+  message chunks. Keep narrow canaries
   for the Codex credential broker as well: peer and nonce admission, one
   generation rotation with the stale and future cases, the exact four-field
   lease, persistent framing with a stalled-frame deadline, fail-closed
-  host-managed and borrowed authority, the all-or-none launch grammar, and the
-  broker starting before every other interactive startup callback. This carry owns
+  host-managed and borrowed authority, the all-or-none launch grammar, the
+  broker starting before every other interactive startup callback, and the
+  pinned account rejecting a swapped ambient, host, or selected-profile
+  session before any refresh side effect, the first-turn title being
+  installed through the manifest rename while the history commit holds the
+  session write mutex, and provider credential selection beneath a selected
+  profile never consulting the ambient store. This carry owns
   the whole gate inventory: a carry based on a dependency that has no
   `tests/fxnk/runner.zig` declares its canaries here rather than on its own
   head. The gate exercises the fresh native binary against
@@ -999,6 +1037,15 @@ failure is quarantined only when its file and harness blobs still match
 signature. A changed blob, undeclared file, assertion, error, or signature
 blocks and requires explicit review. This keeps upstream fragility from gating
 our work without turning that surface into untested code.
+
+Before building, the gate parses and resolves every root E2E test without
+executing it, and runs upstream's shard-membership and PGSO classification
+validators. Missing test owners and malformed fixtures block before an
+expensive build. Receipt validation requires every blocking step, including
+hosted-workflow composition and the direct-write audit; a missing outcome is
+not proof. The gate contract includes every Workshop helper it executes and
+is rechecked before recording, so changing a helper during a run cannot mint
+a receipt for the earlier contract.
 
 Do not run monolithic `zig build test` or the complete deterministic E2E suite
 as a local gate. Full CI is nonblocking observability: it may finish after we
