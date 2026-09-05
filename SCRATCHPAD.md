@@ -97,11 +97,11 @@ declared graph while leaving unrelated fork heads unchanged.
   is unchanged). The HTTPS credential is the gh OAuth token without the
   `workflow` scope, and upstream's interval changed two workflow files, so the
   whole atomic HTTPS publication was refused before anything moved.
-- `carry/launch-permission-mode` exists on the fork at
-  `ed0b75e490a63263149918e7d3af95470768aa2c` but is absent from § Features and
-  from the local checkout. Maintenance leaves it unchanged; whether it becomes
-  a declared carry or `DELETEME/carry/launch-permission-mode` is an explicit
-  human decision.
+- `carry/launch-permission-mode` (AgentWorkplace Phase 1A, abandoned) was
+  renamed on the fork to `DELETEME/carry/launch-permission-mode` on
+  2026-09-05 at the operator's direction, completing the deletion decision
+  recorded on 2026-09-02. Its head `ed0b75e490a63263149918e7d3af95470768aa2c`
+  stays reachable under the marker and is nobody's dependency.
 - The 2026-09-04 Integration carried work that existed only in its composed
   commit: the ADE feed probe on upstream's managed-subagent and shell shapes,
   the credential broker's selected-profile leases and explicit borrow fact,
@@ -248,9 +248,6 @@ declared graph while leaving unrelated fork heads unchanged.
 
 ## Open before the next upstream absorb (2026-09-05)
 
-- Decide `carry/launch-permission-mode` on the fork: declare it in § Features
-  or name it `DELETEME/carry/launch-permission-mode`. Maintenance will not
-  infer either.
 - Hosted Full CI must reach a verdict for `ca773013`; the watcher
   records it. A red verdict there, or a persisting `unclassified` obligation
   for a superseded SHA, is the next cycle's first task.
