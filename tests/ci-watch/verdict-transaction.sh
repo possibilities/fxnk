@@ -358,4 +358,42 @@ run_watch "$state" >/dev/null 2>&1
 jq -e '.status == "green"' "$state/full-ci/$sha.json" >/dev/null \
     || fail "a stale lock was not broken"
 
+# --- a superseded obligation is marked, and only --close retires it ----------
+state="$test_root/superseded"
+seed_quiet "$state"
+old_sha=2222222222222222222222222222222222222222
+jq -n --arg sha "$old_sha" --arg at "$(iso_of $((now - 3600)))" \
+    '{schema:1,fx_sha:$sha,workflow:"full-ci.yml",run:{id:8001,url:"https://example.invalid/8001"},
+      status:"failed",classification:"real_failure",detail:"one deterministic failure",
+      conclusion:"failure",failing_jobs:[],failing_tests:["(fail) old"],reruns:0,
+      first_seen_at:$at,recorded_at:$at,notified_at:null,notified_classification:null}' \
+    >"$state/full-ci/$old_sha.json"
+write_run completed failure
+jq -n '{jobs:[{name:"Full suite (1/4)",conclusion:"failure",
+               steps:[{name:"Run deterministic E2E shard",conclusion:"failure"}]}]}' >"$jobs"
+printf '(fail) tui: startup > current [1.00ms]\n' >"$log"
+: >"$notified"
+run_watch "$state" >/dev/null
+jq -e '(.open | length) == 2 and
+       (.open[] | select(.fx_sha == "'"$old_sha"'") | .superseded) == true and
+       (.open[] | select(.fx_sha == "'"$sha"'") | .superseded) == false' \
+    "$state/full-ci/pending.json" >/dev/null \
+    || fail "a superseded obligation was not marked while the tip is red"
+set +e
+"$root/scripts/ci-watch.sh" --close "$old_sha" --state-dir "$state" >/dev/null 2>&1 \
+    && fail "an obligation was closed without a reason"
+"$root/scripts/ci-watch.sh" --close 3333333333333333333333333333333333333333 --reason x --state-dir "$state" >/dev/null 2>&1 \
+    && fail "an unknown obligation was closed"
+set -e
+FXNK_CI_WATCH_GH_BIN="$fixtures/fake-gh.sh" FXNK_CI_WATCH_NOW="$now" \
+    "$root/scripts/ci-watch.sh" --close "$old_sha" --reason "repaired in the test cycle" --state-dir "$state" \
+    | grep -F "CI-WATCH closed ${old_sha:0:12}" >/dev/null || fail "--close did not report the closure"
+jq -e '.closed_reason == "repaired in the test cycle" and .closed_at != null and .status == "failed"' \
+    "$state/full-ci/$old_sha.json" >/dev/null || fail "--close did not record the judgment on the receipt"
+jq -e '(.open | length) == 1 and .open[0].fx_sha == "'"$sha"'"' \
+    "$state/full-ci/pending.json" >/dev/null || fail "--close left the obligation open"
+run_watch "$state" >/dev/null
+jq -e '(.open | length) == 1 and .open[0].fx_sha == "'"$sha"'"' \
+    "$state/full-ci/pending.json" >/dev/null || fail "a poll reopened a closed obligation"
+
 printf 'ci watch verdict transaction validation passed.\n'

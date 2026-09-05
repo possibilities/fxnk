@@ -51,15 +51,28 @@ warn() {
 }
 
 usage() {
-    printf 'Usage: scripts/ci-watch.sh [--once | --declare] [--state-dir PATH]\n'
+    printf 'Usage: scripts/ci-watch.sh [--once | --declare | --close SHA --reason TEXT] [--state-dir PATH]\n'
 }
 
 mode=once
 state_dir_override=
+close_sha=
+close_reason=
 while [ "$#" -gt 0 ]; do
     case "$1" in
         --once) mode=once; shift ;;
         --declare) mode=declare; shift ;;
+        --close)
+            [ "$#" -ge 2 ] || die "--close requires a commit SHA"
+            mode=close
+            close_sha=$2
+            shift 2
+            ;;
+        --reason)
+            [ "$#" -ge 2 ] || die "--reason requires text"
+            close_reason=$2
+            shift 2
+            ;;
         --state-dir)
             [ "$#" -ge 2 ] || die "--state-dir requires a path"
             state_dir_override=$2
@@ -198,6 +211,31 @@ notify() {
     sent_message=true
     return 0
 }
+
+# --- close: the cycle has read an obligation --------------------------------
+# Closing keeps the receipt and its verdict; it only records who judged it and
+# why, and drops it from the open ledger. Nothing here touches CI.
+if [ "$mode" = close ]; then
+    case "$close_sha" in
+        *[!0-9a-f]*|'') die "--close requires one exact lowercase commit SHA" ;;
+    esac
+    [ "${#close_sha}" -eq 40 ] || die "--close requires one exact lowercase commit SHA"
+    [ -n "$close_reason" ] || die "--close requires --reason"
+    close_receipt="$verdict_dir/$close_sha.json"
+    [ -f "$close_receipt" ] || die "no verdict receipt for $close_sha"
+    read_json "$close_receipt" \
+        | jq --arg at "$iso_now" --arg reason "$close_reason" \
+            '. + {closed_at:$at,closed_reason:$reason}' >"$scratch/closed.json"
+    write_atomic "$close_receipt" "$scratch/closed.json"
+    if [ -f "$pending_file" ]; then
+        read_json "$pending_file" \
+            | jq --arg sha "$close_sha" \
+                '.open |= ((. // []) | map(select(.fx_sha != $sha)))' >"$scratch/pending.json"
+        write_atomic "$pending_file" "$scratch/pending.json"
+    fi
+    printf 'CI-WATCH closed %s: %s\n' "${close_sha:0:12}" "$close_reason"
+    exit 0
+fi
 
 # --- the published tip and its newest run ------------------------------------
 
@@ -486,13 +524,18 @@ for candidate in "$verdict_dir"/*.json; do
         failed|no_run|no_verdict) ;;
         *) continue ;;
     esac
+    # An obligation outlives the tip it was booked on; only the maintenance
+    # cycle closes it, with --close, once it has read it. Until then it says
+    # whether it is superseded, so the ledger separates the tip's own failure
+    # from history.
+    [ "$(printf '%s' "$entry" | jq -r '.closed_at // empty')" = "" ] || continue
     entry_epoch=$(epoch_of "$entry_recorded")
     if [ -n "$entry_epoch" ] && [ $((now - entry_epoch)) -gt "$carry_seconds" ]; then
         continue
     fi
-    printf '%s' "$entry" | jq -c \
+    printf '%s' "$entry" | jq -c --arg tip "$tip" \
         '{fx_sha,kind:.classification,detail,run_url:.run.url,
-          since:.first_seen_at,recorded_at}' >>"$open_file"
+          since:.first_seen_at,recorded_at,superseded:(.fx_sha != $tip)}' >>"$open_file"
 done
 open_list=$(jq -sc 'sort_by(.recorded_at) | reverse | .[0:20]' "$open_file")
 
