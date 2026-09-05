@@ -11,24 +11,7 @@ fail() {
     exit 1
 }
 
-bash -n scripts/install.sh
-bash -n scripts/local-gate.sh
-bash -n scripts/gate-contract.sh
-bash -n scripts/ship-gate.sh
-bash -n scripts/reconcile-branches.sh
-bash -n scripts/configure-supervision.sh
-bash -n tests/install-transaction.sh
-bash -n tests/supervision-transaction.sh
-bash -n tests/local-gate/receipt-transaction.sh
-bash -n scripts/style-extract.sh
-bash -n scripts/style-swatch.sh
-bash -n scripts/style-capture.sh
-bash -n scripts/style-view.sh
-bash -n scripts/prefix-mode-demo.sh
-ruby -c scripts/validate-full-ci-workflow.rb >/dev/null
-bash -n tests/full-ci-workflow.sh
-bash -n scripts/replay-carries.sh
-bash -n tests/replay-carries.sh
+python3 .githooks/pre-push --check
 [ -x scripts/replay-carries.sh ] || fail "scripts/replay-carries.sh is not executable"
 [ -x tests/replay-carries.sh ] || fail "tests/replay-carries.sh is not executable"
 [ -x scripts/install.sh ] || fail "scripts/install.sh is not executable"
@@ -115,11 +98,6 @@ if grep -Eq 'git .*rebase|push .*force' scripts/install.sh; then
     fail "installer contains maintenance behavior"
 fi
 
-# The spec has every section the shared maintain skill reads by name.
-for section in Purpose Upstream 'Branch model' Features Gate Consumer Notify; do
-    grep -Fx "## $section" MAINTAIN.md >/dev/null \
-        || fail "MAINTAIN.md is missing the section: ## $section"
-done
 grep -F 'paired commits' AGENTS.md >/dev/null \
     || fail "agent guidance does not require paired Fx and inventory commits"
 grep -F 'The user does not need to mention maintenance' AGENTS.md >/dev/null \
@@ -352,24 +330,7 @@ if [ -f "$root/.git" ]; then
         || fail "the worktree install refusal was not explained"
 fi
 
-# The carry graph is the branch model's dependency data: it must name exactly
-# the carries § Features maps, resolve every dependency, and order without a
-# cycle, so a replay can never merge a head the inventory does not declare.
-graph_carries=$(sed -n 's/^\([a-z0-9-]*\)\t.*$/carry\/\1/p' scripts/carry-graph.tsv | sort)
-inventory_carries=$(awk '
-    /^## Features$/ { inside = 1; next }
-    /^## / && inside { exit }
-    inside { print }
-' MAINTAIN.md | sed -n 's/^| `\(carry\/[^`]*\)` |.*$/\1/p' | sort)
-[ "$graph_carries" = "$inventory_carries" ] \
-    || fail "scripts/carry-graph.tsv does not name exactly the carries MAINTAIN.md Features maps"
-scripts/replay-carries.sh plan >/dev/null \
-    || fail "scripts/carry-graph.tsv does not order (missing dependency or cycle)"
-grep -F 'scripts/replay-carries.sh' MAINTAIN.md >/dev/null \
-    || fail "MAINTAIN.md does not name the carry replay entrypoint"
-grep -F -- '--carried-only' MAINTAIN.md >/dev/null \
-    || fail "MAINTAIN.md does not describe the gate's carried-only development mode"
-
+scripts/replay-carries.sh plan >/dev/null
 tests/install-transaction.sh
 tests/full-ci-workflow.sh
 tests/local-gate/receipt-transaction.sh

@@ -112,6 +112,13 @@ after upstream changes, reread the affected behavior before accepting it.
 
 ## Validation
 
+Before pushing, run `python3 .githooks/pre-push --check` for the bounded,
+repository-only static checks CI also runs. Install the automatic exact-commit
+hook once from the canonical checkout with `scripts/install-hooks.sh`; it
+covers every linked worktree and preserves existing hooks. These checks use
+one shared per-user lock, wait at most 15 seconds, and run at most 30 seconds.
+They never build Fx or the viewer, install dependencies, or run runtime tests.
+
 Run:
 
 ```sh

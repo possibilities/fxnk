@@ -9,12 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - name: Validate repository contracts
+      - name: Validate repository contracts (static checks first)
         run: tests/validate.sh
-      - name: Check shell scripts
-        run: |
-          shellcheck --severity=warning scripts/*.sh tests/validate.sh \
-            tests/install-transaction.sh \
-            tests/local-gate/receipt-transaction.sh \
-            tests/ci-watch/verdict-transaction.sh \
-            tests/ci-watch/fixtures/*.sh
+      - name: Check pre-push behavior
+        run: python3 tests/pre-push.py

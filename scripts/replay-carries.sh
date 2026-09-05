@@ -28,7 +28,7 @@ graph="$root_dir/scripts/carry-graph.tsv"
 command=${1:-}
 [ -n "$command" ] || die "usage: replay-carries.sh plan|replay|continue|compose|continue-compose ..."
 shift
-checkout= worktree_root= upstream= branch= trailer=
+checkout='' worktree_root='' upstream='' branch='' trailer=''
 while [ "$#" -gt 0 ]; do
     case "$1" in
         --graph) graph=$2; shift 2 ;;

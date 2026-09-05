@@ -1,0 +1,4 @@
+{
+  "inputs": ["scripts", "tests", "MAINTAIN.md", "AGENTS.md", "CLAUDE.md", "style/tokens.json"],
+  "command": ["bash", "scripts/check-static.sh"]
+}
