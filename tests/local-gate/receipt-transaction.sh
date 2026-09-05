@@ -200,7 +200,7 @@ env "${gate_env[@]}" "$root/scripts/local-gate.sh" \
     --worktree "$fx_worktree" --record >/dev/null
 receipt="$state_dir/local-gates/$sha.json"
 [ -f "$receipt" ] || fail "recorded gate did not write the exact-SHA receipt"
-[ "$(stat -f '%Lp' "$receipt" 2>/dev/null || stat -c '%a' "$receipt")" = 600 ] \
+[ "$(stat -c '%a' "$receipt" 2>/dev/null || stat -f '%Lp' "$receipt")" = 600 ] \
     || fail "recorded gate receipt is not mode 0600"
 jq -e --arg sha "$sha" --arg upstream_sha "$captured_upstream_sha" \
     '.authority == "test" and .fx_sha == $sha and

@@ -160,9 +160,9 @@ state_dir="${FXNK_STATE_DIR:-$HOME/.local/state/fxnk}"
 receipt="$state_dir/local-gates/$expected_sha.json"
 [ -f "$receipt" ] && [ ! -L "$receipt" ] \
     || die "no regular local gate receipt for $expected_sha"
-[ "$(stat -f '%u' "$receipt" 2>/dev/null || stat -c '%u' "$receipt")" = "$(id -u)" ] \
+[ "$(stat -c '%u' "$receipt" 2>/dev/null || stat -f '%u' "$receipt")" = "$(id -u)" ] \
     || die "local gate receipt is not owned by the current user"
-[ "$(stat -f '%Lp' "$receipt" 2>/dev/null || stat -c '%a' "$receipt")" = 600 ] \
+[ "$(stat -c '%a' "$receipt" 2>/dev/null || stat -f '%Lp' "$receipt")" = 600 ] \
     || die "local gate receipt must have mode 0600"
 jq -e \
     --arg sha "$expected_sha" \

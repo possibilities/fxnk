@@ -115,7 +115,7 @@ iso_now=$(date -u -r "$now" '+%Y-%m-%dT%H:%M:%SZ')
 # start the next before this one finishes; overlap would double-spend the rerun
 # budget and lose whichever file the loser wrote.
 if ! mkdir "$lock_dir" 2>/dev/null; then
-    lock_epoch=$(stat -f '%m' "$lock_dir" 2>/dev/null || stat -c '%Y' "$lock_dir" 2>/dev/null || printf '0')
+    lock_epoch=$(stat -c '%Y' "$lock_dir" 2>/dev/null || stat -f '%m' "$lock_dir" 2>/dev/null || printf '0')
     if [ "$((now - lock_epoch))" -lt "$lock_stale_seconds" ]; then
         printf 'CI-WATCH busy\n'
         exit 0
