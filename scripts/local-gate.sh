@@ -14,7 +14,7 @@ die() {
 usage() {
     cat <<'EOF'
 Usage: MAINTAIN_UPSTREAM_SHA=SHA scripts/local-gate.sh \
-  --worktree PATH [--record]
+  --worktree PATH [--record | --carried-only]
 
 Run the local gate against the exact upstream SHA captured for this maintenance
 invocation. The gate never selects a target from an upstream tracking ref.
@@ -23,6 +23,7 @@ EOF
 
 fx_worktree=
 record=0
+carried_only=0
 while [ "$#" -gt 0 ]; do
     case "$1" in
         --worktree)
@@ -32,6 +33,12 @@ while [ "$#" -gt 0 ]; do
             ;;
         --record)
             record=1
+            shift
+            ;;
+        --carried-only)
+            # Development aid: rerun only the carried E2E owners against the
+            # worktree's existing build. Never proof, never recordable.
+            carried_only=1
             shift
             ;;
         -h|--help)
@@ -102,6 +109,12 @@ fx_sha=$(git -C "$fx_worktree" rev-parse HEAD) \
 worktree_subject=$fx_sha
 if [ -n "$(git -C "$fx_worktree" status --porcelain)" ]; then
     worktree_subject="$fx_sha+worktree"
+fi
+if [ "$record" -eq 1 ] && [ "$carried_only" -eq 1 ]; then
+    die "--carried-only is a development aid and cannot be recorded"
+fi
+if [ "$carried_only" -eq 1 ] && [ ! -x "$fx_worktree/zig-out/bin/fx" ]; then
+    die "--carried-only needs an existing zig-out/bin/fx in the worktree; run the full gate first"
 fi
 if [ "$record" -eq 1 ] && [ "$worktree_subject" != "$fx_sha" ]; then
     die "recording requires a clean Fx worktree"
@@ -305,6 +318,7 @@ stop_model_catalog_fixture() {
     model_catalog_server_pid=
 }
 
+if [ "$carried_only" -eq 0 ]; then
 step format "$zig_bin" fmt --check "$fx_worktree/src/" "$fx_worktree/build.zig" \
     "$fx_worktree/tests/fxnk/"
 step public-surface run_in_dir "$fx_worktree" ./scripts/check-public-surface.sh
@@ -331,6 +345,11 @@ voice_pattern='voice control'
 bun_step voice-control-integration 7 \
     "$bun_bin" test --max-concurrency 1 \
     --test-name-pattern "$voice_pattern" ./acp.test.ts
+fi
+if [ "$carried_only" -eq 1 ] && [ ! -d "$fx_worktree/tests/e2e/node_modules" ]; then
+    step e2e-dependencies run_in_dir "$fx_worktree/tests/e2e" \
+        "$bun_bin" install --frozen-lockfile
+fi
 
 # Every carried root E2E test: each test whose text differs from the captured
 # upstream is the fork's to prove locally, selected by name from its owner and
@@ -389,6 +408,11 @@ while IFS=$'\t' read -r carried_file carried_count carried_pattern; do
     step "$carried_label:verify" carried_verify_step "$carried_label" "$carried_file" "$carried_report"
 done <"$carried_inventory"
 
+if [ "$carried_only" -eq 1 ]; then
+    finished_at=$(date +%s)
+    printf 'LOCAL-GATE %s carried-only %ss (not proof, not recordable)\n' "$worktree_subject" "$((finished_at - started_at))"
+    exit 0
+fi
 quarantine_jsonl="$scratch/quarantine.jsonl"
 : >"$quarantine_jsonl"
 while IFS= read -r entry; do
