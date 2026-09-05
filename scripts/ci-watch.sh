@@ -109,7 +109,7 @@ lock_dir="$verdict_dir/.lock"
 mkdir -p "$verdict_dir"
 chmod 0700 "$state_dir" "$verdict_dir"
 
-iso_now=$(date -u -r "$now" '+%Y-%m-%dT%H:%M:%SZ')
+iso_now=$(date -u -d "@$now" '+%Y-%m-%dT%H:%M:%SZ' 2>/dev/null || date -u -r "$now" '+%Y-%m-%dT%H:%M:%SZ')
 
 # One poll at a time. A poll makes several network round trips, so launchd can
 # start the next before this one finishes; overlap would double-spend the rerun
@@ -145,7 +145,10 @@ epoch_of() {
     local stamp="$1" normalized
     [ -n "$stamp" ] || return 0
     normalized=${stamp/+00:00/Z}
-    date -u -j -f '%Y-%m-%dT%H:%M:%SZ' "$normalized" '+%s' 2>/dev/null || true
+    # GNU date first; BSD date rejects -d cleanly with nothing on stdout.
+    date -u -d "$normalized" '+%s' 2>/dev/null \
+        || date -u -j -f '%Y-%m-%dT%H:%M:%SZ' "$normalized" '+%s' 2>/dev/null \
+        || true
 }
 
 # A hand-edited, truncated, or half-written state file costs one poll's

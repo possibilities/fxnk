@@ -23,7 +23,12 @@ sha=1111111111111111111111111111111111111111
 tip_date=2026-08-24T12:00:00Z
 lock_stale_seconds=1800
 # Two hours after the tip, so the trigger grace window has closed.
-now=$(date -u -j -f '%Y-%m-%dT%H:%M:%SZ' 2026-08-24T14:00:00Z '+%s')
+# GNU date first; BSD date rejects -d cleanly with nothing on stdout.
+iso_of() {
+    date -u -d "@$1" '+%Y-%m-%dT%H:%M:%SZ' 2>/dev/null || date -u -r "$1" '+%Y-%m-%dT%H:%M:%SZ'
+}
+now=$(date -u -d 2026-08-24T14:00:00Z '+%s' 2>/dev/null \
+    || date -u -j -f '%Y-%m-%dT%H:%M:%SZ' 2026-08-24T14:00:00Z '+%s')
 
 runs="$test_root/runs.json"
 jobs="$test_root/jobs.json"
@@ -53,7 +58,7 @@ run_watch() {
 seed_quiet() {
     local state_dir="$1"
     mkdir -p "$state_dir/full-ci"
-    jq -n --arg at "$(date -u -r "$now" '+%Y-%m-%dT%H:%M:%SZ')" \
+    jq -n --arg at "$(iso_of "$now")" \
         '{schema:1,updated_at:$at,stale_notified_at:null,last_message_at:$at,
           open:[]}' >"$state_dir/full-ci/pending.json"
 }
@@ -145,7 +150,7 @@ seed_quiet "$state"
 printf '[]\n' >"$runs"
 : >"$notified"
 tip_date_saved=$tip_date
-tip_date=$(date -u -r $((now - 60)) '+%Y-%m-%dT%H:%M:%SZ')
+tip_date=$(iso_of $((now - 60)))
 run_watch "$state" >/dev/null
 tip_date=$tip_date_saved
 jq -e '.status == "pending" and .classification == "awaiting_start"' \
@@ -345,7 +350,7 @@ jq -e '.status == "green"' "$state/full-ci/$sha.json" >/dev/null \
 # A lock left behind by a killed poll must not wedge the watcher forever.
 rm -f "$state/full-ci/$sha.json"
 mkdir -p "$state/full-ci/.lock"
-touch -d "$(date -u -r $((now - 2 * lock_stale_seconds)) '+%Y-%m-%dT%H:%M:%SZ')" \
+touch -d "$(iso_of $((now - 2 * lock_stale_seconds)))" \
     "$state/full-ci/.lock"
 run_watch "$state" >/dev/null 2>&1
 jq -e '.status == "green"' "$state/full-ci/$sha.json" >/dev/null \
