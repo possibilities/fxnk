@@ -27,6 +27,10 @@ bash -n scripts/style-view.sh
 bash -n scripts/prefix-mode-demo.sh
 ruby -c scripts/validate-full-ci-workflow.rb >/dev/null
 bash -n tests/full-ci-workflow.sh
+bash -n scripts/replay-carries.sh
+bash -n tests/replay-carries.sh
+[ -x scripts/replay-carries.sh ] || fail "scripts/replay-carries.sh is not executable"
+[ -x tests/replay-carries.sh ] || fail "tests/replay-carries.sh is not executable"
 [ -x scripts/install.sh ] || fail "scripts/install.sh is not executable"
 [ -x scripts/local-gate.sh ] || fail "scripts/local-gate.sh is not executable"
 [ -x scripts/classify-quarantine.py ] \
@@ -145,12 +149,18 @@ if git -C "$fx_checkout" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
 
     hosted_ci_carry=carry/hosted-full-ci
     hosted_ci_workflow=.github/workflows/full-ci.yml
+    # Mid-cycle the mirror still points at the previous upstream while the
+    # hosted head already follows the captured target, so the captured target
+    # is the base whenever the cycle names one.
+    hosted_ci_base=${MAINTAIN_UPSTREAM_SHA:-main}
+    git -C "$fx_checkout" cat-file -e "$hosted_ci_base^{commit}" 2>/dev/null \
+        || fail "hosted CI base $hosted_ci_base is not a commit of the Fx checkout"
     hosted_ci_blob=$(git -C "$fx_checkout" rev-parse \
         "$hosted_ci_carry:$hosted_ci_workflow") \
         || fail "$hosted_ci_carry does not carry $hosted_ci_workflow"
-    git -C "$fx_checkout" merge-base --is-ancestor main "$hosted_ci_carry" \
-        || fail "$hosted_ci_carry is not based on current Main"
-    [ "$(git -C "$fx_checkout" diff --name-only main.."$hosted_ci_carry")" \
+    git -C "$fx_checkout" merge-base --is-ancestor "$hosted_ci_base" "$hosted_ci_carry" \
+        || fail "$hosted_ci_carry is not based on $hosted_ci_base"
+    [ "$(git -C "$fx_checkout" diff --name-only "$hosted_ci_base".."$hosted_ci_carry")" \
         = "$hosted_ci_workflow" ] \
         || fail "$hosted_ci_carry changes files outside its owned workflow"
     hosted_ci_text=$(git -C "$fx_checkout" show \
@@ -342,9 +352,28 @@ if [ -f "$root/.git" ]; then
         || fail "the worktree install refusal was not explained"
 fi
 
+# The carry graph is the branch model's dependency data: it must name exactly
+# the carries § Features maps, resolve every dependency, and order without a
+# cycle, so a replay can never merge a head the inventory does not declare.
+graph_carries=$(sed -n 's/^\([a-z0-9-]*\)\t.*$/carry\/\1/p' scripts/carry-graph.tsv | sort)
+inventory_carries=$(awk '
+    /^## Features$/ { inside = 1; next }
+    /^## / && inside { exit }
+    inside { print }
+' MAINTAIN.md | sed -n 's/^| `\(carry\/[^`]*\)` |.*$/\1/p' | sort)
+[ "$graph_carries" = "$inventory_carries" ] \
+    || fail "scripts/carry-graph.tsv does not name exactly the carries MAINTAIN.md Features maps"
+scripts/replay-carries.sh plan >/dev/null \
+    || fail "scripts/carry-graph.tsv does not order (missing dependency or cycle)"
+grep -F 'scripts/replay-carries.sh' MAINTAIN.md >/dev/null \
+    || fail "MAINTAIN.md does not name the carry replay entrypoint"
+grep -F -- '--carried-only' MAINTAIN.md >/dev/null \
+    || fail "MAINTAIN.md does not describe the gate's carried-only development mode"
+
 tests/install-transaction.sh
 tests/full-ci-workflow.sh
 tests/local-gate/receipt-transaction.sh
 tests/ci-watch/verdict-transaction.sh
+tests/replay-carries.sh
 
 printf 'fxnk validation passed.\n'
