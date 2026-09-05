@@ -158,8 +158,9 @@ done < <(jq -r '.entries[].required_blobs[] | [.path, .oid] | @tsv' "$manifest")
 contract_digest=$(fxnk_gate_contract_digest "$root" "$manifest")
 state_dir="${FXNK_STATE_DIR:-$HOME/.local/state/fxnk}"
 receipt="$state_dir/local-gates/$expected_sha.json"
-[ -f "$receipt" ] && [ ! -L "$receipt" ] \
-    || die "no regular local gate receipt for $expected_sha"
+if [ ! -f "$receipt" ] || [ -L "$receipt" ]; then
+    die "no regular local gate receipt for $expected_sha"
+fi
 [ "$(stat -c '%u' "$receipt" 2>/dev/null || stat -f '%u' "$receipt")" = "$(id -u)" ] \
     || die "local gate receipt is not owned by the current user"
 [ "$(stat -c '%a' "$receipt" 2>/dev/null || stat -f '%Lp' "$receipt")" = 600 ] \

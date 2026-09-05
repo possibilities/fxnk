@@ -92,7 +92,9 @@ if [ "$mode" = declare ]; then
 fi
 
 gh_bin="${FXNK_CI_WATCH_GH_BIN:-$(command -v gh || true)}"
-[ -n "$gh_bin" ] && [ -x "$gh_bin" ] || die "gh is required"
+if [ -z "$gh_bin" ] || [ ! -x "$gh_bin" ]; then
+    die "gh is required"
+fi
 # An explicitly empty override means "no notifier", which must stay
 # distinguishable from "not overridden".
 notifier_bin="${FXNK_CI_WATCH_NOTIFIER_BIN-$(command -v terminal-notifier || true)}"

@@ -77,8 +77,12 @@ for required in git jq shasum python3 tmux; do
 done
 zig_bin="${FXNK_LOCAL_GATE_ZIG_BIN:-$(command -v zig || true)}"
 bun_bin="${FXNK_LOCAL_GATE_BUN_BIN:-$(command -v bun || true)}"
-[ -n "$zig_bin" ] && [ -x "$zig_bin" ] || die "zig is required"
-[ -n "$bun_bin" ] && [ -x "$bun_bin" ] || die "bun is required"
+if [ -z "$zig_bin" ] || [ ! -x "$zig_bin" ]; then
+    die "zig is required"
+fi
+if [ -z "$bun_bin" ] || [ ! -x "$bun_bin" ]; then
+    die "bun is required"
+fi
 
 [ "$(git -C "$fx_worktree" rev-parse --is-inside-work-tree 2>/dev/null)" = true ] \
     || die "$fx_worktree is not a git worktree"
@@ -278,8 +282,9 @@ start_model_catalog_fixture() {
             case "$port" in
                 ''|*[!0-9]*) die "model catalog fixture returned an invalid port" ;;
             esac
-            [ "$port" -gt 0 ] && [ "$port" -le 65535 ] \
-                || die "model catalog fixture returned an invalid port"
+            if [ "$port" -le 0 ] || [ "$port" -gt 65535 ]; then
+                die "model catalog fixture returned an invalid port"
+            fi
             model_catalog_url="http://127.0.0.1:$port/models"
             model_catalog_requests_file="$requests_file"
             return

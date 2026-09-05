@@ -15,10 +15,10 @@ usage() {
 
 case "${1:-}" in
     --install)
-        [ "$#" -eq 3 ] && [ "${2:-}" = --sha ] || {
+        if [ "$#" -ne 3 ] || [ "${2:-}" != --sha ]; then
             usage >&2
             exit 64
-        }
+        fi
         expected_sha=$3
         [ "${#expected_sha}" -eq 40 ] || die "--sha must be a full lowercase commit SHA"
         case "$expected_sha" in
