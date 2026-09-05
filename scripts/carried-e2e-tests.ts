@@ -46,11 +46,15 @@ function escapeRegex(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-// A template name selects by its literal parts; each `${...}` matches any text.
+// bun matches the pattern against a test's full label: its describe names and
+// its own name joined by single spaces. The pattern anchors on the label's end
+// and on the space before the name, never on the label's start. A template
+// name selects by its literal parts; each `${...}` matches any text.
 function namePattern(entry: Entry): string {
-  if (!entry.template) return `^${escapeRegex(entry.name)}$`;
-  const parts = entry.name.split(/\$\{[^}]*\}/).map(escapeRegex);
-  return `^${parts.join(".*")}$`;
+  const body = entry.template
+    ? entry.name.split(/\$\{[^}]*\}/).map(escapeRegex).join(".*")
+    : escapeRegex(entry.name);
+  return `(?:^| )${body}$`;
 }
 
 const listing = git(["ls-files", "--", "tests/e2e/*.test.ts"]);

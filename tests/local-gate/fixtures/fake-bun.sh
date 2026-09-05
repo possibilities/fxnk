@@ -41,7 +41,7 @@ if [[ " $* " == *' tests/e2e/render-lab/audit-direct-writes.ts '* ]]; then
 fi
 
 if [[ " $* " == *'/carried-e2e-tests.ts '* ]]; then
-    printf 'tests/e2e/carried-fixture.test.ts\t2\t^carried one$|^carried two$\n'
+    printf 'tests/e2e/carried-fixture.test.ts\t2\t(?:^| )carried one$|(?:^| )carried two$\n'
     printf 'CARRIED-E2E 2 tests in 1 owners differ from upstream fixture\n' >&2
     exit 0
 fi
