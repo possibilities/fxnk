@@ -74,7 +74,7 @@ write_run completed success
 run_watch "$state" >/dev/null
 receipt="$state/full-ci/$sha.json"
 [ -f "$receipt" ] || fail "green verdict was not recorded"
-[ "$(stat -f '%Lp' "$receipt")" = 600 ] || fail "verdict receipt is not mode 0600"
+[ "$(stat -f '%Lp' "$receipt" 2>/dev/null || stat -c '%a' "$receipt")" = 600 ] || fail "verdict receipt is not mode 0600"
 jq -e '.status == "green" and .classification == "green" and .notified_at == null' \
     "$receipt" >/dev/null || fail "green verdict recorded the wrong proof"
 jq -e '.open == [] and .overdue == false and .unverified_since == null' \
