@@ -1,0 +1,38 @@
+# Carry dependency graph, read by scripts/replay-carries.sh and checked by
+# tests/validate.sh against MAINTAIN.md § Features. One carry per line:
+#   <carry>	<dependencies>
+# where <dependencies> is a comma-separated list of carry names, "-" for none,
+# "upstream" for the captured upstream target, or "=<carry>" for a head that
+# shares another carry's commit and is fast-forwarded to it. Every carry other
+# than hosted-full-ci also follows carry/hosted-full-ci, the common base, so it
+# is not repeated here. A carry's dependencies merge in the listed order.
+hosted-full-ci	upstream
+fmx-distribution	=hosted-full-ci
+acp-capability-gates	-
+acp-permission-policy	-
+acp-project-instructions	-
+acp-state-isolation	-
+acp-tool-selection	acp-capability-gates
+acp-voice-control	ade-event-feed,fmx-work-control,session-naming
+ade-event-feed	-
+agent-shape-sessions	state-system-prompts
+codex-credential-authority	libfx-provider-authorization,agent-shape-sessions
+edited-git-roots	ade-event-feed
+effort	-
+effort-catalog	-
+exclusive-skill-roots	-
+external-editor	-
+fmx-work-control	-
+fxnk-version	-
+invocation-skill-roots	-
+launch-control-continuity	system-prompt-files,invocation-skill-roots,acp-capability-gates,acp-tool-selection,exclusive-skill-roots,acp-project-instructions,acp-permission-policy,acp-state-isolation,libfx-provider-authorization,state-auth-borrowing,ade-event-feed,edited-git-roots,effort,effort-catalog,external-editor,fmx-work-control,fxnk-version,notification-sound-single-flight,resume-bounds,session-naming,structured-inference,terminal-probe-determinism
+libfx-provider-authorization	-
+local-gate-support	launch-control-continuity
+notification-sound-single-flight	-
+resume-bounds	-
+session-naming	ade-event-feed
+state-auth-borrowing	acp-state-isolation
+state-system-prompts	local-gate-support
+structured-inference	-
+system-prompt-files	-
+terminal-probe-determinism	-
