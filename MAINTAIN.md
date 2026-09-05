@@ -770,12 +770,16 @@ servers.
 
 ### ACP voice control
 
-- `carry/acp-voice-control` declares `carry/fmx-work-control` and
-  `carry/ade-event-feed` as its dependencies and reuses both rather than
-  restating them. Steering and queueing go through the same `WorkerRuntime`
-  FIFO the work-control socket drives, the queue is encoded by work control's
-  own writer, and every lifecycle record carries the ADE reducer's
-  `agent_state` and `attention_kind` with the ADE spellings. Its consumer is
+- `carry/acp-voice-control` declares `carry/fmx-work-control`,
+  `carry/ade-event-feed`, and `carry/session-naming` as its dependencies and
+  reuses all three rather than restating them. Steering and queueing go
+  through the same `WorkerRuntime` FIFO the work-control socket drives, the
+  queue is encoded by work control's own writer, and every lifecycle record
+  carries the ADE reducer's `agent_state` and `attention_kind` with the ADE
+  spellings. A prompt admitted through work control's intent path is reported
+  to ADE and names its session through the same admission context an
+  interactive prompt uses, which is why this head, not Integration, composes
+  the steer site with those two carries. Its consumer is
   AgentVoice, whose voice layer talks to one parent ACP session and never
   addresses a child directly.
 - Serve `_fx/session/steer { sessionId, text }` under `fx acp`, answering
