@@ -40,7 +40,16 @@ if [[ " $* " == *' tests/e2e/render-lab/audit-direct-writes.ts '* ]]; then
     exit 0
 fi
 
+if [[ " $* " == *'/carried-e2e-tests.ts '* ]]; then
+    printf 'tests/e2e/carried-fixture.test.ts\t2\t^carried one$|^carried two$\n'
+    printf 'CARRIED-E2E 2 tests in 1 owners differ from upstream fixture\n' >&2
+    exit 0
+fi
+
 case " $* " in
+    *' ./carried-fixture.test.ts '*)
+        printf '2 pass\n0 fail\n'
+        ;;
     *' ./cli.test.ts '*)
         printf '4 pass\n0 fail\n'
         ;;

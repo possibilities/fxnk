@@ -7,6 +7,7 @@ fxnk_gate_contract_digest() {
         "$contract_root/scripts/gate-contract.sh" \
         "$contract_root/scripts/local-gate.sh" \
         "$contract_root/scripts/check-e2e-structure.ts" \
+        "$contract_root/scripts/carried-e2e-tests.ts" \
         "$contract_root/scripts/classify-quarantine.py" \
         "$contract_root/tests/local-gate/fixtures/model-catalog-server.ts" \
         "$manifest"; do

@@ -208,6 +208,7 @@ jq -e --arg sha "$sha" --arg upstream_sha "$captured_upstream_sha" \
      .outcomes.hosted_ci_composition == "pass" and
      .outcomes.direct_write_audit == "pass" and
      .outcomes.fresh_binary == "pass" and
+     .outcomes.carried_e2e == "pass" and
      .outcomes.quarantine[0].status == "quarantined" and
      .outcomes.quarantine[0].failure_count == 1 and
      .outcomes.quarantine[0].signatures == ["fixture"] and

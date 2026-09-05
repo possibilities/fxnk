@@ -189,6 +189,7 @@ jq -e \
         .outcomes.ade_integration == "pass" and
         .outcomes.credential_broker_integration == "pass" and
         .outcomes.voice_control_integration == "pass" and
+        .outcomes.carried_e2e == "pass" and
         .outcomes.fresh_binary == "pass" and
         (.duration_seconds | type == "number" and . >= 0) and
         (.recorded_at | type == "string" and length > 0) and

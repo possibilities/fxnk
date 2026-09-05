@@ -332,6 +332,32 @@ bun_step voice-control-integration 7 \
     "$bun_bin" test --max-concurrency 1 \
     --test-name-pattern "$voice_pattern" ./acp.test.ts
 
+# Every carried root E2E test: each test whose text differs from the captured
+# upstream is the fork's to prove locally, selected by name from its owner and
+# required to execute exactly. Upstream's unchanged tests remain hosted-CI
+# observability.
+carried_inventory="$scratch/carried-e2e.tsv"
+carried_inventory_step() {
+    "$bun_bin" "$root/scripts/carried-e2e-tests.ts" "$fx_worktree" "$upstream_sha" \
+        >"$carried_inventory" 2>"$scratch/carried-e2e-inventory.log" \
+        || { cat "$scratch/carried-e2e-inventory.log"; die "carried E2E inventory failed"; }
+    [ -s "$carried_inventory" ] || die "carried E2E inventory is empty"
+    printf '%s ' "$(tr -d '\n' <"$scratch/carried-e2e-inventory.log")"
+}
+step carried-e2e-inventory carried_inventory_step
+while IFS=$'\t' read -r carried_file carried_count carried_pattern; do
+    [ -n "$carried_file" ] || continue
+    printf '%s\n' "$carried_file" | grep -Eq '^tests/e2e/[A-Za-z0-9._-]+\.test\.ts$' \
+        || die "carried E2E inventory names an invalid owner: $carried_file"
+    printf '%s\n' "$carried_count" | grep -Eq '^[1-9][0-9]*$' \
+        || die "carried E2E inventory has an invalid count for $carried_file"
+    carried_label="carried:${carried_file#tests/e2e/}"
+    bun_step "${carried_label%.test.ts}" "$carried_count" \
+        env TMUX_TMPDIR="$scratch/tmux" FX_REQUIRE_TMUX=1 \
+        "$bun_bin" test --max-concurrency 1 \
+        --test-name-pattern "$carried_pattern" "./${carried_file#tests/e2e/}"
+done <"$carried_inventory"
+
 quarantine_jsonl="$scratch/quarantine.jsonl"
 : >"$quarantine_jsonl"
 while IFS= read -r entry; do
@@ -451,6 +477,7 @@ if [ "$record" -eq 1 ]; then
             fxnk_unit_canaries:"pass",cli_integration:"pass",ade_integration:"pass",
             credential_broker_integration:"pass",
             voice_control_integration:"pass",
+            carried_e2e:"pass",
             fresh_binary:"pass",quarantine:$quarantine},
           duration_seconds:$duration,recorded_at:$recorded_at}' \
         >"$pending_receipt"
