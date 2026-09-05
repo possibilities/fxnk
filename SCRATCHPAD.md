@@ -5,41 +5,43 @@ entries on every maintenance cycle and appends one compact history entry.
 
 ## Baseline
 
-- Current maintenance: 2026-09-05. One-shot upstream snapshot
-  `478960a8ab9315507e0a40d4434df71898fadf13` is mirrored as Main. Thirty
+- Current maintenance: 2026-09-05, second cycle. One-shot upstream snapshot
+  `65d76390260d3daeccb258e873be144c1e6160c4` is mirrored as Main. Thirty
   durable carries are published in installed Integration
-  `ca773013b48be68451ed363f168f0a3251e50db2`; the bound checkout is clean,
+  `61eb3da1b8f4286fa52694cf9b032c241ddba224`; the bound checkout is clean,
   and local and remote Integration agree exactly.
 - Local development gate receipt:
-  `~/.local/state/fxnk/local-gates/ca773013b48be68451ed363f168f0a3251e50db2.json`.
+  `~/.local/state/fxnk/local-gates/61eb3da1b8f4286fa52694cf9b032c241ddba224.json`.
   Contract digest:
-  `6568ea9fefedad18ea3673951fe1891224f0cd443c41e7bf168b8cb7bfee34c6`.
-  The 109-second gate passed 130 of 130 canaries, CLI 4/4, ADE 3/3,
-  credential broker 4/4, voice 7/7, and quarantine 1/1.
+  `404718b76b5a1b120be79a05f826ba503abe2b6fb50b8ae0274bd0ce774279e3`.
+  The 236-second gate passed 130 of 130 canaries, CLI 4/4, ADE 3/3,
+  credential broker 4/4, voice 7/7, every carried root E2E test
+  (89 tests across 12 owners), and quarantine
+  1/1.
 - Installed SHA-256:
-  `5cde9075c6cb1d6e91fd821abafd1cedffcd5b01695c7513c9ba228691d4eced`.
+  `eea93182dc4d6f666442ae765c1374dcf6442e54bbdd0fd27765fb15e6e96934`.
   `/Users/arthack/.local/bin/fx --fxnk-version` reports
   `fxnk 0.5.0 (fx 0.0.7)`.
 - AgentStart's exact Fx consumer handoff is
-  `9e56e555b69ad77c0feec04508f8685778f790b6`: the pin, installer plan line,
-  validation fixture, fleet map, and fleet snapshot name `ca773013`, its
-  validation passes on the committed tree, and its convergence installed Fx
-  `ca773013` before stopping at an unrelated guard (the retired-Pi cleanup
-  requires the reviewed AgentLaunch commit on AgentLaunch's pushed `main`).
-  AgentStart's `main` holds fourteen unpushed commits including operator
-  work; this cycle pushed nothing there. fmx remains deprecated and is not a
-  consumer.
+  `03bc13ce6087d343d3c7356f91c99c900b7cd1b5`: the pin, installer plan line,
+  validation fixture, and fleet map name `61eb3da1`. Its validation passes on
+  a clean worktree of that commit, its convergence installed Fx `61eb3da1`
+  before stopping at the unrelated retired-Pi guard, its fleet snapshot could
+  not be regenerated behind the snapshot guard, and its `main` is pushed.
+  fmx remains deprecated and is not a consumer.
 
 ## Audited-upstream frontier
 
-- Complete through `478960a8ab9315507e0a40d4434df71898fadf13` on
-  2026-09-05. The 578 commits in
-  `ef03b480874a49a9cc508c39b7b98214c34178ee..478960a8ab9315507e0a40d4434df71898fadf13`
-  (122 first-parent merges; 413 of them delivered on 2026-09-04 without a
-  disposition audit, 165 new) were read in groups and every carried feature
-  received one disposition: 0 retired, 18 repaired, 12 unchanged. The
-  Reliability entry's alphanumeric session-identity bound was retired as a
-  bullet; its resume viewport bound stays carried.
+- Complete through `65d76390260d3daeccb258e873be144c1e6160c4` on
+  2026-09-05. The 15 commits in
+  `478960a8ab9315507e0a40d4434df71898fadf13..65d76390260d3daeccb258e873be144c1e6160c4`
+  (5 first-parent merges: immediate steering transcript #682, provider event
+  framing #681, Gateway auth diagnostics #683, conversation summary
+  separation #684, reviewer metadata tolerance #685) were read in groups and
+  every carried feature received one disposition: 0 retired, 2 repaired,
+  28 unchanged. The same cycle repaired the sixteen deterministic hosted-CI
+  failures the previous Integration `ca773013` exposed, each on the carry
+  that owns the failing test.
 - Direct Codex operation beyond 64 sequential provider calls remains the
   upstream-owned reliability behavior at
   `dd409c27a7719e4dccaa30152c4e9087ec30edea`; no downstream carry exists.
@@ -49,38 +51,38 @@ entries on every maintenance cycle and appends one compact history entry.
 Integration composes thirty durable published carry heads. Every head below is
 an ancestor of published Integration:
 
-- `carry/acp-capability-gates` `0512ed4127407adee5fe4dfc8e900908cb51cb7e`
-- `carry/acp-permission-policy` `856c0fde453ff15e08bc34c0984f347bf55453d7`
-- `carry/acp-project-instructions` `9ff20aecd71f7e13b2ca5306f0e84f5cff949324`
-- `carry/acp-state-isolation` `4c470a2e80b3c71d706a0922e9f0e83c4c64af77`
-- `carry/acp-tool-selection` `d29152922e0ca3ea72990460371361c6b5d16818`
-- `carry/acp-voice-control` `4740133920344a2e3f4b625c1130a84b34f60ebb`
-- `carry/ade-event-feed` `65eb9a2d86a5d66747d3f72ee95815bc90e8c9e0`
-- `carry/agent-shape-sessions` `6a33df0f33fc85277a78ccbca0158139d4b7df20`
-- `carry/codex-credential-authority` `cf05dd3cc2385835b4adeff44f49a8ef45f2d342`
-- `carry/edited-git-roots` `dc4b5c532b39fe41cd2e29bdfd347738d785fdde`
-- `carry/effort` `af8d76ee89a3063d323a71805ba57b13dace2d70`
-- `carry/effort-catalog` `95ae2a4a3b83e16cee7b5acbc0e892e16f604c3f`
-- `carry/exclusive-skill-roots` `ce4751fb95d9d44f137de57ba33a70b43d25ca39`
-- `carry/external-editor` `e8c474e6338fb7c32b32a10d6720797f5d10b41a`
-- `carry/fmx-distribution` `44d35547847fc2f71abdb01e0f814177bb7cabed`
-- `carry/fmx-work-control` `e4ed29e9c1bd8172b8f75a516cf93f96807c4f12`
-- `carry/fxnk-version` `b8f723d095ee2df7e58caf37117a8ef4a2772bf6`
-- `carry/hosted-full-ci` `44d35547847fc2f71abdb01e0f814177bb7cabed`
-- `carry/invocation-skill-roots` `43be6fba14fd964f03781578460a7405b3e1a3d2`
-- `carry/launch-control-continuity` `599ed00e7c54a21c849cb9b6d45e3eddd41d7b94`
+- `carry/acp-capability-gates` `bf72e5ea0422b635c03bf905c827b853185e0425`
+- `carry/acp-permission-policy` `b059fe3285882e75051d23b1630c931f144d231f`
+- `carry/acp-project-instructions` `74ebaa4aa92264a8ec0f37ac6732425c56a87067`
+- `carry/acp-state-isolation` `d5e361cd4d34418ed359db882bc22e0a6dd45fcb`
+- `carry/acp-tool-selection` `404a80ae6eabd30eb30f6ba4e5b30ad46f821266`
+- `carry/acp-voice-control` `f34dbfec730c7e92f1734076b90ecc3aa0a070d4`
+- `carry/ade-event-feed` `6ac2b52657653a8295da22656bab7973e97268bc`
+- `carry/agent-shape-sessions` `962a5b6cc0c5222b5c6aee9cc29324ae5e17a307`
+- `carry/codex-credential-authority` `f3725c78a73ff0d61b59211329d2f35780aadc67`
+- `carry/edited-git-roots` `40258020901ffb1c98e7ac61b5e53e11dad30b5e`
+- `carry/effort` `453276f83bb9925bf7dce37f8b062ecfba495e5e`
+- `carry/effort-catalog` `12ea5f7f21b32c7819aedb5b07a2411a1cdab0ae`
+- `carry/exclusive-skill-roots` `5359be0c7802f81aeaf473f7aad1d13a5597fcd6`
+- `carry/external-editor` `bbd2a073ec0e518952b53fb2741d51032f168fb0`
+- `carry/fmx-distribution` `f5cd558b189c65fbc25a299ffecfabf1e76c5bcb`
+- `carry/fmx-work-control` `8414eac74c4cd0fdd4d740ee9d97139fae3ac339`
+- `carry/fxnk-version` `509a19f9b8a35aaf7fc71d053f3956b6bef36be1`
+- `carry/hosted-full-ci` `f5cd558b189c65fbc25a299ffecfabf1e76c5bcb`
+- `carry/invocation-skill-roots` `158171acffb0a650e3ec561df11ea140eb768d7c`
+- `carry/launch-control-continuity` `10ac80db8b681380dab470433406adfab0c459ae`
 - `carry/libfx-provider-authorization`
-  `3f7989b672d5b07c8af6cf479975c89182f154f2`
-- `carry/local-gate-support` `8c55103bb40dbd99ad569c0bb3750458f8afd05f`
+  `b96afa8dc224b6663b32ebed347f7a5b98426967`
+- `carry/local-gate-support` `21b89a5bd2fd25956cf579f1122f5f2fc0805bfc`
 - `carry/notification-sound-single-flight`
-  `8b214748c7c8d7f5b6546c2545fb8a85dfd62b4e`
-- `carry/resume-bounds` `3658c038ae185cff7a0aedbfd7f2efb2f77a9d1c`
-- `carry/session-naming` `4eedd66c74dcdd93527373d550795dba92f43cdf`
-- `carry/state-auth-borrowing` `3cf9346ca174c96b04c8922e7fb8971fcb0a1e51`
-- `carry/state-system-prompts` `c72c3091c186799d93c93a5507341d45518c057e`
-- `carry/structured-inference` `be98268b45517593823b901ed9972a3a23179eef`
-- `carry/system-prompt-files` `c694a89a27cb884324847f076f645622820ad5e3`
-- `carry/terminal-probe-determinism` `1bc1b669f72ed7e55d3c87d17856ff2ef76104a8`
+  `f3d09cefbfe2ef99f141f24d581e3fe8abd7ee03`
+- `carry/resume-bounds` `29d3514a50d73df0370d26ce46806b6290e7173c`
+- `carry/session-naming` `7a65da551fa684018117fb76cf654a523e0e7ede`
+- `carry/state-auth-borrowing` `64948967e9bc0475915e5551d7686736fa68bf01`
+- `carry/state-system-prompts` `e3f9449c3375b0104f1700afac75ca8aeefc375e`
+- `carry/structured-inference` `38c5a8c43a49f00b388e90151a9daf2963e5f661`
+- `carry/system-prompt-files` `04452d82c1bf0c7488749323fa68d165cd450532`
+- `carry/terminal-probe-determinism` `a2b2762ae1cf68c0b7adc8f8e7ec8124ee5b6d83`
 
 All thirty heads are exact published refs and ancestors of Integration. The
 2026-09-05 reconciliation matched Main, Integration, and every carry to the
@@ -88,67 +90,82 @@ declared graph while leaving unrelated fork heads unchanged.
 
 ## Current notes
 
-- Exact branch reconciliation against captured upstream `478960a8` passes for
+- Exact branch reconciliation against captured upstream `65d76390` passes for
   Main, Integration, and all thirty carry refs. Supervision is configured and
   verified with trunk `integration` and mirror `main`. Style extraction from
-  installed Integration `ca773013` reports no drift.
-- The fork remote now pushes over SSH
-  (`remote.fork.pushurl = git@github.com:possibilities/fx.git`; the fetch URL
-  is unchanged). The HTTPS credential is the gh OAuth token without the
-  `workflow` scope, and upstream's interval changed two workflow files, so the
-  whole atomic HTTPS publication was refused before anything moved.
-- `carry/launch-permission-mode` (AgentWorkplace Phase 1A, abandoned) was
-  renamed on the fork to `DELETEME/carry/launch-permission-mode` on
-  2026-09-05 at the operator's direction, completing the deletion decision
-  recorded on 2026-09-02. Its head `ed0b75e490a63263149918e7d3af95470768aa2c`
-  stays reachable under the marker and is nobody's dependency.
-- The 2026-09-04 Integration carried work that existed only in its composed
-  commit: the ADE feed probe on upstream's managed-subagent and shell shapes,
-  the credential broker's selected-profile leases and explicit borrow fact,
-  the upgrade-relaunch guard for a live broker channel, and the broker E2E
-  coverage of those paths. This cycle moved all of it onto carry heads
-  (`carry/ade-event-feed`, `carry/codex-credential-authority`), and
-  `carry/codex-credential-authority` now depends on
-  `carry/agent-shape-sessions`. Composition-only code must not recur: every
-  candidate is a merge of committed carry heads and nothing else.
+  installed Integration `61eb3da1` reports no drift.
+- `DELETEME/carry/launch-permission-mode` records the 2026-09-05 human
+  decision to close the abandoned agentworkplace carry; maintenance reports
+  it and never moves it.
+- Composition-only code must not recur: every candidate is a merge of
+  committed carry heads and nothing else. This cycle found two more artifacts
+  that only a recorded merge resolution had been dropping, and moved each onto
+  a head: `carry/ade-event-feed` registered a canary for a test upstream had
+  removed, and the work-control steer site's lifecycle hook and naming
+  admission met only in Integration, so `carry/acp-voice-control` now depends
+  on `carry/session-naming` and composes that site itself.
+- The local gate runs every carried root E2E test: each test in a root owner
+  whose text differs from the captured upstream, or every test of an owner
+  that differs only in shared helpers, selected by name and required to
+  execute exactly. Upstream's unchanged tests remain hosted-CI observability.
+  Every deterministic hosted failure on `ca773013` lived in a carried test
+  that no local step ran; that blind spot is closed.
+- Upstream's Codex catalog refresh (#628) rejects any catalog that does not
+  list the reviewer model `gpt-5.6-luna` and advertises client version
+  0.153.0; every fork catalog fixture now serves the reviewer model, and the
+  structured inference provenance names the refreshed version.
+- Upstream's MCP rebuild (#639) starts every server with legacy
+  initialization unless `FX_MCP_PROTOCOL_VERSION=2026-07-28` is present, and
+  offers the panel's logout only for a server that connected with
+  credentials; the ACP state-root and selected-profile pending-trust probes
+  follow both rules.
 - Upstream's Responses text reconciliation (#677) abandons a completed
   terminal event when cancellation is pending; structured inference reverses
   that on `carry/structured-inference`, and its restated upstream tests
   document the rule. Reread the reducer on every upstream change to
-  `src/gateway/responses_protocol.zig`.
+  `src/gateway/responses_protocol.zig`; #681's complete-event framing kept
+  the rule.
 - Upstream's conversation storage (#608) derives and commits the first-turn
   title itself. `carry/session-naming` keeps a title committed through the
   rename path authoritative over that derivation, installs the derived title
   under the commit lock without relocking, and treats a saved session's
-  derived title as durable native metadata.
+  derived title as durable native metadata. Its one title request per saved
+  session is excluded from upstream's provider-preparation request counts.
 - The selected-profile Codex account pin lives on
   `carry/launch-control-continuity`, where `--state-dir` meets the
   account-pinned session store, not on `carry/codex-credential-authority`.
-- Hosted Full CI: `~/.local/state/fxnk/full-ci/pending.json` holds fifteen open
-  obligations for superseded Integration SHAs (`e1b20262` and older),
-  overdue since 2026-08-31. This cycle repaired the composition failures those runs exposed in the carries themselves (the E2E shard weights name codex-credential-broker.test.ts, the native failures and the CLI-catalog crash are fixed and proved by canaries); the watcher records the verdict for the new Integration SHA on its own, and a red verdict there is the next cycle's first task.
+- Hosted Full CI: `~/.local/state/fxnk/full-ci/pending.json` holds seven open obligations and is overdue; the recorded verdict for `ca773013` is `failed` (sixteen deterministic failures, every one repaired in this cycle on its owning carry, plus native races that did not reproduce locally in forty runs). The watcher records the verdict for `61eb3da1` on its own; a red verdict there is the next cycle's first task.
 - The full native suite (`zig build test`) is not a gate step. Run on this
-  machine it reports 8619 tests with only shell-profile noise failing (five
-  `run_command`/`command_runner` tests read this machine's zsh startup output);
-  the hosted run is the clean-environment proof.
+  machine it reports only shell-profile noise failing; the hosted run is the
+  clean-environment proof.
 - AgentVoice last passed its complete non-Cove voice and credential broker
   regression on Integration `e1b20262` (2026-09-04). The broker wire contract
-  is unchanged in `ca773013`; its selected-profile and borrowed-authority
-  binding is restored there.
+  is unchanged in `61eb3da1`.
+- Upstream's shell-managed execution keeps the legacy `terminal:exec`
+  selection token as an alias of the `shell` tool; a bare `terminal`
+  selection is unknown. The `ask` launch retains permission policy,
+  project-instruction, state-root, skill-policy, and native-tool controls,
+  and every usage line those gates print names it; CLI probes that need a
+  refused launch use `fx models`.
+- Adversarial review of this cycle's five behavior changes found no defect.
+  One latent hazard is recorded, not applied: `createNativeSession` marks a
+  present derived title committed, and a non-empty history with no prompt
+  candidate would derive the "Untitled session" placeholder as present. No
+  production path creates such a session today; guard it with a prompt
+  candidate check if a same-process copy or fork feature lands.
 - The model-capability design at
   `~/handoffs/2026-09-04-fx-model-capability-exposure-design.md` is not part of
   this mandate and has no promised start.
 - Do not retire `/Users/arthack/src/fx/.git` or `/Users/arthack/src` yet.
   `/Volumes/Scratch/fx-maintain-20260904.J4a8X0/launch-control-continuity`
   remains an old-store worktree with 25 dirty paths and must be handled by its
-  owner before retirement. The abandoned 2026-09-04 Codex cycle's scratch
-  directory `/Volumes/Scratch/fxnk-maintain-20260904-01xxds8n` holds only
-  non-worktree files now; its worktrees are gone.
+  owner before retirement.
 - The copied rerere cache still contains a known corrupt resolution for
   `src/core/agent/worker_runtime.zig`: it stacks two return types on
   `admitPromptObserved`. Never accept that resolution as proof; clear or
   bypass it and re-derive the merge by hand. Every resolution this cycle
-  accepted was compared against a mechanical three-way merge first.
+  accepted was compared against the two sides line by line first, and the
+  steer-site resolution was re-recorded.
 
 ## History
 
@@ -245,15 +262,30 @@ declared graph while leaving unrelated fork heads unchanged.
   selected-profile canaries, passed the 130-canary exact-SHA gate, atomically
   published and installed `ca773013`, and advanced AgentStart's exact
   consumer pin.
+- 2026-09-05: Audited the 15 commits in `478960a8..65d76390` (0 retired, 2
+  repaired, 28 unchanged), repaired the sixteen deterministic hosted-CI
+  failures on `ca773013` on their owning carries, moved two more
+  composition-only artifacts onto heads (a retired canary registration and
+  the steer-site admission hook, with voice control now depending on session
+  naming), widened the Local gate to every carried root E2E test, passed the
+  130-canary exact-SHA gate, atomically published and installed
+  `61eb3da1`, and advanced AgentStart's exact consumer pin.
 
 ## Open before the next upstream absorb (2026-09-05)
 
-- Hosted Full CI must reach a verdict for `ca773013`; the watcher
+- Hosted Full CI must reach a verdict for `61eb3da1`; the watcher
   records it. A red verdict there, or a persisting `unclassified` obligation
-  for a superseded SHA, is the next cycle's first task.
-- `tests/e2e/acp.test.ts` is parsed by the gate's `e2e-structure` step but run
-  by no step; its skill-catalog assertions were rewritten by upstream #650 and
-  are proved only by the hosted run.
+  for a superseded SHA, is the next cycle's first task. The native races the
+  `ca773013` run also showed (0 of 40 local reproductions) are recorded, not
+  repaired.
+- AgentStart's convergence stops after installing Fx at its retired-Pi
+  guard: AgentLaunch's pushed `main` (`8ba25149`) is two commits past the
+  reviewed retirement commit `c4bb316d` ("smoke: read the deployed-sha mode
+  with GNU stat first", "ci: pin bun to 1.4.2"). Advancing the reviewed
+  commit is a human review, not maintenance.
+- AgentStart's fleet snapshot guard refuses the managed `plannotator` skill's
+  retired `pi` spelling, so `site/public/fleet-resources.json` still embeds
+  the previous Fx pin `ca773013` until that skill or the guard changes.
 - Replay helpers from the 2026-09-04 cycle remain under `scripts/resolvers/`;
   this cycle's helpers were disposable scratch and are not kept.
 - Retire the old Fx store only after the owner resolves the 25 dirty paths in
