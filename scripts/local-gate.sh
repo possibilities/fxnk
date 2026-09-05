@@ -265,7 +265,7 @@ start_model_catalog_fixture() {
     local ready_file="$scratch/model-catalog.ready"
     local requests_file="$scratch/model-catalog.requests"
     local output="$scratch/model-catalog-server.log"
-    local port= attempt=0
+    local port='' attempt=0
 
     "$bun_bin" "$root/tests/local-gate/fixtures/model-catalog-server.ts" \
         --ready-file "$ready_file" --requests-file "$requests_file" \
@@ -392,8 +392,8 @@ printf '%s\n' \
 printf '%s\n' '{"provider":"codex","codex_model":"gpt-5.6-sol"}' \
     >"$models_home/.fx/settings.json"
 chmod 0600 "$models_home/.fx/chatgpt-auth.json" "$models_home/.fx/settings.json"
-models_output=$(HOME="$models_home" AI_GATEWAY_API_KEY= OPENAI_API_KEY= \
-    VERCEL_OIDC_TOKEN= \
+models_output=$(HOME="$models_home" AI_GATEWAY_API_KEY='' OPENAI_API_KEY='' \
+    VERCEL_OIDC_TOKEN='' \
     FX_AUTO_UPGRADE=0 FX_DISABLE_KEYCHAIN=1 FX_E2E_DISABLE_DOTENV=1 \
     FX_E2E_OPENAI_CODEX_MODELS_URL="$model_catalog_url" \
     MODEL_CATALOG_REQUESTS_FILE="$model_catalog_requests_file" \

@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2016,SC2088 # Literal backticks and tildes are text this suite greps for.
 
 set -euo pipefail
 
@@ -270,12 +271,14 @@ grep -F 'receipt covered captured upstream at' scripts/ship-gate.sh >/dev/null \
     || fail "ship gate does not report the captured upstream target"
 gate_test_sha=0000000000000000000000000000000000000000
 set +e
-integration_gate_output=$(MAINTAIN_UPSTREAM_SHA="$gate_test_sha" scripts/ship-gate.sh \
+# These probe argument handling, not shipping authority; test mode skips the
+# macOS-arm64 requirement so the probes mean the same thing on a Linux runner.
+integration_gate_output=$(FXNK_LOCAL_GATE_TESTING=1 MAINTAIN_UPSTREAM_SHA="$gate_test_sha" scripts/ship-gate.sh \
     --worktree "$root/does-not-exist" \
     --branch integration \
     --sha "$gate_test_sha" 2>&1)
 integration_gate_status=$?
-main_gate_output=$(MAINTAIN_UPSTREAM_SHA="$gate_test_sha" scripts/ship-gate.sh \
+main_gate_output=$(FXNK_LOCAL_GATE_TESTING=1 MAINTAIN_UPSTREAM_SHA="$gate_test_sha" scripts/ship-gate.sh \
     --worktree "$root/does-not-exist" \
     --branch main \
     --sha "$gate_test_sha" 2>&1)
