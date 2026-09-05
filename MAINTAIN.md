@@ -21,6 +21,13 @@ shipping it.
 - Bound checkout: `~/source/vercel-labs--fx`. `upstream` is `vercel-labs/fx`;
   `fork` is `possibilities/fx`. Read
   `~/source/vercel-labs--fx/AGENTS.md` completely before touching Fx.
+- The fork is fetched over HTTPS and pushed over SSH
+  (`git@github.com:possibilities/fx.git`); the installer converges
+  `remote.fork.pushurl` whenever the fetch URL is the HTTPS form. The
+  machine's HTTPS credential is the gh OAuth token without the `workflow`
+  scope, and upstream changes workflow files, so an HTTPS push of the atomic
+  publication is refused as a whole and moves nothing. Both URLs name the
+  same repository, and the gates accept either form.
 - Contribution stance: regular maintenance is downstream-only. We do not open,
   update, support, or preserve upstream pull requests, and we do not wait on
   upstream review. Pull requests #242, #244, #320, and #323 and related issues

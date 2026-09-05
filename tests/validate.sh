@@ -104,6 +104,8 @@ grep -F 'has unpublished commits' scripts/install.sh >/dev/null \
     || fail "installer does not reject unpublished integration commits"
 grep -F "jq '.auto_upgrade = false'" scripts/install.sh >/dev/null \
     || fail "installer does not disable Fx auto-upgrade"
+grep -F 'remote.$name.pushurl' scripts/install.sh >/dev/null \
+    || fail "installer does not converge the fork push URL"
 if grep -Eq 'git .*rebase|push .*force' scripts/install.sh; then
     fail "installer contains maintenance behavior"
 fi

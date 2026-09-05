@@ -96,6 +96,23 @@ ensure_remote() {
     fi
 }
 
+# Publication pushes the fork over SSH. The machine's HTTPS credential is the
+# gh OAuth token, which lacks the workflow scope, and upstream regularly changes
+# workflow files, so an HTTPS push of the atomic publication is refused as a
+# whole. Reads stay on the public HTTPS URL; only the push side moves to SSH.
+ensure_push_url() {
+    local name="$1" expected_https="$2" expected_ssh="$3" fetch_url push_url
+    fetch_url=$(git -C "$fx_checkout" remote get-url "$name" 2>/dev/null || true)
+    case "$fetch_url" in
+        "$expected_https" | "${expected_https%.git}") ;;
+        *) return 0 ;;
+    esac
+    push_url=$(git -C "$fx_checkout" config --get "remote.$name.pushurl" 2>/dev/null || true)
+    [ "$push_url" = "$expected_ssh" ] && return 0
+    git -C "$fx_checkout" config "remote.$name.pushurl" "$expected_ssh" \
+        || die "could not set the Fx $name push URL"
+}
+
 stage_auto_upgrade_setting() {
     local settings_dir
     settings_dir=$(dirname "$fx_settings")
@@ -270,6 +287,8 @@ ensure_remote fork "$fx_fork_url" \
     'https://github.com/possibilities/fx.git' 'git@github.com:possibilities/fx.git'
 ensure_remote upstream "$fx_upstream_url" \
     'https://github.com/vercel-labs/fx.git' 'git@github.com:vercel-labs/fx.git'
+ensure_push_url fork \
+    'https://github.com/possibilities/fx.git' 'git@github.com:possibilities/fx.git'
 
 FXNK_FX_CHECKOUT="$fx_checkout" \
     "$script_dir/configure-supervision.sh" --install
