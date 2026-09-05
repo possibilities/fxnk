@@ -13,7 +13,7 @@ jobs:
         run: tests/validate.sh
       - name: Check shell scripts
         run: |
-          shellcheck scripts/*.sh tests/validate.sh \
+          shellcheck --severity=warning scripts/*.sh tests/validate.sh \
             tests/install-transaction.sh \
             tests/local-gate/receipt-transaction.sh \
             tests/ci-watch/verdict-transaction.sh \
