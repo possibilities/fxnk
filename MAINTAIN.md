@@ -93,6 +93,16 @@ shipping it.
 - Rerere: relied on. The bound checkout keeps it enabled; a recorded
   resolution is reused when it remains semantically correct and rechecked
   after upstream changes.
+- Carry dependencies: `scripts/carry-graph.tsv` declares each carry's
+  dependencies, and `tests/validate.sh` holds it to exactly the carries
+  § Features maps. `scripts/replay-carries.sh` replays the graph onto the
+  captured upstream target in dependency order, one worktree per carry,
+  idempotently; `compose` merges the graph's sinks into the candidate branch.
+  It stops on a textual conflict, and it also stops when git completed a
+  merge only through recorded resolutions, printing every line a reused
+  resolution dropped from either side, because that is how the steer-site
+  hook and a retired canary registration were lost for two cycles;
+  `continue` commits a reviewed merge. The script never fetches or pushes.
 - `scripts/reconcile-branches.sh` is this repository's entrypoint to the
   shared namespace script; it declares these values and nothing else.
 - `scripts/configure-supervision.sh --install` converges the local-only
@@ -1062,6 +1072,10 @@ not proof. The gate contract includes every Workshop helper it executes and
 is rechecked before recording, so changing a helper during a run cannot mint
 a receipt for the earlier contract.
 
+While repairing carried tests, `scripts/local-gate.sh --worktree … --carried-only`
+reruns only the carried E2E owners against the worktree's existing build. It
+is a development aid, never proof, and cannot be recorded.
+
 Do not run monolithic `zig build test` or the complete deterministic E2E suite
 as a local gate. Full CI is nonblocking observability: it may finish after we
 ship, and neither its success nor its failure authorizes or prevents shipping.
@@ -1076,7 +1090,10 @@ once a day when nothing has happened, so a silent watcher reads as broken
 rather than as good news. Read
 `~/.local/state/fxnk/full-ci/pending.json` at the start of every cycle: an open
 obligation there, or `overdue: true`, is work for this cycle, not a status
-note. A verdict it could not classify escalates rather than guessing, so an
+note. An obligation outlives the tip it was booked on and says whether that
+tip is superseded; once the cycle has read it and repaired or judged it,
+`scripts/ci-watch.sh --close <sha> --reason "<what the cycle did>"` closes it
+and keeps the receipt. A verdict it could not classify escalates rather than guessing, so an
 `unclassified` obligation means read the run, not distrust the watcher. The watcher polls
 from launchd, bound once with:
 

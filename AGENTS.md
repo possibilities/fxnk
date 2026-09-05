@@ -42,6 +42,16 @@ or its installer.
   else. The mechanics — mirror `main`, publish declared `carry/*` heads, and
   leave every other fork head unchanged — live and are tested in
   agentguidance (`skills/maintain/scripts/`, `tests/branch-policy.sh`).
+- `scripts/carry-graph.tsv` is the carry dependency graph and
+  `scripts/replay-carries.sh` replays and composes it (`plan`, `replay`,
+  `continue`, `compose`); adding or re-parenting a carry means editing the
+  graph in the same commit as the § Features change. When the script stops on
+  a recorded rerere resolution, read the lines it reports as dropped before
+  `continue`.
+- Shell in agent sessions: the interactive shell is zsh, which parses `$var:path`
+  as a history modifier and turns an unmatched glob into an error. Write
+  multi-step shell as `bash` scripts or `bash -c`, and spell paths as
+  `${var}:path`.
 - Upstream pull requests are historical references only. Maintenance may read
   them for evidence, but must not update, support, or preserve their branches.
   Regular maintenance does not open or tend upstream requests.

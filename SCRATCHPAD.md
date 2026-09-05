@@ -291,7 +291,8 @@ declared graph while leaving unrelated fork heads unchanged.
 - AgentStart's fleet snapshot guard refuses the managed `plannotator` skill's
   retired `pi` spelling, so `site/public/fleet-resources.json` still embeds
   the previous Fx pin `ca773013` until that skill or the guard changes.
-- Replay helpers from the 2026-09-04 cycle remain under `scripts/resolvers/`;
-  this cycle's helpers were disposable scratch and are not kept.
+- The replay and composition mechanics now live in
+  `scripts/replay-carries.sh` over `scripts/carry-graph.tsv`; the 2026-09-04
+  resolver helpers are removed.
 - Retire the old Fx store only after the owner resolves the 25 dirty paths in
   `/Volumes/Scratch/fx-maintain-20260904.J4a8X0/launch-control-continuity`.
