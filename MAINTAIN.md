@@ -1036,8 +1036,12 @@ The gate runs formatting, the public-surface audit, and upstream's direct-write
 audit, first proves that the exact candidate HEAD contains
 `carry/hosted-full-ci` and preserves its exact workflow blob, builds
 ReleaseSafe, executes the narrow `test-fxnk` native target, runs focused CLI,
-ADE, and Codex credential broker integration tests, and exercises the fresh
-binary. It also runs bounded probes
+ADE, and Codex credential broker integration tests, runs every carried root
+E2E test, and exercises the fresh binary. A carried test is one whose text
+differs from the captured upstream: `scripts/carried-e2e-tests.ts` inventories
+them per owner, and the gate selects each owner's carried tests by name and
+requires exactly that many executions, so a renamed or lost test fails closed
+while upstream's unchanged tests remain hosted-CI observability. It also runs bounded probes
 from the known fragile macOS-arm64 terminal surface. A green probe passes; a
 failure is quarantined only when its file and harness blobs still match
 `gate/macos-arm64-quarantine.json` and every failure has a declared normalized
@@ -1058,8 +1062,12 @@ Do not run monolithic `zig build test` or the complete deterministic E2E suite
 as a local gate. Full CI is nonblocking observability: it may finish after we
 ship, and neither its success nor its failure authorizes or prevents shipping.
 It must still eventually reach a verdict. `scripts/ci-watch.sh` records one
-verdict per published Integration SHA under `~/.local/state/fxnk/full-ci/` and
-escalates a real failure or an overdue verdict to the human. It also reports
+verdict per published Integration SHA under `~/.local/state/fxnk/full-ci/`.
+A real or infrastructure failure is recorded, not paged: the fleet's one CI
+banner is Agentsource's notifier, and Full CI gates nothing, so its per-run
+verdicts reach the human through this cycle rather than a notification. The
+watcher escalates only what it cannot do itself — a published tip with no run
+at all, a failure it could not classify, or an overdue verdict — and reports
 once a day when nothing has happened, so a silent watcher reads as broken
 rather than as good news. Read
 `~/.local/state/fxnk/full-ci/pending.json` at the start of every cycle: an open

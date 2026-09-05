@@ -87,8 +87,9 @@ jq -e '.open == [] and .overdue == false and .unverified_since == null' \
     || fail "green verdict left an open obligation"
 [ ! -s "$notified" ] || fail "green verdict notified the human"
 
-# --- a real test failure escalates exactly once ------------------------------
+# --- a real test failure is recorded for the cycle, not paged -----------------
 state="$test_root/failed"
+seed_quiet "$state"
 write_run completed failure
 jq -n '{jobs:[{name:"E2E (ReleaseSafe, macos-aarch64, shard 1/4)",
                conclusion:"failure",
@@ -99,21 +100,19 @@ printf '(fail) tui: direct-write audit > classifies the real repository [1076.89
 run_watch "$state" >/dev/null
 receipt="$state/full-ci/$sha.json"
 jq -e '.status == "failed" and .classification == "real_failure" and
-       .notified_at != null and (.failing_tests | length) == 1 and
+       .notified_at == null and (.failing_tests | length) == 1 and
        (.failing_jobs[0].failed_step == "Run deterministic E2E shard")' \
     "$receipt" >/dev/null || fail "real failure recorded the wrong proof"
 jq -e '.open[0].kind == "real_failure" and .open[0].fx_sha == "'"$sha"'"' \
     "$state/full-ci/pending.json" >/dev/null \
     || fail "real failure left no obligation for the next cycle"
-[ "$(wc -l <"$notified")" -eq 1 ] || fail "real failure did not notify exactly once"
-grep -F 'Fx Maintenance' "$notified" >/dev/null || fail "notification lost its title"
-grep -F 'fxnk.maintain' "$notified" >/dev/null || fail "notification lost its group"
+[ ! -s "$notified" ] || fail "real failure paged the human; the verdict belongs to the ledger"
 grep -Fv -- '--failed' "$calls" | grep -F 'run rerun' >/dev/null \
-    && fail "real failure was rerun instead of escalated"
+    && fail "real failure was rerun instead of recorded"
 run_watch "$state" >/dev/null
-[ "$(wc -l <"$notified")" -eq 1 ] || fail "unchanged real failure notified twice"
+[ ! -s "$notified" ] || fail "unchanged real failure paged the human"
 
-# --- a setup failure is retried once, then escalated -------------------------
+# --- a setup failure is retried once, then recorded --------------------------
 state="$test_root/infra"
 seed_quiet "$state"
 write_run completed failure
@@ -131,8 +130,8 @@ grep -F 'run rerun 9001' "$calls" >/dev/null || fail "no rerun was requested"
 [ ! -s "$notified" ] || fail "first setup failure notified the human"
 run_watch "$state" >/dev/null
 jq -e '.status == "failed" and .classification == "infrastructure" and .reruns == 1' \
-    "$receipt" >/dev/null || fail "repeated setup failure was not escalated"
-[ "$(wc -l <"$notified")" -eq 1 ] || fail "repeated setup failure did not notify"
+    "$receipt" >/dev/null || fail "repeated setup failure was not recorded as infrastructure"
+[ ! -s "$notified" ] || fail "repeated setup failure paged the human"
 
 # --- a published tip with no run at all is a broken trigger ------------------
 state="$test_root/absent"
@@ -141,6 +140,9 @@ printf '[]\n' >"$runs"
 run_watch "$state" >/dev/null
 jq -e '.status == "no_run" and .classification == "absent" and .notified_at != null' \
     "$state/full-ci/$sha.json" >/dev/null || fail "missing run was not escalated"
+[ "$(wc -l <"$notified")" -eq 1 ] || fail "missing run did not notify exactly once"
+grep -F 'Fx Maintenance' "$notified" >/dev/null || fail "notification lost its title"
+grep -F 'fxnk.maintain' "$notified" >/dev/null || fail "notification lost its group"
 jq -e '.open[0].kind == "absent"' "$state/full-ci/pending.json" >/dev/null \
     || fail "missing run left no obligation"
 

@@ -394,9 +394,15 @@ fi
 
 # --- escalate on evidence, at most once per SHA per window -------------------
 
+# A run's own verdict is the ledger's business: pending.json carries every
+# real or infrastructure failure into the next maintenance cycle, and Full CI
+# gates nothing, so a banner per failed run only taught the human to ignore
+# banners. This watcher pages only when it cannot do its job — no run at all
+# for a published tip, or a failure it could not classify — plus the overdue
+# and heartbeat escalations below.
 needs_human=false
-case "$status" in
-    failed|no_run) needs_human=true ;;
+case "$classification" in
+    absent|unclassified) needs_human=true ;;
 esac
 
 notified_at=$prior_notified
