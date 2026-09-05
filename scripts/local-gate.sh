@@ -344,6 +344,33 @@ carried_inventory_step() {
     [ -s "$carried_inventory" ] || die "carried E2E inventory is empty"
     printf '%s ' "$(tr -d '\n' <"$scratch/carried-e2e-inventory.log")"
 }
+# A carried owner run must exit clean and report zero failures; the name-level
+# proof that every carried test executed comes from the junit verification,
+# because a template-named test expands at run time and a bare count cannot
+# tell a lost carried test from an extra upstream one the pattern selected.
+carried_run_step() {
+    local label="$1" report="$2" output status
+    shift 2
+    output="$scratch/$label.log"
+    printf 'LOCAL-GATE %-24s' "$label"
+    set +e
+    run_in_dir "$fx_worktree/tests/e2e" "$@" >"$output" 2>&1
+    status=$?
+    set -e
+    sed -n '1,240p' "$output"
+    [ "$status" -eq 0 ] || die "$label exited $status"
+    grep -Eq '^[[:space:]]*0 fail(s)?[[:space:]]*$' "$output" \
+        || die "$label did not report zero failures"
+    [ -s "$report" ] || die "$label wrote no junit report"
+    printf ' pass\n'
+}
+carried_verify_step() {
+    local label="$1" owner="$2" report="$3"
+    "$bun_bin" "$root/scripts/carried-e2e-tests.ts" verify "$fx_worktree" "$upstream_sha" "$owner" "$report" \
+        >"$scratch/$label.verify.log" 2>&1 \
+        || { cat "$scratch/$label.verify.log"; die "carried tests of $owner are not proved"; }
+    printf '%s ' "$(tr -d '\n' <"$scratch/$label.verify.log")"
+}
 step carried-e2e-inventory carried_inventory_step
 while IFS=$'\t' read -r carried_file carried_count carried_pattern; do
     [ -n "$carried_file" ] || continue
@@ -352,10 +379,14 @@ while IFS=$'\t' read -r carried_file carried_count carried_pattern; do
     printf '%s\n' "$carried_count" | grep -Eq '^[1-9][0-9]*$' \
         || die "carried E2E inventory has an invalid count for $carried_file"
     carried_label="carried:${carried_file#tests/e2e/}"
-    bun_step "${carried_label%.test.ts}" "$carried_count" \
+    carried_label=${carried_label%.test.ts}
+    carried_report="$scratch/$carried_label.junit.xml"
+    carried_run_step "$carried_label" "$carried_report" \
         env TMUX_TMPDIR="$scratch/tmux" FX_REQUIRE_TMUX=1 \
         "$bun_bin" test --max-concurrency 1 \
+        --reporter=junit --reporter-outfile="$carried_report" \
         --test-name-pattern "$carried_pattern" "./${carried_file#tests/e2e/}"
+    step "$carried_label:verify" carried_verify_step "$carried_label" "$carried_file" "$carried_report"
 done <"$carried_inventory"
 
 quarantine_jsonl="$scratch/quarantine.jsonl"

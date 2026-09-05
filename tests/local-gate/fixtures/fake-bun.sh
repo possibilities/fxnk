@@ -40,6 +40,19 @@ if [[ " $* " == *' tests/e2e/render-lab/audit-direct-writes.ts '* ]]; then
     exit 0
 fi
 
+if [[ " $* " == *'/carried-e2e-tests.ts verify '* ]]; then
+    printf 'CARRIED-E2E-VERIFIED fixture executed=2 carried=2\n'
+    exit 0
+fi
+
+for arg in "$@"; do
+    case "$arg" in
+        --reporter-outfile=*)
+            printf '<testsuites></testsuites>\n' >"${arg#--reporter-outfile=}"
+            ;;
+    esac
+done
+
 if [[ " $* " == *'/carried-e2e-tests.ts '* ]]; then
     printf 'tests/e2e/carried-fixture.test.ts\t2\t(?:^| )carried one$|(?:^| )carried two$\n'
     printf 'CARRIED-E2E 2 tests in 1 owners differ from upstream fixture\n' >&2

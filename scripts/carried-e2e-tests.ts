@@ -8,9 +8,19 @@ import { resolve } from "node:path";
 // The count is the number of carried tests the pattern must select; the gate
 // requires exactly that many executions so a pattern that matches more or
 // fewer tests fails closed.
-const [worktreeArg, upstreamSha] = process.argv.slice(2);
-if (!worktreeArg || !/^[0-9a-f]{40}$/.test(upstreamSha ?? "")) {
-  throw new Error("usage: carried-e2e-tests.ts <fx-worktree> <upstream-sha>");
+// Two modes share one inventory:
+//   carried-e2e-tests.ts <fx-worktree> <upstream-sha>
+//     prints the carried inventory, one owner per line
+//   carried-e2e-tests.ts verify <fx-worktree> <upstream-sha> <owner> <junit.xml>
+//     proves that owner's bun junit report executed and passed every carried
+//     test by name; an extra upstream test the pattern also selected must pass
+//     too, and a carried test the report never executed fails closed.
+const verifyMode = process.argv[2] === "verify";
+const [worktreeArg, upstreamSha, verifyOwner, verifyReport] = process.argv.slice(verifyMode ? 3 : 2);
+if (!worktreeArg || !/^[0-9a-f]{40}$/.test(upstreamSha ?? "") || (verifyMode && (!verifyOwner || !verifyReport))) {
+  throw new Error(
+    "usage: carried-e2e-tests.ts <fx-worktree> <upstream-sha> | verify <fx-worktree> <upstream-sha> <owner> <junit.xml>",
+  );
 }
 const worktree = resolve(worktreeArg);
 
@@ -63,8 +73,10 @@ const files = listing.stdout.split("\n").filter((line) => /^tests\/e2e\/[A-Za-z0
 if (files.length === 0) throw new Error("no root E2E test owners found");
 
 const lines: string[] = [];
+const carriedByFile = new Map<string, Entry[]>();
 let carried = 0;
 for (const file of files) {
+  if (verifyMode && file !== verifyOwner) continue;
   const currentText = await Bun.file(resolve(worktree, file)).text();
   const current = inventory(currentText);
   const upstream = git(["show", `${upstreamSha}:${file}`]);
@@ -81,19 +93,23 @@ for (const file of files) {
     }
   }
   const patterns = new Set<string>();
-  let count = 0;
+  const carriedEntries: Entry[] = [];
   for (const entry of current) {
     const texts = baseline.get(entry.name);
     const unchanged = texts !== undefined && texts.some((text) => text === entry.text);
     if (unchanged) continue;
-    count += 1;
+    carriedEntries.push(entry);
     patterns.add(namePattern(entry));
   }
-  if (count === 0) {
+  if (carriedEntries.length === 0) {
     // The owner differs only outside its tests: shared helpers or fixtures
     // every test depends on. The whole owner is carried.
-    for (const entry of current) patterns.add(namePattern(entry));
+    for (const entry of current) {
+      carriedEntries.push(entry);
+      patterns.add(namePattern(entry));
+    }
   }
+  carriedByFile.set(file, carriedEntries);
   // Every entry sharing a name with a carried one is selected by the same
   // pattern, so the required count is the number of current entries the
   // selected patterns match, which the fail-closed count check re-verifies.
@@ -102,5 +118,43 @@ for (const file of files) {
   lines.push(`${file}\t${selected.length}\t${[...patterns].join("|")}`);
 }
 if (carried === 0) throw new Error("no carried root E2E tests differ from upstream");
-console.log(lines.join("\n"));
-console.error(`CARRIED-E2E ${carried} tests in ${lines.length} owners differ from upstream ${upstreamSha.slice(0, 12)}`);
+
+if (!verifyMode) {
+  console.log(lines.join("\n"));
+  console.error(`CARRIED-E2E ${carried} tests in ${lines.length} owners differ from upstream ${upstreamSha.slice(0, 12)}`);
+  process.exit(0);
+}
+
+// Verify mode: bun's junit report lists every test of the owner; a test the
+// name pattern did not select carries a <skipped/> child, a failing one a
+// <failure/> or <error/> child. A carried test must appear executed and clean.
+function unescapeXml(value: string): string {
+  return value.replace(/&(quot|apos|lt|gt|amp|#(\d+));/g, (_, entity: string, code?: string) => {
+    if (code) return String.fromCodePoint(Number(code));
+    return { quot: '"', apos: "'", lt: "<", gt: ">", amp: "&" }[entity] ?? "";
+  });
+}
+const report = await Bun.file(resolve(verifyReport)).text();
+const executed: string[] = [];
+let failed = 0;
+for (const match of report.matchAll(/<testcase\b([^>]*?)(\/>|>([\s\S]*?)<\/testcase>)/g)) {
+  const name = /\bname="([^"]*)"/.exec(match[1])?.[1];
+  if (name === undefined) throw new Error(`${verifyReport}: a testcase has no name`);
+  const body = match[3] ?? "";
+  if (/<skipped\b/.test(body)) continue;
+  if (/<(failure|error)\b/.test(body)) failed += 1;
+  executed.push(unescapeXml(name));
+}
+const entries = carriedByFile.get(verifyOwner);
+if (!entries || entries.length === 0) throw new Error(`${verifyOwner} carries no test to verify`);
+const missing: string[] = [];
+for (const entry of entries) {
+  const bare = new RegExp(`^${namePattern(entry).slice("(?:^| )".length)}`);
+  if (!executed.some((name) => bare.test(name))) missing.push(entry.name);
+}
+if (failed > 0) throw new Error(`${verifyOwner}: ${failed} executed test(s) failed`);
+if (executed.length === 0) throw new Error(`${verifyOwner}: the report executed no test`);
+if (missing.length > 0) {
+  throw new Error(`${verifyOwner}: ${missing.length} carried test(s) never executed:\n  ${missing.join("\n  ")}`);
+}
+console.log(`CARRIED-E2E-VERIFIED ${verifyOwner} executed=${executed.length} carried=${entries.length}`);
