@@ -134,12 +134,9 @@ declared graph while leaving unrelated fork heads unchanged.
 - The selected-profile Codex account pin lives on
   `carry/launch-control-continuity`, where `--state-dir` meets the
   account-pinned session store, not on `carry/codex-credential-authority`.
-- Hosted Full CI: `~/.local/state/fxnk/full-ci/pending.json` holds seven open
-  obligations and is overdue; the recorded verdict for `ca773013` is `failed`
-  (sixteen deterministic failures, every one repaired in this cycle on its
-  owning carry, plus native races that did not reproduce locally in forty runs).
-  The watcher records the verdict for `61eb3da1` on its own; a red verdict there
-  is the next cycle's first task.
+- Hosted Full CI passed for installed Integration `61eb3da1`. Agentsource's
+  fleet-wide local CI watcher reports future failures; the redundant
+  fxnk-specific watcher and its maintenance-obligation ledger are retired.
 - The full native suite (`zig build test`) is not a gate step. Run on this
   machine it reports only shell-profile noise failing; the hosted run is the
   clean-environment proof.
@@ -275,14 +272,12 @@ declared graph while leaving unrelated fork heads unchanged.
   naming), widened the Local gate to every carried root E2E test, passed the
   130-canary exact-SHA gate, atomically published and installed
   `61eb3da1`, and advanced AgentStart's exact consumer pin.
+- 2026-09-06: Retired the redundant fxnk-specific Full CI polling daemon,
+  local verdict ledger, and heartbeat while keeping hosted Full CI unchanged;
+  Agentsource's fleet-wide local watcher remains the error-reporting owner.
 
 ## Open before the next upstream absorb (2026-09-05)
 
-- Hosted Full CI must reach a verdict for `61eb3da1`; the watcher
-  records it. A red verdict there, or a persisting `unclassified` obligation
-  for a superseded SHA, is the next cycle's first task. The native races the
-  `ca773013` run also showed (0 of 40 local reproductions) are recorded, not
-  repaired.
 - AgentStart's convergence stops after installing Fx at its retired-Pi
   guard: AgentLaunch's pushed `main` (`8ba25149`) is two commits past the
   reviewed retirement commit `c4bb316d` ("smoke: read the deployed-sha mode

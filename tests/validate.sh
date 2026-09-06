@@ -169,11 +169,16 @@ grep -F 'scripts/local-gate.sh' MAINTAIN.md >/dev/null \
     || fail "the gate does not name the local development gate"
 grep -F 'Full CI is nonblocking observability' MAINTAIN.md >/dev/null \
     || fail "the gate does not state that Full CI is nonblocking"
-grep -F 'scripts/ci-watch.sh' MAINTAIN.md >/dev/null \
-    || fail "the gate does not name the Full CI watcher"
-# shellcheck disable=SC2088 # Match the literal documented path, not a real one.
-grep -F '~/.local/state/fxnk/full-ci/pending.json' MAINTAIN.md >/dev/null \
-    || fail "the gate does not make an open verdict a cycle input"
+grep -F 'Workshop owns no second Full CI polling daemon' MAINTAIN.md >/dev/null \
+    || fail "the gate does not retire the redundant Full CI watcher"
+for retired_watch_path in \
+    scripts/ci-watch.sh \
+    scripts/ci-watch-install.sh \
+    launchd/fxnk.ci-watch.plist \
+    tests/ci-watch; do
+    [ ! -e "$retired_watch_path" ] \
+        || fail "retired Full CI watcher path remains: $retired_watch_path"
+done
 grep -Fx '### Hosted Full CI' MAINTAIN.md >/dev/null \
     || fail "the inventory does not carry the hosted Full CI trigger and serialization"
 grep -F '`--fxnk-version`' MAINTAIN.md >/dev/null \
@@ -286,55 +291,10 @@ printf '%s\n' "$final_gate_tail" | grep -F 'verify_local_branch' >/dev/null \
 printf '%s\n' "$final_gate_tail" | grep -F 'remote_branch_sha' >/dev/null \
     || fail "ship gate does not recheck the remote branch immediately before SHIP"
 
-# The watcher declares exactly the subject the spec states, and gates nothing.
-watch_declared=$(scripts/ci-watch.sh --declare)
-printf '%s\n' "$watch_declared" | jq -e \
-    '.repo == "possibilities/fx" and .branch == "integration" and
-     .workflow == "full-ci.yml"' >/dev/null \
-    || fail "the watcher does not declare the published integration subject"
-if grep -Eq 'ci-watch' scripts/ship-gate.sh scripts/local-gate.sh scripts/install.sh; then
-    fail "a gate or the installer depends on the nonblocking watcher"
-fi
-if grep -Eq 'git push|git rebase|--record' scripts/ci-watch.sh; then
-    fail "the watcher does more than observe and escalate"
-fi
-grep -F 'terminal-notifier' scripts/ci-watch.sh >/dev/null \
-    || fail "the watcher has no way to reach the human"
-grep -F 'fxnk.maintain' scripts/ci-watch.sh >/dev/null \
-    || fail "the watcher does not use the declared notification group"
-grep -F 'heartbeat_seconds' scripts/ci-watch.sh >/dev/null \
-    || fail "the watcher cannot prove it is still running"
-grep -F 'classification=unclassified' scripts/ci-watch.sh >/dev/null \
-    || fail "the watcher guesses instead of escalating what it cannot classify"
-grep -F 'aggregate_job_prefix' scripts/ci-watch.sh >/dev/null \
-    || fail "the watcher lets aggregate jobs stand in for real evidence"
-grep -F 'lock_stale_seconds' scripts/ci-watch.sh >/dev/null \
-    || fail "the watcher does not serialize overlapping polls"
-grep -F 'overdue: true' MAINTAIN.md >/dev/null \
-    || fail "the gate does not make an overdue branch a cycle input"
-grep -F 'once a day when nothing has happened' MAINTAIN.md >/dev/null \
-    || fail "the gate does not state the watcher's daily heartbeat"
-scripts/ci-watch-install.sh --check | grep -F 'scripts/ci-watch.sh' >/dev/null \
-    || fail "the launchd template does not render the watcher path"
-if scripts/ci-watch-install.sh --check | grep -F '__FXNK_' >/dev/null; then
-    fail "the launchd template rendered with unresolved placeholders"
-fi
-if [ -f "$root/.git" ]; then
-    set +e
-    worktree_install=$(scripts/ci-watch-install.sh --install 2>&1)
-    worktree_install_status=$?
-    set -e
-    [ "$worktree_install_status" -ne 0 ] \
-        || fail "the watcher installed launchd from a temporary worktree"
-    printf '%s\n' "$worktree_install" | grep -F 'canonical checkout' >/dev/null \
-        || fail "the worktree install refusal was not explained"
-fi
-
 scripts/replay-carries.sh plan >/dev/null
 tests/install-transaction.sh
 tests/full-ci-workflow.sh
 tests/local-gate/receipt-transaction.sh
-tests/ci-watch/verdict-transaction.sh
 tests/replay-carries.sh
 
 printf 'fxnk validation passed.\n'

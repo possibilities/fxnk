@@ -5,8 +5,7 @@ cd "$(dirname "$0")/.."
 
 command -v shellcheck >/dev/null || { printf 'Install shellcheck before pushing.\n' >&2; exit 1; }
 shellcheck --severity=warning scripts/*.sh tests/validate.sh \
-    tests/install-transaction.sh tests/local-gate/receipt-transaction.sh \
-    tests/ci-watch/verdict-transaction.sh tests/ci-watch/fixtures/*.sh
+    tests/install-transaction.sh tests/local-gate/receipt-transaction.sh
 for script in scripts/*.sh tests/*.sh tests/*/*.sh tests/*/fixtures/*.sh; do
     bash -n "$script"
 done

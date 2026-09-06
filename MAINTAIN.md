@@ -1079,27 +1079,10 @@ is a development aid, never proof, and cannot be recorded.
 Do not run monolithic `zig build test` or the complete deterministic E2E suite
 as a local gate. Full CI is nonblocking observability: it may finish after we
 ship, and neither its success nor its failure authorizes or prevents shipping.
-It must still eventually reach a verdict. `scripts/ci-watch.sh` records one
-verdict per published Integration SHA under `~/.local/state/fxnk/full-ci/`.
-A real or infrastructure failure is recorded, not paged: the fleet's one CI
-banner is Agentsource's notifier, and Full CI gates nothing, so its per-run
-verdicts reach the human through this cycle rather than a notification. The
-watcher escalates only what it cannot do itself — a published tip with no run
-at all, a failure it could not classify, or an overdue verdict — and reports
-once a day when nothing has happened, so a silent watcher reads as broken
-rather than as good news. Read
-`~/.local/state/fxnk/full-ci/pending.json` at the start of every cycle: an open
-obligation there, or `overdue: true`, is work for this cycle, not a status
-note. An obligation outlives the tip it was booked on and says whether that
-tip is superseded; once the cycle has read it and repaired or judged it,
-`scripts/ci-watch.sh --close <sha> --reason "<what the cycle did>"` closes it
-and keeps the receipt. A verdict it could not classify escalates rather than guessing, so an
-`unclassified` obligation means read the run, not distrust the watcher. The watcher polls
-from launchd, bound once with:
-
-```sh
-~/code/fxnk/scripts/ci-watch-install.sh --install
-```
+Agentsource's fleet-wide local CI watcher already reports hosted failures. This
+Workshop owns no second Full CI polling daemon, local verdict ledger,
+automatic-rerun policy, or heartbeat; maintenance inspects the hosted run
+directly when a result needs diagnosis.
 
 The authoritative platform is macOS arm64 because it is the installed consumer
 platform; the explicit quarantine prevents chronic upstream terminal failures
