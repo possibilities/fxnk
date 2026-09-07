@@ -241,8 +241,9 @@ servers.
 
 - Compose upstream's model-safe `subagent` surface without reopening its
   internal control schema. The model receives only one wrapped request with
-  `run`, `wait`, `send`, or `stop`; `run` accepts a task plus optional exact
-  model and effort, returns the model-facing child handle, and Fx owns child
+  `run` or `message`; each action waits for its child result. `run` accepts a
+  task plus optional exact model and effort and returns the model-facing child
+  handle; `message` continues a named persistent child. Fx owns child
   naming, persistence, inspection bounds, relationship state, notifications,
   permissions, and lifecycle translation. The reversible compact handle is a
   presentation boundary, not a second child identity.
@@ -312,6 +313,9 @@ servers.
   resolve against the real workspace home, profile-global skills always
   resolve against the selected state profile, and ordered invocation roots
   remain visible without allowing either home to leak globals into the other.
+- Interactive status reads provider and credential preferences only from the
+  selected state profile. Ambient settings, including malformed settings,
+  cannot change or break that status snapshot.
 - Let an explicit selected-state launch set `FX_AUTH_READ_ONLY_HOME` to one
   canonical existing Fx profile home. Fx borrows only an already-valid saved
   provider credential from that profile at startup; it never copies, refreshes,
@@ -392,6 +396,12 @@ servers.
   refresh token, API key, or serialized credential in provenance. Session
   listings and usage grouping must make shape and account provenance visible
   without changing the history root that owns those records.
+- Session listings retain the non-secret credential identity alongside its
+  source through discovery, cloning, and cached summaries, including the
+  resume picker and ACP listing metadata, so accounts using
+  the same provider remain distinguishable. JSON exposes the full digest and
+  text shows a stable bounded digest beside the source. Cache format changes
+  invalidate entries that lack this provenance.
 - Preserve provenance through upstream's conversation metadata, legacy-session
   conversion, rename, compaction, resume, and every session listing. The
   conversation log remains the history authority; do not restore retired
@@ -607,6 +617,10 @@ servers.
   API output bound, so the capture bound is the only bound available; it
   bounds memory rather than generation, because cancelling the read stops
   neither the tokens already produced nor their billing.
+- A recovered or converted history without a real prompt candidate must not
+  commit the display fallback as a title. Its first later prompt can still
+  derive a title; an explicit saved title, including the literal fallback
+  wording, remains authoritative.
 - Keep automatic naming disabled for `fx ask`, `fx acp`, browser and
   WebAssembly hosts, subagents, and disabled or unconfigured providers. Naming
   must not block agent lifecycle.
@@ -639,7 +653,10 @@ servers.
   best effort and the authoritative provider outcome wins: a provider
   terminal event already read from the stream while cancellation is pending
   is reconciled and recorded with its usage and generation id, never
-  abandoned as cancelled.
+  abandoned as cancelled. Preserve typed terminal provider failures as durable
+  rate-limit, provider-rejection, or retryable server outcomes, with their
+  usage and generation identity, including when a refusal or tool output
+  appeared earlier in the same response.
 - Never advertise or dispatch tools, start MCP or background work, create an
   interactive Conversation or session directory, create a Worktree, or expose
   Workplace policy. This narrow Core/native-executable primitive is not libfx,
@@ -656,7 +673,11 @@ servers.
   made `createFxAgent()` refuse `env` outright and routed native agents through
   the same option validation as WebAssembly ones, so `env.AI_GATEWAY_API_KEY`
   is no longer Gateway shorthand. Translate a tagged `auth` entry into those
-  flat options before upstream's guard runs. Keep native Gateway and Codex
+  flat options before upstream's guard runs. Preserve that normalized Gateway
+  authorization through asynchronous asset loading and native-to-WebAssembly
+  fallback; reject Codex before any WebAssembly instantiation. Packaged native
+  and browser artifacts include every runtime module their exports import.
+  Keep native Gateway and Codex
   behind one public Agent instance with `prompt()`, `checkpoint()`,
   `setConfig()`, `configOptions`, and `close()`; expose only host-supplied
   providers for switching, and do not restore the retired public sub-session
@@ -970,7 +991,9 @@ servers.
   session before any refresh side effect, the first-turn title being
   installed through the manifest rename while the history commit holds the
   session write mutex, and provider credential selection beneath a selected
-  profile never consulting the ambient store. This carry owns
+  profile never consulting the ambient store, interactive status ignoring
+  ambient credential preferences. Carried E2E checks prove cached session
+  listings retain account identity beside shape provenance. This carry owns
   the whole gate inventory: a carry based on a dependency that has no
   `tests/fxnk/runner.zig` declares its canaries here rather than on its own
   head. The gate exercises the fresh native binary against

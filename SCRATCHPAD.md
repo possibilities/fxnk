@@ -90,6 +90,14 @@ declared graph while leaving unrelated fork heads unchanged.
 
 ## Current notes
 
+- Maintenance in progress, 2026-09-07: captured upstream
+  `3c58c8051be288079d6d23fe90bb7b08f9841dc8` once. The audit covers 110
+  commits since `65d76390`, including Fx 0.0.8. Repairs and carry replay are
+  in dedicated worktrees under `/Volumes/Scratch/fx-maintain-20260907.wnNTUg`;
+  leases and evidence are in `/tmp/fx-maintain-20260907.oxw55E`. No new
+  candidate is gated or published yet; the delivered baseline above remains
+  authoritative. Responses/structured focused checks pass 83/83.
+
 - Exact branch reconciliation against captured upstream `65d76390` passes for
   Main, Integration, and all thirty carry refs. Supervision is configured and
   verified with trunk `integration` and mirror `main`. Style extraction from

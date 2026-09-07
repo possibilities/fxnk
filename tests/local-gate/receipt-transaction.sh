@@ -153,6 +153,7 @@ gate_env=(
 
 set +e
 missing_gate_target_output=$(
+    unset MAINTAIN_UPSTREAM_SHA
     FXNK_LOCAL_GATE_TESTING=1 \
     FXNK_LOCAL_GATE_UNAME_S=Darwin \
     FXNK_LOCAL_GATE_UNAME_M=arm64 \
@@ -265,6 +266,7 @@ after=$(shasum -a 256 "$receipt" | awk '{print $1}')
 
 set +e
 missing_ship_target_output=$(
+    unset MAINTAIN_UPSTREAM_SHA
     FXNK_LOCAL_GATE_TESTING=1 FXNK_LOCAL_GATE_MANIFEST="$manifest" \
     FXNK_STATE_DIR="$state_dir" \
         "$root/scripts/ship-gate.sh" \
