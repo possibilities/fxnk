@@ -24,11 +24,13 @@ entries on every maintenance cycle and appends one compact history entry.
 - AgentStart consumer commit: `16750931dbc4876b95c76b8d467eb58b1b018b73` on pushed Main.
   Its pin, installer plan, validation fixture, fleet map, and regenerated fleet
   snapshot name `e6ef2148c63f304883de21768bcfcdbf97c4d833`. `tests/validate.sh` passes.
-  Full convergence installed/reused that exact Fx and passed the retired-Pi
-  guard, then stopped at Agentdesk's screen-capture gate because the macOS GUI
-  session is locked. This is a partial consumer convergence, not a completed
-  maintenance cycle. Unlock the desktop and rerun
-  `~/code/agentstart/scripts/install.sh --install`.
+  The first full convergence stopped at Agentdesk's capture gate while the
+  desktop was locked. The operator reran `scripts/install.sh --install` and
+  reported its normal final guidance-linking step. Both installed harness
+  guidance symlinks, the `collab` source/invocation policy, and the exact Fx
+  install receipt were then verified. The consumer handoff and cycle are complete.
+  Full `--install` ends after guidance linking; the explicit "content convergence
+  complete" message belongs only to `--content`.
 - AgentStart's authorized `scripts/sync-skills` completed separately. The
   installed `collab` interface matches agentguidance's source template exactly;
   its generated `allow_implicit_invocation: false` matches source
@@ -185,7 +187,8 @@ The exact-composition gate covers every row; focused repair proof follows.
   `/Volumes/Scratch/fx-maintain-20260907.wnNTUg` and the extra Wasm build prefix
   were removed after publication and installed-delivery recording, with no
   live process using their paths. Their branches and commits remain available.
-  The maintenance board item is waiting on the unlocked-desktop consumer gate.
+  The maintenance board item is complete after the operator rerun and
+  verification of the consumer postconditions.
 
 ## History
 
@@ -302,17 +305,13 @@ The exact-composition gate covers every row; focused repair proof follows.
   135-canary exact-SHA gate and all 95 carried E2E definitions, atomically
   published all thirty carries with Main and Integration, and installed
   `e6ef2148`. AgentStart `16750931` pins it, validates, syncs resources,
-  and regenerates the fleet snapshot; full convergence is waiting on an
-  unlocked desktop for Agentdesk's capture gate. Audit frontier advances to
+  and regenerates the fleet snapshot. The operator's full installer rerun
+  reached normal completion; guidance links, the collab manifest, and installed
+  Fx receipt were verified, clearing the locked-desktop blocker. Audit frontier advances to
   `3c58c805`; the unrelated old dirty worktree and explicit marker are retained.
 
 ## Open before the next upstream absorb (2026-09-07)
 
-- Unlock the active macOS GUI session, then rerun AgentStart's full installer.
-  It currently fails at Agentdesk's served screen-capture check, after Fx
-  installation and the retired-Pi guard. Do not bypass the gate. Reconfirm the
-  installed `collab` manifest after successful convergence and close the
-  maintenance board item only then.
 - If the recovery fixture seed fails again, use the newly retained subprocess
   diagnostics to identify its cause; the original unrepeatable exit was not
   explained or quarantined.
