@@ -181,9 +181,11 @@ The exact-composition gate covers every row; focused repair proof follows.
   `/Volumes/Scratch/fx-maintain-20260904.J4a8X0/launch-control-continuity`
   remains an unrelated old-store worktree with 25 dirty paths, left untouched.
 - Cycle leases, audit subjects, focused logs, gate logs, and publication proof
-  are in `/tmp/fx-maintain-20260907.oxw55E`. Clean cycle-owned worktrees under
-  `/Volumes/Scratch/fx-maintain-20260907.wnNTUg` may be removed after recording
-  delivery; their branches and commits remain available.
+  are in `/tmp/fx-maintain-20260907.oxw55E`. All 31 clean cycle-owned worktrees under
+  `/Volumes/Scratch/fx-maintain-20260907.wnNTUg` and the extra Wasm build prefix
+  were removed after publication and installed-delivery recording, with no
+  live process using their paths. Their branches and commits remain available.
+  The maintenance board item is waiting on the unlocked-desktop consumer gate.
 
 ## History
 
