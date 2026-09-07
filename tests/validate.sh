@@ -319,6 +319,26 @@ scripts/ci-watch-install.sh --check | grep -F 'scripts/ci-watch.sh' >/dev/null \
 if scripts/ci-watch-install.sh --check | grep -F '__FXNK_' >/dev/null; then
     fail "the launchd template rendered with unresolved placeholders"
 fi
+scripts/ci-watch-install.sh --check | grep -Fq \
+    '<!-- fxnk-installer-owned: io.arthack.fxnk.watch-ci.v1 -->' \
+    || fail "the launchd template omits its exact ownership marker"
+status_root=$(mktemp -d)
+trap 'rm -rf -- "$status_root"' EXIT
+mkdir -p "$status_root/agents" "$status_root/state"
+FXNK_LAUNCH_AGENTS_DIR="$status_root/agents" \
+    FXNK_STATE_DIR="$status_root/state" \
+    scripts/ci-watch-install.sh --check \
+    >"$status_root/agents/io.arthack.fxnk.watch-ci.plist"
+printf test >"$status_root/state/ci-watch.log"
+status_output=$(FXNK_LAUNCH_AGENTS_DIR="$status_root/agents" \
+    FXNK_STATE_DIR="$status_root/state" \
+    scripts/ci-watch-install.sh --status)
+printf '%s\n' "$status_output" | grep -Fq 'ownership: owned' \
+    || fail "the watcher status does not recognize its owned plist"
+printf '%s\n' "$status_output" | grep -Fq 'log bytes: 4' \
+    || fail "the watcher status does not report log bytes"
+rm -rf -- "$status_root"
+trap - EXIT
 if [ -f "$root/.git" ]; then
     set +e
     worktree_install=$(scripts/ci-watch-install.sh --install 2>&1)

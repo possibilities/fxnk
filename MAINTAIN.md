@@ -1101,6 +1101,10 @@ from launchd, bound once with:
 ~/code/fxnk/scripts/ci-watch-install.sh --install
 ```
 
+The watcher is installed as `io.arthack.fxnk.watch-ci`. Inspect its ownership,
+loaded state, last exit, and log size without changing it with
+`scripts/ci-watch-install.sh --status`.
+
 The authoritative platform is macOS arm64 because it is the installed consumer
 platform; the explicit quarantine prevents chronic upstream terminal failures
 on that same platform from swallowing new failures.
