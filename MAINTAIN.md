@@ -240,7 +240,7 @@ servers.
 - Preserve the fork's ADE, permission, and work-control authorities across
   that upstream change. Managed children still publish their exact durable
   session and owning-main attribution to ADE, and automatic review remains
-  scoped to the exact action, targets, origin, bounded masked prior results,
+  scoped to the exact action, targets, origin, bounded unmasked terminal-safe prior results,
   and canonical root-request context. Neither a task string nor the compact
   handle widens execution authority.
 

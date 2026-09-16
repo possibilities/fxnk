@@ -54,7 +54,11 @@
       "id": 97485268413,
       "result": "Seven failures across the two declared files, dominated by tmux teardown timeouts"
     },
-    "coverage_gap": "Upstream full-ci.yml ignores pushes to main, so merge commits are not normally exercised by Full CI."
+    "coverage_gap": "Upstream full-ci.yml ignores pushes to main, so merge commits are not normally exercised by Full CI.",
+    "captured_a8200bff_review": {
+      "sha": "a8200bff1621c43476b0fa14f0ed523d09101b70",
+      "result": "Reviewed complete prior-pinned-to-candidate deltas. Render/replay changes only expected auth notice casing/bullet and full-detail key hints. Shared helper adds a separate automatic-title response channel, Gateway v4 endpoint, and paired-Escape helper; selected probe ownership and assertions remain intact. All six exact selected names and the two runtime-only timeout signatures remain unchanged; assertion failures and undeclared failures block."
+    }
   },
   "entries": [
     {
@@ -63,11 +67,11 @@
       "required_blobs": [
         {
           "path": "tests/e2e/tui-render-replay.test.ts",
-          "oid": "2805f916de4553f1801bf90108c9d7f4d4efc2e0"
+          "oid": "1382329d999cc0b22826d0afa68a3340dad640b0"
         },
         {
           "path": "tests/e2e/tmux-helpers.ts",
-          "oid": "e3ea787f20d5dd612a57bf22c5f550590d816e43"
+          "oid": "dee725fbb96e35596deb8a443fb44f3fef030416"
         }
       ],
       "allowed_signatures": [
