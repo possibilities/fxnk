@@ -1,5 +1,5 @@
 
-━━ fx style swatch · dark theme · fx 1bd7bed ━━
+━━ fx style swatch · dark theme · fx e639de6 ━━
 
   roles
   divider                the quick brown fox  \x1b[38;5;240m  #585858

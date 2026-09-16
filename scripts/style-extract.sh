@@ -7,6 +7,7 @@
 #   src/core/agent/presentation/ansi.zig     inline code + task checkmark
 #   src/ui/assistant/user_message_card.zig   prompt rail + skill-token accent
 #   src/ui/transcript/store.zig              dark<->light retint map
+#   src/ui/input/visual_layout.zig           input prefix
 #
 # Exits nonzero when any site fails to parse, so an fx refactor is loud.
 # See MAINTAIN.md "Style guide" for the discovery method behind these sites.
@@ -41,8 +42,9 @@ highlight="$fx/src/ui/render_engine/code_highlight.zig"
 ansi="$fx/src/core/agent/presentation/ansi.zig"
 card="$fx/src/ui/assistant/user_message_card.zig"
 store="$fx/src/ui/transcript/store.zig"
+layout="$fx/src/ui/input/visual_layout.zig"
 
-for f in "$render" "$highlight" "$ansi" "$card" "$store"; do
+for f in "$render" "$highlight" "$ansi" "$card" "$store" "$layout"; do
     [ -f "$f" ] || fail "missing source file: $f (fx refactor? see MAINTAIN.md Style guide)"
 done
 
@@ -158,8 +160,8 @@ file == "render.zig" && /^const diff_(added|removed)_marker_(truecolor|fallback)
     diff_markers[$2] = quoted_content($0)
     diff_marker_count++
 }
-file == "render.zig" && /^pub const input_prefix = "/ { glyphs["input_prefix"] = quoted_content($0) }
-file == "render.zig" && /^pub const right_tag = "/ { glyphs["right_tag"] = quoted_content($0) }
+file == "visual_layout.zig" && /^pub fn inputPrefix/ { in_prefix = 1 }
+file == "visual_layout.zig" && in_prefix && /\.bytes = "/ { glyphs["input_prefix"] = quoted_content($0); in_prefix = 0 }
 file == "render.zig" && /^pub const ask_activity_label = "/ { glyphs["ask_activity_label"] = quoted_content($0) }
 
 # ---- src/ui/render_engine/code_highlight.zig --------------------------------
@@ -279,12 +281,11 @@ END {
     printf "  \"glyphs\": {\n"
     printf "    \"input_prefix\": \"%s\",\n", json_escape(glyphs["input_prefix"])
     printf "    \"user_turn_rail\": \"%s\",\n", json_escape(glyphs["user_turn_rail"])
-    printf "    \"right_tag\": \"%s\",\n", json_escape(glyphs["right_tag"])
     printf "    \"ask_activity_label\": \"%s\"\n", json_escape(glyphs["ask_activity_label"])
     printf "  }\n"
     printf "}\n"
 }
-' "$render" "$highlight" "$ansi" "$card" "$store" > "$tmp"
+' "$render" "$highlight" "$ansi" "$card" "$store" "$layout" > "$tmp"
 
 jq . "$tmp" > /dev/null || fail "generated tokens are not valid JSON (bug in extractor)"
 

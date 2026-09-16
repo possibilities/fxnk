@@ -147,7 +147,9 @@ fmx:
 
 ## Glyphs and typography
 
-The glyph vocabulary carries the state that color does not:
+The glyph vocabulary carries the state that color does not. The input prefix
+comes from `visual_layout.inputPrefix`; the retired `/fx` right tag is no
+longer an extracted token:
 
 | glyph | meaning |
 |---|---|
@@ -346,3 +348,7 @@ darkening of whatever the stage is, not a color of its own.
 `scripts/style-extract.sh --check` diffs a fresh extraction against the
 committed tokens.json and fails on drift — run it whenever the fx checkout
 moves. See `MAINTAIN.md` § "Style guide".
+
+The welcome PNGs retain termctrl’s default dark terminal background. `FX_THEME`
+selects Fx foreground tokens; it does not paint the terminal background, so the
+light capture is a token reference rather than a light-terminal contrast proof.

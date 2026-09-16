@@ -1,5 +1,5 @@
-𝒇x v0.0.5 · Run /help for commands
+𝒇x v0.0.10 · Run /help for commands
 
 ┃
 
-YOLO · gpt-5.6-sol · high
+full access · gpt-5.6-sol · …hack/worktrees/fxnk/maintain-20260916/fxnk (worktree/maintain-20260916)

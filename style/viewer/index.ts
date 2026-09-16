@@ -133,6 +133,7 @@ function codeSection(theme: Theme): Line[] {
 function glyphsSection(theme: Theme): Line[] {
   const t = theme
   const rows: Array<[string, string]> = [
+    // Glyph schema follows visual_layout; the retired right_tag is absent.
     [tokens.glyphs.input_prefix.trim(), "input prompt prefix"],
     [tokens.glyphs.user_turn_rail, "user prompt rail"],
     ["●", "tool call — dim while running, accent when done"],

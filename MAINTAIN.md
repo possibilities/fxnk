@@ -305,7 +305,10 @@ servers.
   remain visible without allowing either home to leak globals into the other.
 - Interactive status reads provider and credential preferences only from the
   selected state profile. Ambient settings, including malformed settings,
-  cannot change or break that status snapshot.
+  cannot change or break that status snapshot. Named configured-provider
+  definitions and their authorization routes also belong to the selected
+  profile; borrowing a built-in credential never imports another profile’s
+  connection registry.
 - Let an explicit selected-state launch set `FX_AUTH_READ_ONLY_HOME` to one
   canonical existing Fx profile home. Fx borrows only an already-valid saved
   provider credential from that profile at startup; it never copies, refreshes,
@@ -613,7 +616,10 @@ servers.
   wording, remains authoritative.
 - Keep automatic naming disabled for `fx ask`, `fx acp`, browser and
   WebAssembly hosts, subagents, and disabled or unconfigured providers. Naming
-  must not block agent lifecycle.
+  must not block agent lifecycle. The carried interactive naming engine is
+  the single owner; upstream automatic naming must not issue a second request.
+  Honor `session_titles=false` while retaining the carried per-provider
+  `session_naming` model, effort, and timeout settings.
   This carry keeps `carry/ade-event-feed` as its branch dependency for live
   consumer updates. Exact relaunch and recovery conformance is an Integration
   composition invariant with the separate `carry/launch-control-continuity`
@@ -1097,6 +1103,10 @@ Workshop owns no second Full CI polling daemon, local verdict ledger,
 automatic-rerun policy, or heartbeat; maintenance inspects the hosted run
 directly when a result needs diagnosis.
 
+Use `TMPDIR=/tmp` when invoking the gate on macOS: its tmux sockets need a
+short scratch root to remain beneath the Unix-domain socket path limit. This
+changes only temporary placement, not the gate contract or selected checks.
+
 The authoritative platform is macOS arm64 because it is the installed consumer
 platform; the explicit quarantine prevents chronic upstream terminal failures
 on that same platform from swallowing new failures.
@@ -1214,10 +1224,10 @@ grep -rhoE '(38|48);5;[0-9]+' src --include='*.zig' | sort | uniq -c | sort -rn
 grep -rn 'initTheme\|detectTheme\|FX_THEME\|2031\|997' src --include='*.zig'
 ```
 
-The extractor's five parsed sites (role palette `src/ui/render.zig`
+The extractor's six parsed sites (role palette `src/ui/render.zig`
 `initTheme`, syntax palettes `code_highlight.zig`, assistant tokens
 `presentation/ansi.zig`, prompt card `user_message_card.zig`, retint map
-`store.zig`) are the authoritative producers; scattered literal SGR strings
+`store.zig`, input prefix `input/visual_layout.zig`) are the authoritative producers; scattered literal SGR strings
 elsewhere in fx are always dark-ramp values covered by the retint map, so
 tracking the five sites plus the index census is complete coverage.
 
