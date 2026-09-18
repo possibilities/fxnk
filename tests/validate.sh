@@ -52,7 +52,10 @@ if command -v bun >/dev/null; then
         && bun test prefix-mode.test.ts >/dev/null) \
         || fail "style/viewer does not build"
 fi
-[ "$(readlink CLAUDE.md)" = AGENTS.md ] || fail "CLAUDE.md must link to AGENTS.md"
+[ -f AGENTS.md ] || fail "AGENTS.md is missing"
+if [ -e CLAUDE.md ] || [ -L CLAUDE.md ]; then
+    fail "CLAUDE.md must not exist; AGENTS.md is the sole project instruction file"
+fi
 
 plan=$(scripts/install.sh --check)
 for required in \
