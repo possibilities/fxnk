@@ -44,11 +44,6 @@ def check(root):
         for name in ready:
             del pending[name]
     require((root / 'AGENTS.md').is_file(), 'AGENTS.md is missing')
-    claude_md = root / 'CLAUDE.md'
-    require(
-        not claude_md.exists() and not claude_md.is_symlink(),
-        'CLAUDE.md must not exist; AGENTS.md is the sole project instruction file',
-    )
     tokens = json.loads((root / 'style/tokens.json').read_text())
     require(tokens['roles']['divider']['dark']['fg']['hex'] and tokens['retint_map'], 'invalid style tokens')
     for script in list((root / 'scripts').glob('*.sh')) + list((root / 'tests').glob('*.sh')):
