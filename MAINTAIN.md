@@ -83,6 +83,8 @@ shipping it.
   aligns the checkout, builds ReleaseSafe, and installs atomically. A consumer's
   own pin — AgentStart's `fx_integration_sha`, for instance — is a separate
   release act and moves only when that consumer's release says so.
+  `scripts/install.sh --print-bin` is the read-only consumer boundary for the
+  configured executable path; AgentStart uses it when rendering its Fx shim.
 - Deletion marker prefix: `DELETEME/`. Creating, moving, or removing
   `DELETEME/<original-name>` requires an explicit human decision naming the
   branch. Maintenance never infers deletion from branch age, ownership,

@@ -11,6 +11,9 @@ AgentStart is the consumer. It pins the exact approved Integration commit as
 `fx_integration_sha` in its own installer and builds `~/.local/bin/fx` from
 that source. Fxnk publishes no binaries; the Integration branch is source
 publication, and `scripts/install.sh` here builds it for this machine.
+`scripts/install.sh --print-bin` is the side-effect-free consumer contract for
+the exact installed executable path; it honors `FXNK_FX_BIN`, so AgentStart can
+render a fixed shim target without duplicating fxnk's path configuration.
 
 ## Before pushing
 

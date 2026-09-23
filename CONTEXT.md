@@ -56,7 +56,8 @@ older receipt.
 _Avoid_: CI result, approval, mutable status.
 
 **Installer** — `scripts/install.sh`, which only converges the published
-integration branch into a ReleaseSafe binary on the system path.
+integration branch into a ReleaseSafe binary on the configured system path and
+publishes that path read-only through `--print-bin` for consumers.
 _Avoid_: maintainer, updater.
 
 **Supervision policy** — fxnk's tracked `supervision/SUPERVISE.md`, installed

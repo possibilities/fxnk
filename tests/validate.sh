@@ -66,6 +66,15 @@ for required in \
         || fail "installer plan is missing: $required"
 done
 
+[ "$(scripts/install.sh --print-bin)" = "$HOME/.local/bin/fx" ] \
+    || fail "installer does not publish its default binary path"
+probe_bin="${TMPDIR:-/tmp}/fxnk-consumer-contract/fx"
+[ "$(FXNK_FX_BIN="$probe_bin" scripts/install.sh --print-bin)" = "$probe_bin" ] \
+    || fail "installer does not publish its configured binary path"
+if FXNK_FX_BIN=relative/fx scripts/install.sh --print-bin >/dev/null 2>&1; then
+    fail "installer published a relative binary path"
+fi
+
 for supervision_contract in \
     'durable published `carry/<feature>` head' \
     'Treat every Fx merge candidate as report-and-route evidence' \

@@ -34,6 +34,8 @@ or its installer.
   `~/source/vercel-labs--fx` and never write outside this repository.
 - `scripts/install.sh` consumes the published `fork/integration` branch. It
   must not rebase, push, inspect PRs, or decide which patches should be carried.
+  Its side-effect-free `--print-bin` mode publishes the configured executable
+  path to consumers such as AgentStart; consumers must not infer another path.
   It also converges fxnk's local-only `SUPERVISE.md` and
   `supervisor.trunk=integration` configuration so a fresh checkout cannot
   mistake an Integration-only fast-forward for a valid carried-feature landing.

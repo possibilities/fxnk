@@ -10,8 +10,10 @@ die() {
 }
 
 usage() {
-    printf 'Usage: scripts/install.sh --install --sha SHA|--check\n'
+    printf 'Usage: scripts/install.sh --install --sha SHA|--check|--print-bin\n'
 }
+
+fx_bin="${FXNK_FX_BIN:-$HOME/.local/bin/fx}"
 
 case "${1:-}" in
     --install)
@@ -32,6 +34,18 @@ case "${1:-}" in
             exit 64
         }
         ;;
+    --print-bin)
+        [ "$#" -eq 1 ] || {
+            usage >&2
+            exit 64
+        }
+        case "$fx_bin" in
+            /*) ;;
+            *) die "FXNK_FX_BIN must be an absolute path" ;;
+        esac
+        printf '%s\n' "$fx_bin"
+        exit 0
+        ;;
     -h|--help)
         usage
         exit 0
@@ -46,7 +60,6 @@ fx_checkout="${FXNK_FX_CHECKOUT:-$HOME/source/vercel-labs--fx}"
 fx_branch=integration
 fx_fork_url="${FXNK_FX_FORK_URL:-https://github.com/possibilities/fx.git}"
 fx_upstream_url="${FXNK_FX_UPSTREAM_URL:-https://github.com/vercel-labs/fx.git}"
-fx_bin="${FXNK_FX_BIN:-$HOME/.local/bin/fx}"
 fx_settings="${FXNK_FX_SETTINGS:-$HOME/.fx/settings.json}"
 state_dir="${FXNK_STATE_DIR:-$HOME/.local/state/fxnk}"
 commit_receipt="$state_dir/fx-built-commit"
