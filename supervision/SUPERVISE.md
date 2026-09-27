@@ -9,7 +9,7 @@ do not integrate product branches here.
 - `upstream` is `vercel-labs/fx`. Never push there.
 - `main` is an exact upstream mirror. It is never an integration base or a
   target for downstream work.
-- The workshop is `~/code/fxnk`; its `MAINTAIN.md` is the authority for branch
+- The workshop is `~/workshops/fxnk`; its `MAINTAIN.md` is the authority for branch
   composition, gating, publication, installation, and consumer handoff.
 
 ## Why a normal supervised landing is unsafe

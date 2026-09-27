@@ -1059,7 +1059,7 @@ publishing any affected carry:
 
 ```sh
 MAINTAIN_UPSTREAM_SHA="$cycle_upstream_sha" \
-  ~/code/fxnk/scripts/local-gate.sh --worktree "$composition_worktree"
+  ~/workshops/fxnk/scripts/local-gate.sh --worktree "$composition_worktree"
 ```
 
 `MAINTAIN_UPSTREAM_SHA` is required for every gate run. The gate verifies that
@@ -1118,7 +1118,7 @@ rerun the gate with `--record` on the clean exact Integration SHA:
 
 ```sh
 MAINTAIN_UPSTREAM_SHA="$cycle_upstream_sha" \
-  ~/code/fxnk/scripts/local-gate.sh \
+  ~/workshops/fxnk/scripts/local-gate.sh \
     --worktree "$integration_worktree" \
     --record
 ```
@@ -1136,7 +1136,7 @@ next one-shot maintenance invocation rather than restarting this one:
 
 ```sh
 MAINTAIN_UPSTREAM_SHA="$cycle_upstream_sha" \
-  ~/code/fxnk/scripts/ship-gate.sh \
+  ~/workshops/fxnk/scripts/ship-gate.sh \
   --worktree "$integration_worktree" \
   --branch integration \
   --sha "$integration_sha"
@@ -1148,7 +1148,7 @@ The installer. Only after the local receipt and ship gate pass for the
 still-published Integration SHA, run:
 
 ```sh
-~/code/fxnk/scripts/install.sh --install --sha "$integration_sha"
+~/workshops/fxnk/scripts/install.sh --install --sha "$integration_sha"
 ```
 
 It proves any existing local integration tip from the installed commit receipt
