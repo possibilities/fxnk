@@ -18,9 +18,10 @@ shipping it.
 
 ## Upstream
 
-- Bound checkout: `~/source/vercel-labs--fx`. `upstream` is `vercel-labs/fx`;
+- Bound checkout: `fork/` (`~/workshops/fxnk/fork`). `upstream` is `vercel-labs/fx`;
   `fork` is `possibilities/fx`. Read
-  `~/source/vercel-labs--fx/AGENTS.md` completely before touching Fx.
+  `fork/AGENTS.md` completely before touching Fx. The checkout is ignored by
+  the Workshop; new persistent maintenance worktrees live in ignored `worktrees/`.
 - The fork is fetched over HTTPS and pushed over SSH
   (`git@github.com:possibilities/fx.git`); the installer converges
   `remote.fork.pushurl` whenever the fetch URL is the HTTPS form. The
@@ -1192,7 +1193,7 @@ Methodology, run whenever the bound checkout's `integration` moves (every
 maintenance cycle qualifies, since carried features can touch UI):
 
 1. `scripts/style-extract.sh --check` — re-extracts the tokens from
-   `~/source/vercel-labs--fx` and diffs against the committed
+   `fork/` and diffs against the committed
    `style/tokens.json`, ignoring the generated stamp. No drift: done. Drift:
    run it without `--check`,
    read the diff, and update the tables and prose in `style/STYLE.md` to
@@ -1208,14 +1209,14 @@ maintenance cycle qualifies, since carried features can touch UI):
 3. After any token drift, regenerate the visual references:
    `scripts/style-capture.sh` (swatch sheets from tokens.json, plus
    welcome-screen PNGs of the freshly built
-   `~/source/vercel-labs--fx/zig-out/bin/fx` in both `FX_THEME` values). Commit
+   `fork/zig-out/bin/fx` in both `FX_THEME` values). Commit
    the changed captures; they are small and diffable.
 4. If the extractor itself fails, fx refactored a styling site. Re-derive
    the sites with the census greps below, fix the extractor's parsers, and
    reconcile STYLE.md prose against what actually changed.
 
 Discovery method (how the styling sites were found, and how to find them
-again after a refactor) — run in `~/source/vercel-labs--fx`:
+again after a refactor) — run in `fork/`:
 
 ```sh
 # every file carrying SGR color literals, ranked; excludes tests

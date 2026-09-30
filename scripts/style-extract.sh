@@ -15,12 +15,12 @@
 # Usage: style-extract.sh [--check] [--fx DIR]
 #   --check   regenerate to a temp file and diff against the committed
 #             style/tokens.json (ignoring the generated stamp); exit 1 on drift
-#   --fx DIR  fx checkout to read (default: $FX_CHECKOUT or ~/source/vercel-labs--fx)
+#   --fx DIR  fx checkout to read (default: $FX_CHECKOUT or this workshop's fork/)
 
 set -euo pipefail
 
 root=$(cd "$(dirname "$0")/.." && pwd)
-fx="${FX_CHECKOUT:-$HOME/source/vercel-labs--fx}"
+fx="${FX_CHECKOUT:-$root/fork}"
 check=0
 
 while [ $# -gt 0 ]; do
@@ -237,7 +237,7 @@ END {
     }
 
     printf "{\n"
-    printf "  \"generated\": {\"script\": \"scripts/style-extract.sh\", \"fx_checkout\": \"~/source/vercel-labs--fx\", \"fx_ref\": \"%s\", \"fx_commit\": \"%s\"},\n", fx_ref, fx_commit
+    printf "  \"generated\": {\"script\": \"scripts/style-extract.sh\", \"fx_checkout\": \"~/workshops/fxnk/fork\", \"fx_ref\": \"%s\", \"fx_commit\": \"%s\"},\n", fx_ref, fx_commit
     printf "  \"roles\": {\n"
     for (i = 1; i <= role_n; i++) {
         name = role_order[i]

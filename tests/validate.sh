@@ -111,7 +111,7 @@ grep -F 'paired commits' AGENTS.md >/dev/null \
     || fail "agent guidance does not require paired Fx and inventory commits"
 grep -F 'The user does not need to mention maintenance' AGENTS.md >/dev/null \
     || fail "agent guidance does not classify ordinary Fx feature requests"
-fx_checkout="${FXNK_FX_CHECKOUT:-$HOME/source/vercel-labs--fx}"
+fx_checkout="${FXNK_FX_CHECKOUT:-$root/fork}"
 if git -C "$fx_checkout" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
     features_section=$(awk '
         /^## Features$/ { inside = 1; next }

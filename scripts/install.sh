@@ -3,6 +3,7 @@
 set -euo pipefail
 
 script_dir=$(cd "$(dirname "$0")" && pwd)
+root=$(cd "$script_dir/.." && pwd)
 
 die() {
     printf 'fxnk installer: %s\n' "$*" >&2
@@ -56,7 +57,7 @@ case "${1:-}" in
         ;;
 esac
 
-fx_checkout="${FXNK_FX_CHECKOUT:-$HOME/source/vercel-labs--fx}"
+fx_checkout="${FXNK_FX_CHECKOUT:-$root/fork}"
 fx_branch=integration
 fx_fork_url="${FXNK_FX_FORK_URL:-https://github.com/possibilities/fx.git}"
 fx_upstream_url="${FXNK_FX_UPSTREAM_URL:-https://github.com/vercel-labs/fx.git}"

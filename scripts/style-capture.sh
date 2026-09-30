@@ -11,7 +11,7 @@
 #      FX_THEME pins the palette so no OSC 11 answer from the PTY is needed.
 #
 # The fx binary defaults to the bound checkout's build. This script never
-# builds fx itself — build in ~/source/vercel-labs--fx first (`zig build`) or
+# builds fx itself — build in this workshop's fork/ first (`zig build`) or
 # pass --fx-bin.
 # Running fx creates normal runtime state under ~/.fx (a session directory);
 # nothing in the fx checkout is modified.
@@ -22,7 +22,7 @@ set -euo pipefail
 
 root=$(cd "$(dirname "$0")/.." && pwd)
 captures="$root/style/captures"
-fx_bin="${FX_BIN:-$HOME/source/vercel-labs--fx/zig-out/bin/fx}"
+fx_bin="${FX_BIN:-$root/fork/zig-out/bin/fx}"
 swatch_only=0
 
 while [ $# -gt 0 ]; do
@@ -54,7 +54,7 @@ done
 [ "$swatch_only" = 1 ] && exit 0
 
 command -v termctrl > /dev/null || fail "termctrl not found; rerun with --swatch-only or install terminal-control"
-[ -x "$fx_bin" ] || fail "fx binary missing at $fx_bin — run 'zig build' in ~/source/vercel-labs--fx or pass --fx-bin"
+[ -x "$fx_bin" ] || fail "fx binary missing at $fx_bin — run 'zig build' in $root/fork or pass --fx-bin"
 
 for theme in dark light; do
     session="fxnk-style-$theme"

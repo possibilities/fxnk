@@ -87,6 +87,10 @@ MAINTAIN remains the behavioral and retirement authority. No carry was retired.
 
 ## Current notes
 
+- 2026-09-29 layout: the bound clone now lives at `fork/` inside this Workshop;
+  script defaults resolve it relative to the Workshop. All fork refs and the
+  installed pin were preserved. New persistent worktrees belong in ignored
+  `worktrees/`; existing historical evidence paths below remain valid.
 - Configured connections resolve only from selected profile definitions;
   borrowed built-in credentials cannot import another registry. Codex checks
   explicit store/account authority instead of trusting source-global freshness.

@@ -31,7 +31,7 @@ or its installer.
   `scripts/style-extract.sh`, `scripts/style-swatch.sh`, and
   `scripts/style-capture.sh` maintain the artifacts; the methodology is
   `MAINTAIN.md` section "Style guide". The scripts read
-  `~/source/vercel-labs--fx` and never write outside this repository.
+  `fork/` and never write outside this repository.
 - `scripts/install.sh` consumes the published `fork/integration` branch. It
   must not rebase, push, inspect PRs, or decide which patches should be carried.
   Its side-effect-free `--print-bin` mode publishes the configured executable
@@ -58,10 +58,14 @@ or its installer.
   them for evidence, but must not update, support, or preserve their branches.
   Regular maintenance does not open or tend upstream requests.
 
-The checkout being maintained is `~/source/vercel-labs--fx`, with `fork`
+The checkout being maintained is `fork/` (`~/workshops/fxnk/fork`), with `fork`
 pointing to `possibilities/fx` and `upstream` pointing to `vercel-labs/fx`. Its
 `integration` branch is the only install source. Read that checkout's
 `AGENTS.md` completely before modifying or validating Fx.
+
+The fork is a separate Git repository inside this Workshop. `fork/` and
+`worktrees/` are ignored; the Workshop tracks maintenance files, never fork
+contents. New persistent maintenance worktrees belong under `worktrees/`.
 
 ## Adding or changing Fx behavior
 
@@ -88,8 +92,8 @@ available, it rejects local `carry/*` heads absent from § Features.
 
 ## Working topology
 
-Work directly on `main` in this repository. Outside this repository, develop
-each carried Fx feature in a dedicated worktree on its `carry/<feature>` branch,
+Work directly on `main` in this repository. Develop each carried Fx feature
+in a dedicated fork worktree under `worktrees/` on its `carry/<feature>` branch,
 based on the cycle's captured Main or a declared carry dependency. Gate and
 publish that carry, compose it into Integration, and remove the worktree after
 the published result is installed. Run focused checks in the carry worktree and
@@ -130,7 +134,7 @@ tests/validate.sh
 Installer changes also require an isolated real install using temporary binary,
 state, and settings paths, followed by execution of the built binary. Fx feature
 work follows the Local development gate and real-binary requirements in
-`~/source/vercel-labs--fx/AGENTS.md`. Hosted Full CI is nonblocking
+`fork/AGENTS.md`. Hosted Full CI is nonblocking
 observability and is never a shipping prerequisite.
 
 Finished work lands on `main` and is pushed. The installer may rebind a clean
